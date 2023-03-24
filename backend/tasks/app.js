@@ -239,20 +239,20 @@ const sendEmails = async (teeTimesByUser) => {
 };
 
 const now = new Date();
-const startHour = 8;
+const startHour = 9;
 const endHour = 23;
 
-if (now.getHours() >= startHour && now.getHours() <= endHour) {
-  // Code to run immediately if the current time is within the allowed time frame
-  checkTeeTimes();
-}
-
-// cron.schedule(`0 ${startHour}-${endHour} * * * *`, () => {
-//   // Code to be executed every minute, except between 12am and 8am
+// if (now.getHours() >= startHour && now.getHours() <= endHour) {
+//   // Code to run immediately if the current time is within the allowed time frame
 //   checkTeeTimes();
-// });
+// }
 
-cron.schedule(`* * * * *`, () => {
+cron.schedule(`0 ${startHour}-${endHour} * * * *`, () => {
   // Code to be executed every minute, except between 12am and 8am
   checkTeeTimes();
 });
+
+// cron.schedule(`* * * * *`, () => {
+//   // Code to be executed every minute, except between 12am and 8am
+//   checkTeeTimes();
+// });
