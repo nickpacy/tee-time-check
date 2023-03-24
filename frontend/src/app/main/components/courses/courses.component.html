@@ -1,0 +1,21 @@
+<h5>Courses</h5>
+<p-table [value]="courses" [paginator]="true" [rows]="5" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+        <tr>
+            <th pSortableColumn="CourseName">Course <p-sortIcon field="CourseName"></p-sortIcon></th>
+            <th pSortableColumn="BookingClass">Booking Class <p-sortIcon field="BookingClass"></p-sortIcon></th>
+            <th pSortableColumn="ScheduleId">Schedule ID <p-sortIcon field="ScheduleId"></p-sortIcon></th>
+            <th>View</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-course>
+        <tr>
+            <td style="width: 35%; min-width: 7rem;">{{course.CourseName}}</td>
+            <td style="width: 35%; min-width: 7rem;">{{course.BookingClass}}</td>
+            <td style="width: 35%; min-width: 7rem;">{{course.ScheduleId}}</td>
+            <td style="width: 15%;">
+                <button pButton pRipple type="button" icon="pi pi-search" class="p-button p-component p-button-text p-button-icon-only"></button>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>

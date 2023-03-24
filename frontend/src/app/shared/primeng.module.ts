@@ -19,7 +19,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ChipsModule } from 'primeng/chips';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ContextMenuModule } from 'primeng/contextmenu';
 import { DataViewModule } from 'primeng/dataview';
 import { DeferModule } from 'primeng/defer';
@@ -238,7 +238,8 @@ import { TreeTableModule } from 'primeng/treetable';
         TreeTableModule,
     ],
     providers: [
-        ConfirmationService
+        ConfirmationService,
+        MessageService
     ]
   })
   export class PrimeNgModule { }
