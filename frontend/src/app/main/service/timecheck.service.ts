@@ -46,7 +46,7 @@ export class TimecheckService {
   }
 
   getTimechecksByUserId(userId: number): Observable<any> {
-    const url = `http://localhost:5050/timechecksByUserId/${userId}`;
+    const url = `${this.baseUrl}/timechecksByUserId/${userId}`;
     return this.http.get<any>(url).pipe(
       catchError(this.handleError)
     );

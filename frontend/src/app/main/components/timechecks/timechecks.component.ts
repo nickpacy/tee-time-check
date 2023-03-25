@@ -71,9 +71,7 @@ export class TimechecksComponent implements OnInit {
           this.timechecks = data;
           this.timechecks.map((x) => {
             x.DayName = this.utilityService.dayName(x.DayOfWeek);
-            console.log(this.utilityService.localTime(x.StartTime));
           });
-          console.log('Timechecks:', this.timechecks);
           resolve(true);
         },
         (error) => {

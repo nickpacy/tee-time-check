@@ -21,7 +21,7 @@ export class UserService {
   }
 
   getUserByEmail(email: string): Observable<any> {
-    return this.http.get(`http://localhost:5050/userByEmail/${email}`);
+    return this.http.get(`${this.apiUrl}/userByEmail/${email}`);
   }
 
   createUser(user: any): Observable<any> {
