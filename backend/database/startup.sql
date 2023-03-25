@@ -3,8 +3,10 @@ Use TTC;
 CREATE TABLE Users (
   UserId INT AUTO_INCREMENT PRIMARY KEY,
   Name VARCHAR(50) NOT NULL,
+  Password VARCHAR(50) NOT NULL,
   Email VARCHAR(50) NOT NULL,
-  Active BOOLEAN NOT NULL DEFAULT true
+  Active BOOLEAN NOT NULL DEFAULT true,
+  Admin BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE Courses (
@@ -23,6 +25,7 @@ CREATE TABLE Timechecks (
   EndTime TIME NOT NULL,
   CourseId INT NOT NULL,
   NumPlayers INT NOT NULL,
+  Active BOOLEAN NOT NULL DEFAULT true,
   FOREIGN KEY (UserId) REFERENCES Users(UserId),
   FOREIGN KEY (CourseId) REFERENCES Courses(CourseId)
 );

@@ -24,7 +24,7 @@ import { CoursesComponent } from './main/components/courses/courses.component';
                     { path: 'timechecks/:userId', component: TimechecksComponent },
                 ]
             },
-            { path: 'auth', loadChildren: () => import('./demo/components/auth/auth.module').then(m => m.AuthModule) },
+            { path: 'auth', loadChildren: () => import('./main/components/auth/auth.module').then(m => m.AuthModule) },
             { path: 'landing', loadChildren: () => import('./demo/components/landing/landing.module').then(m => m.LandingModule) },
             
             { path: 'notfound', component: NotfoundComponent },

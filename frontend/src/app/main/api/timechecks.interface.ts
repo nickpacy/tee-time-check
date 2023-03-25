@@ -14,7 +14,7 @@ export class TimecheckEntry extends Timecheck {
 }
 
 export class FullTimeCheck {
-  Active?: number;
+  Active?: boolean;
   BookingClass?: number;
   CourseId?: number;
   CourseName?: string;

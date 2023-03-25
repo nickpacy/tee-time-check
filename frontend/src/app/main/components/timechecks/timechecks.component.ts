@@ -69,8 +69,10 @@ export class TimechecksComponent implements OnInit {
       this.timecheckService.getTimechecksByUserId(this.USERID).subscribe(
         (data: any[]) => {
           this.timechecks = data;
+          console.log(data);
           this.timechecks.map((x) => {
             x.DayName = this.utilityService.dayName(x.DayOfWeek);
+            x.Active = Boolean(x.Active);
           });
           resolve(true);
         },
@@ -123,20 +125,31 @@ export class TimechecksComponent implements OnInit {
 
   }
 
-  onSave() {
-    console.log(this.timecheck);
-    this.submitted = true;
-
-    this.timecheck.UserId = this.USERID;
-    this.timecheck.StartTime = this.utilityService.utcTime(this.timecheck.StartDate)
-    this.timecheck.EndTime = this.utilityService.utcTime(this.timecheck.EndDate)
-
-    this.loadingDialog = true;
+  onSave(timecheck?: Timecheck) {
+    
+    let update = new Timecheck();
+    if (!timecheck) {
+      
+      console.log(this.timecheck);
+      this.submitted = true;
+  
+      this.timecheck.UserId = this.USERID;
+      this.timecheck.StartTime = this.utilityService.utcTime(this.timecheck.StartDate)
+      this.timecheck.EndTime = this.utilityService.utcTime(this.timecheck.EndDate)
+  
+      update = this.timecheck;
+      this.loadingDialog = true;
+      console.log("NOT PASSED IN");
+    } else {
+      update = timecheck;
+      console.log("PASSED IN");
+    }
+    
     return new Promise((resolve, reject) => {
 
-      if (this.timecheck.Id) {
+      if (update.Id) {
         //Edit Timecheck
-        this.timecheckService.updateTimecheck(this.timecheck.Id, this.timecheck).subscribe(
+        this.timecheckService.updateTimecheck(update.Id, update).subscribe(
           (data: any) => {
             this.timecheckDialog = false;
             this.getTimechecksByUser().finally(() => {
@@ -145,7 +158,7 @@ export class TimechecksComponent implements OnInit {
             resolve(true);
           },
           (error) => {
-            console.error('Error creating timecheck:', error);
+            console.error('Error updating timecheck:', error);
             this.loadingDialog = false;
             reject(true);
           }
@@ -153,7 +166,7 @@ export class TimechecksComponent implements OnInit {
       } else {
         //Create New
 
-        this.timecheckService.createTimecheck(this.timecheck).subscribe(
+        this.timecheckService.createTimecheck(update).subscribe(
           (data: any) => {
             this.timecheckDialog = false;
             this.getTimechecksByUser().finally(() => {
@@ -214,6 +227,10 @@ export class TimechecksComponent implements OnInit {
         }
       );
     });
+  }
+
+  toggleActive(timecheck: Timecheck) {
+    this.onSave(timecheck);
   }
 
 }

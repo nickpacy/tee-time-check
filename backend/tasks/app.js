@@ -71,7 +71,11 @@ const getClosestDayOfWeek = (dayOfWeek) => {
       (dayOfWeek - currentDate.getDay()) * 24 * 60 * 60 * 1000
   );
 
-  if (closestDayOfWeek < currentDate) {
+  if (
+    (closestDayOfWeek < currentDate) ||
+    (closestDayOfWeek.getDay() === currentDate.getDay() &&
+    currentDate.getHours() >= 19)
+  ) {
     closestDayOfWeek = new Date(
       closestDayOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000
     );
@@ -84,7 +88,7 @@ const serverTimecheck = () => {
   const now = new Date();
   const currentHour = now.getHours();
 
-  if (currentHour >= 0 && currentHour < 8) {
+  if (currentHour >= 0 && currentHour < 9) {
     return false;
   } else {
     return true;
@@ -92,7 +96,7 @@ const serverTimecheck = () => {
 };
 
 const checkTeeTimes = async () => {
-  //Don't run between 12am and 8am
+  //Don't run between 12am and 9am
   if (!serverTimecheck()) {
     return false;
   }
@@ -100,12 +104,12 @@ const checkTeeTimes = async () => {
   pool.getConnection((err, connection) => {
     if (err) throw error;
 
-    const query = `SELECT t.id, u.userId, u.email, t.dayOfWeek, t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.courseName, n.notifiedTeeTimes
+    const query = `SELECT DISTINCT t.id, u.userId, u.email, t.dayOfWeek, t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.courseName, n.notifiedTeeTimes
                     FROM timeChecks t
                     JOIN users u ON u.userid = t.userId
                     JOIN courses c ON c.courseid = t.courseId
                     LEFT JOIN notifications n ON n.userId = t.userId AND n.courseId = t.courseId AND n.checkdate = CURDATE() 
-                    WHERE u.active = 1`;
+                    WHERE u.active = 1 AND t.active = 1`;
 
     connection.query(query, async (error, results) => {
       connection.release();
@@ -242,17 +246,12 @@ const now = new Date();
 const startHour = 9;
 const endHour = 23;
 
-// if (now.getHours() >= startHour && now.getHours() <= endHour) {
-//   // Code to run immediately if the current time is within the allowed time frame
-//   checkTeeTimes();
-// }
+if (now.getHours() >= startHour && now.getHours() <= endHour) {
+  // Code to run immediately if the current time is within the allowed time frame
+  checkTeeTimes();
+}
 
 cron.schedule(`0 ${startHour}-${endHour} * * * *`, () => {
   // Code to be executed every minute, except between 12am and 8am
   checkTeeTimes();
 });
-
-// cron.schedule(`* * * * *`, () => {
-//   // Code to be executed every minute, except between 12am and 8am
-//   checkTeeTimes();
-// });
