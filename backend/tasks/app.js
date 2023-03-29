@@ -248,10 +248,14 @@ const endHour = 23;
 
 if (now.getHours() >= startHour && now.getHours() <= endHour) {
   // Code to run immediately if the current time is within the allowed time frame
+  logger.info("Code started running at: " + new Date().toLocaleString());
   checkTeeTimes();
 }
 
-cron.schedule(`0 ${startHour}-${endHour} * * * *`, () => {
+var task = cron.schedule(`* ${startHour}-${endHour} * * *`, () => {
   // Code to be executed every minute, except between 12am and 8am
+  logger.info("Cron scheduler running at: " + new Date().toLocaleString());
   checkTeeTimes();
 });
+
+task.start();
