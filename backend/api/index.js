@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const authRoutes = require('./routes/authRoutes');
 const usersRoutes = require('./routes/usersRoutes');
 const coursesRoutes = require('./routes/coursesRoutes');
 const timechecksRoutes = require('./routes/timechecksRoutes');
@@ -11,6 +12,7 @@ app.use(cors());
 
 const PORT = process.env.PORT || 5050;
 
+app.use('/auth', authRoutes);
 app.use('/users', usersRoutes);
 app.use('/courses', coursesRoutes);
 app.use('/timechecks', timechecksRoutes);
