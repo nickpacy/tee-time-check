@@ -9,8 +9,8 @@ export class Timecheck {
 }
 
 export class TimecheckEntry extends Timecheck {
-  StartDate: Date = new Date;
-  EndDate: Date = new Date;
+    StartDate: Date = new Date;
+    EndDate: Date = new Date;
 }
 
 export class FullTimeCheck {

@@ -108,6 +108,16 @@ VALUES
 1);
 
 
+
+
+-- Query for Getting Unique found tee times
+SELECT UserId, CourseId, TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(NotifiedTeeTimes, ',', numbers.n), ',', -1)) AS TeeTimes
+FROM TTC.Notifications
+JOIN (SELECT @row := @row + 1 AS n FROM (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) t, (SELECT @row := 0) r) numbers
+ON CHAR_LENGTH(NotifiedTeeTimes) - CHAR_LENGTH(REPLACE(NotifiedTeeTimes, ',', '')) >= numbers.n - 1
+ORDER BY TeeTimes;
+
+
 // Different schedule ID (uncomment to use)
 // const scheduleId = 1468; // TN schedule ID
 // const scheduleId = 1487; // TS schedule ID

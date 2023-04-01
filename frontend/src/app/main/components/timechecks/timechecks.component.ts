@@ -1,11 +1,11 @@
 import { Component, Injectable, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FullTimeCheck, Timecheck, TimecheckEntry } from '../../api/timechecks.interface';
+import { FullTimeCheck, Timecheck, TimecheckEntry } from '../../models/timecheck.model';
 import { TimecheckService } from '../../service/timecheck.service';
 import { UserService } from '../../service/user.service';
 import { Message, MessageService } from 'primeng/api';
 import { CourseService } from '../../service/course.service';
-import { Course } from '../../api/courses.interface';
+import { Course } from '../../models/course.model';
 import { UtilityService } from '../../service/utility.service';
 
 @Injectable()

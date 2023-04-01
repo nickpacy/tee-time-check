@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MessageService } from 'primeng/api';
-import { User } from '../../api/users.interface';
+import { User } from '../../models/user.model';
 import { UserService } from '../../service/user.service';
 
 @Component({
@@ -11,7 +11,7 @@ import { UserService } from '../../service/user.service';
 export class UserComponent implements OnInit {
 
   users: User[] = [];
-  user: User = {};
+  user: User =  new User();
   userDialog: boolean = false;
   submitted: boolean = false;
   loading: boolean = true;
