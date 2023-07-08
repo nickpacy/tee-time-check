@@ -141,7 +141,7 @@ const checkTeeTimes = async () => {
           endDate.setUTCDate(endDate.getUTCDate() + 1);
         }
 
-        const apiUrl = `https://foreupsoftware.com/index.php/api/booking/times?time=all&date=${formattedDate}&holes=18&players=${numPlayers}&booking_class=${bookingClass}&schedule_id=${scheduleId}&api_key=no_limits`;
+        const apiUrl = `https://foreupsoftware.com/index.php/api/booking/times?time=all&date=${formattedDate}&holes=all&players=${numPlayers}&booking_class=${bookingClass}&schedule_id=${scheduleId}&api_key=no_limits`;
 
         try {
           const response = await axios.get(apiUrl);
