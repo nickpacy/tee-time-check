@@ -45,6 +45,9 @@
                         </tr>
                     </ng-template>
                 </p-table>
+<br><br>
+    {{convertToTime(timeRange[0])}} - {{convertToTime(timeRange[1])}}
+                <p-slider [(ngModel)]="timeRange" [step]="1" [min]="20" [max]="76" [range]="true"></p-slider>
             </div>
         </div>
     </div>
@@ -80,6 +83,33 @@
                 <small class="ng-dirty ng-invalid" *ngIf="submitted && !timecheck.NumPlayers">Players is required.</small>
             </div>
         </div>
+
+
+        <p-table [value]="daysOfWeek">
+            <ng-template pTemplate="caption">
+                <div class="flex align-items-center justify-content-between">
+                    Products
+                    <p-button icon="pi pi-refresh"></p-button>
+                </div>
+            </ng-template>
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Image</th>
+                    <th>Price</th>
+                    <th>Category</th>
+                    <th>Num</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-product>
+                <tr>
+                    <td><p-checkbox [(ngModel)]="product.Active" [binary]="true"></p-checkbox></td>
+                    <td>{{product.name}}</td>
+                    <td style="text-align: center;width: 200px;">{{convertToTime(timeRange[0])}} - {{convertToTime(timeRange[1])}}<br><p-slider [(ngModel)]="timeRange" [step]="1" [min]="20" [max]="76" [range]="true"></p-slider></td>
+                    <td><p-dropdown [options]="[1, 2, 3, 4]" [(ngModel)]="product.NumPlayers"></p-dropdown></td>
+                    
+                </tr>
+            </ng-template>
+        </p-table>
          
     </ng-template>
 

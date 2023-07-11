@@ -5,6 +5,11 @@ const nodemailer = require("nodemailer");
 const cron = require("node-cron");
 const winston = require("winston");
 
+const foreupFunction = require("./tee-times-foreup");
+const navyFunction = require("./tee-times-navy");
+const teeitupFunction = require("./tee-times-teeitup");
+const jcgolfFunction = require("./tee-times-jcgolf");
+
 dotenv.config();
 
 const logger = winston.createLogger({
@@ -104,7 +109,7 @@ const checkTeeTimes = async () => {
   pool.getConnection((err, connection) => {
     if (err) throw error;
 
-    const query = `SELECT DISTINCT t.id, u.userId, u.email, t.dayOfWeek, t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.courseName, n.notifiedTeeTimes
+    const query = `SELECT DISTINCT t.id, u.userId, u.email, t.dayOfWeek, t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.courseName, c.method, n.notifiedTeeTimes
                     FROM timeChecks t
                     JOIN users u ON u.userid = t.userId
                     JOIN courses c ON c.courseid = t.courseId
@@ -131,29 +136,64 @@ const checkTeeTimes = async () => {
           courseId,
           userId,
           courseName,
+          method,
           notifiedTeeTimes,
         } = row;
         const formattedDate = formatDate(getClosestDayOfWeek(dayOfWeek));
         const startDate = formatTime(formattedDate, startTime);
         let endDate = formatTime(formattedDate, endTime);
 
-
         if (endDate < startDate) {
           endDate.setUTCDate(endDate.getUTCDate() + 1);
         }
 
-        const apiUrl = `https://foreupsoftware.com/index.php/api/booking/times?time=all&date=${formattedDate}&holes=all&players=${numPlayers}&booking_class=${bookingClass}&schedule_id=${scheduleId}&api_key=no_limits`;
+        // let apiUrl = "";
+        let teeTimes = [];
+
+        // Check the value of the "Method" column and run the corresponding function
+        if (method === "foreup") {
+            // apiUrl = `https://foreupsoftware.com/index.php/api/booking/times?time=all&date=${formattedDate}&holes=all&players=${numPlayers}&booking_class=${bookingClass}&schedule_id=${scheduleId}&api_key=no_limits`;
+            try {
+            //   logger.info("Checking foreup " + courseName);
+                teeTimes = await foreupFunction.getTeeTimes(bookingClass, dayOfWeek, numPlayers, scheduleId);
+            } catch (error) {
+              logger.error(error);
+            }
+          } else if (method === "navy") {
+            try {
+            //   logger.info("Checking navy " + courseName);
+              teeTimes = await navyFunction.getTeeTimes(bookingClass, startTime, endTime, dayOfWeek, numPlayers);
+            } catch (error) {
+              logger.error(error);
+            }
+          } else if (method === "teeitup") {
+            try {
+            //   logger.info("Checking teeitup " + courseName);
+              teeTimes = await teeitupFunction.getTeeTimes(bookingClass, dayOfWeek, numPlayers);
+            } catch (error) {
+              logger.error(error);
+            }
+          } else if (method === "jcgolf") {
+            try {
+            //   logger.info("Checking jcgolf " + courseName + ' | ' + dayOfWeek + ' | ' + bookingClass);
+              teeTimes = await jcgolfFunction.getTeeTimes(bookingClass, dayOfWeek, numPlayers);
+            } catch (error) {
+              logger.error(error);
+            }
+          }
+
+        
 
         try {
-          const response = await axios.get(apiUrl);
+        //   const response = await axios.get(apiUrl);
 
-          const teeTimes = response.data;
+        //   const teeTimes = response.data;
 
           for (const teeTime of teeTimes) {
-            const teeTimeDate = new Date(teeTime.time);
-            console.log(startTime, formattedDate, startDate, teeTimeDate, teeTime.time);
 
-            if (teeTimeDate > startDate && teeTimeDate < endDate) {
+              
+              const teeTimeDate = new Date(teeTime.time);
+              if (teeTimeDate > startDate && teeTimeDate < endDate) {
               if (notifiedTeeTimes && notifiedTeeTimes.includes(teeTime.time)) {
                 // This tee time has already been notified, skip it
                 continue;
@@ -245,15 +285,27 @@ const sendEmails = async (teeTimesByUser) => {
   }
 };
 
+// const now = new Date();
+// const startHour = 9;
+// const endHour = 23;
+
+// var task = cron.schedule(`* ${startHour}-${endHour} * * *`, () => {
+//   // Code to be executed every minute, except between 12am and 8am
+//   logger.info("Cron scheduler running at: " + new Date().toLocaleString());
+//   checkTeeTimes();
+// });
+
+// task.start();
+
 const now = new Date();
 const startHour = 7;
 const endHour = 23;
 
-if (now.getHours() >= startHour && now.getHours() <= endHour) {
-  // Code to run immediately if the current time is within the allowed time frame
-  logger.info("Code started running at: " + new Date().toLocaleString());
-  checkTeeTimes();
-}
+// if (now.getHours() >= startHour && now.getHours() <= endHour) {
+//   // Code to run immediately if the current time is within the allowed time frame
+//   logger.info("Code started running at: " + new Date().toLocaleString());
+//   checkTeeTimes();
+// }
 
 var task = cron.schedule(`* ${startHour}-${endHour} * * *`, () => {
   // Code to be executed every minute, except between 12am and 8am

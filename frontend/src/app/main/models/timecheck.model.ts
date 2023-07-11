@@ -29,4 +29,5 @@ export class FullTimeCheck {
   ScheduleId?: number;
   StartTime: string = '';
   UserId?: number;
+  TimeInterval!: number[];
 }

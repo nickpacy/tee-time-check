@@ -45,5 +45,41 @@ export class UtilityService {
         return `${hours}:${minutes}`;
     }
 
+    convertTimeToInterval(start: string, end: string): number[] {
+        const startInterval = this.convertToIntervalNumber(start);
+        const endInterval = this.convertToIntervalNumber(end);
+      
+        // if (startInterval > endInterval) {
+        //   throw new Error('Invalid time range: Start time is after end time');
+        // }
+      
+        return [startInterval, endInterval];
+      }
+      
+    convertToIntervalNumber(time: string): number {
+        const [hoursString, minutesString, secondsString] = time.split(':');
+      
+        const date = new Date();
+        date.setUTCHours(parseInt(hoursString));
+        date.setUTCMinutes(parseInt(minutesString));
+        date.setUTCSeconds(parseInt(secondsString));
+      
+        const interval = (date.getHours() * 60 + date.getMinutes() + date.getSeconds() / 60) / 15;
+      
+        return Math.floor(interval);
+    }
+
+    convertIntervalToUTCTimeString(interval: number): string {
+        const localDate = new Date();
+        localDate.setHours(Math.floor(interval / 4), (interval % 4) * 15, 0, 0);
+
+        const utcHours = localDate.getUTCHours().toString().padStart(2, '0');
+        const utcMinutes = localDate.getUTCMinutes().toString().padStart(2, '0');
+        const utcSeconds = localDate.getUTCSeconds().toString().padStart(2, '0');
+
+        const utcTimeString = `${utcHours}:${utcMinutes}:${utcSeconds}`;
+
+        return utcTimeString;
+    }
 
 }

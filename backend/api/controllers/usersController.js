@@ -49,6 +49,10 @@ const createUser = async (req, res) => {
     try {
       const [result] = await pool.query('INSERT INTO Users (Name, Email, Active) VALUES (?, ?, ?)', [Name, Email, Active]);
       const newUserId = result.insertId;
+
+      // Call the stored procedure to add inactive timechecks for the new user
+      await pool.query('CALL AddTimechecksForNewUser(?)', [newUserId]);
+
       res.status(201).json({ UserId: newUserId, Name, Email, Active });
     } catch (error) {
       console.error('Error creating user: ', error);

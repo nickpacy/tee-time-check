@@ -1,23 +1,22 @@
 import { Component, Injectable, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FullTimeCheck, Timecheck, TimecheckEntry } from '../../models/timecheck.model';
-import { TimecheckService } from '../../service/timecheck.service';
-import { UserService } from '../../service/user.service';
+import { FullTimeCheck, Timecheck, TimecheckEntry } from '../../../models/timecheck.model';
+import { TimecheckService } from '../../../service/timecheck.service';
+import { UserService } from '../../../service/user.service';
 import { Message, MessageService } from 'primeng/api';
-import { CourseService } from '../../service/course.service';
-import { Course } from '../../models/course.model';
-import { UtilityService } from '../../service/utility.service';
+import { CourseService } from '../../../service/course.service';
+import { Course } from '../../../models/course.model';
+import { UtilityService } from '../../../service/utility.service';
 
-@Injectable()
 @Component({
-  selector: 'app-timechecks',
-  templateUrl: './timechecks.component.html',
-  styleUrls: ['./timechecks.component.scss']
+  selector: 'app-bycourse',
+  templateUrl: './bycourse.component.html',
+  styleUrls: ['./bycourse.component.scss']
 })
-export class TimechecksComponent implements OnInit {
+export class BycourseComponent {
 
   loading: boolean = true;
-  USERID: number = 0;
+  USERID: number = 1;
   timechecks: FullTimeCheck[] = [];
   emailDialog: boolean = false;
   userEmail: string = '';
@@ -27,6 +26,8 @@ export class TimechecksComponent implements OnInit {
   loadingDialog: boolean = false;
 
   timeRange: number[] = [20, 65];
+
+  selectedCourse: Course = new Course;
 
   courses: Course[] = [];
   daysOfWeek = [
@@ -50,17 +51,16 @@ export class TimechecksComponent implements OnInit {
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
       this.USERID = Number(params.get('userId'));
+
       if (this.USERID == 0) {
         //No User:
         this.loading = false;
         this.emailDialog = true;
       } else {
-        this.getTimechecksByUser().finally(() => {
-          this.getCourses();
+        this.getCourses().finally(() => {
           this.loading = false;
-        });
+        })
       }
-      
       
       
     });
@@ -84,11 +84,7 @@ export class TimechecksComponent implements OnInit {
         }
       );
     })
-  }
-
-  
-
-  
+  }  
 
   onSubmit() {
     if (!this.userEmail) {
@@ -236,6 +232,9 @@ export class TimechecksComponent implements OnInit {
   }
 
   convertToTime(interval: number): string {
+    if (!interval) {
+      return "false";
+    }
     const hours = Math.floor(interval / 4);
     const minutes = (interval % 4) * 15;
   
@@ -246,6 +245,57 @@ export class TimechecksComponent implements OnInit {
     return `${formattedHours}:${formattedMinutes} ${period}`;
   }
 
+  onCourseClick(course: Course) {
+    this.selectedCourse = course;
+    this.getTimechecks(course.CourseId).then(() => {
+      this.timecheckDialog = true;
+    });
+  }
+
+  getTimechecks(courseId: number) {
+    return new Promise((resolve, reject) => {
+      this.timecheckService.getTimechecksByUserIdAndCourseId(this.USERID, courseId).subscribe(
+        (data: any[]) => {
+          this.timechecks = data;
+          console.log(data);
+          this.timechecks.map((x) => {
+            x.DayName = this.utilityService.dayName(x.DayOfWeek);
+            x.Active = Boolean(x.Active);
+            x.TimeInterval = this.utilityService.convertTimeToInterval(x.StartTime, x.EndTime);
+          });
+          resolve(true);
+        },
+        (error) => {
+          console.error('Error getting Timechecks:', error);
+          reject(true);
+        }
+      );
+    })
+  }
+
+
+  onBulkSaveTimechecks() {
+    if (this.timechecks.length > 0) {
+      this.loadingDialog = true;
+      
+      this.timechecks.map((x: FullTimeCheck) => {
+        x.StartTime = this.utilityService.convertIntervalToUTCTimeString(x.TimeInterval[0]);
+        x.EndTime = this.utilityService.convertIntervalToUTCTimeString(x.TimeInterval[1]);
+      });
+
+      this.timecheckService.bulkUpdateTimechecks(this.timechecks).subscribe(
+        (data: any) => {
+          this.timecheckDialog = false;
+          this.loadingDialog = false;
+        },
+        (error) => {
+          console.error('Error creating timecheck:', error);
+          this.loadingDialog = false;
+        }
+      );
+
+    }
+  }
   
 
 }

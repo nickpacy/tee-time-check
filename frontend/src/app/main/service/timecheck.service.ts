@@ -31,6 +31,13 @@ export class TimecheckService {
     );
   }
 
+  bulkUpdateTimechecks(timechecks: any[]): Observable<any> {
+    const url = `${this.baseUrl}/bulk-update`;
+    return this.http.post<any>(url, timechecks).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   updateTimecheck(id: number, timecheck: any): Observable<any> {
     const url = `${this.baseUrl}/${id}`;
     return this.http.put<any>(url, timecheck).pipe(
@@ -51,6 +58,14 @@ export class TimecheckService {
       catchError(this.handleError)
     );
   }
+
+  getTimechecksByUserIdAndCourseId(userId: number, courseId: number): Observable<any> {
+    const url = `${this.baseUrl}/timechecksByUserIdAndCourseId/${userId}/${courseId}`;
+    return this.http.get<any>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
+
 
   private handleError(error: any) {
     console.error('Error:', error);

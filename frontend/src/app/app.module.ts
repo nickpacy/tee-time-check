@@ -18,11 +18,13 @@ import { CoursesComponent } from './main/components/courses/courses.component';
 import { CourseService } from './main/service/course.service';
 import { PrimeNgModule } from './shared/primeng.module';
 import { LocalTimePipe } from './shared/localTime.pipe';
+import { BycourseComponent } from './main/components/timechecks/bycourse/bycourse.component';
 
 @NgModule({
     declarations: [
         AppComponent, NotfoundComponent, UserComponent, TimechecksComponent, CoursesComponent,
-        LocalTimePipe
+        LocalTimePipe,
+        BycourseComponent
     ],
     imports: [
         AppRoutingModule,

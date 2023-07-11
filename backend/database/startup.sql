@@ -13,7 +13,12 @@ CREATE TABLE Courses (
   CourseId INT AUTO_INCREMENT PRIMARY KEY,
   CourseName VARCHAR(50) NOT NULL,
   BookingClass INT NOT NULL,
-  ScheduleId INT NOT NULL
+  ScheduleId INT NOT NULL,
+  BookingPrefix VARCHAR(50) NULL,
+  WebsiteId VARCHAR(255) NULL,
+  Method VARCHAR(50) NULL,
+  ImageUrl VARCHAR(255) NULL,
+  BookingUrl VARCHAR(255) NULL
 );
 
 

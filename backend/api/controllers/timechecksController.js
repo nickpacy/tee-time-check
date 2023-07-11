@@ -57,6 +57,34 @@ const updateTimecheck = async (req, res) => {
   }
 };
 
+// Update existing timechecks in bulk
+const updateBulkTimechecks = async (req, res) => {
+  const timechecks = req.body; // Assuming the request body contains an array of timechecks to update
+
+  try {
+    const promises = timechecks.map(async (timecheck) => {
+      const { Id, UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers, Active } = timecheck;
+
+      const result = await pool.query(
+        'UPDATE Timechecks SET UserId = ?, DayOfWeek = ?, StartTime = ?, EndTime = ?, CourseId = ?, NumPlayers = ?, Active = ? WHERE Id = ?',
+        [UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers, Active, Id]
+      );
+
+      if (result.affectedRows === 0) {
+        return { Id, error: 'Timecheck not found' };
+      } else {
+        return { Id, success: true };
+      }
+    });
+
+    const updatedTimechecks = await Promise.all(promises);
+    res.json(updatedTimechecks);
+  } catch (err) {
+    console.error('Error updating timechecks: ', err);
+    res.status(500).json({ error: 'Error updating timechecks' });
+  }
+};
+
 // Delete a timecheck
 const deleteTimecheck = async (req, res) => {
   const timecheckId = req.params.timecheckId;
@@ -95,11 +123,30 @@ const getTimechecksByUserId = async (req, res) => {
   }
 };
 
+// Get timechecks by UserId and CourseId
+const getTimechecksByUserIdAndCourseId = async (req, res) => {
+  const userId = req.params.userId;
+  const courseId = req.params.courseId;
+  try {
+    const results = await pool.query('SELECT * FROM Timechecks WHERE UserId = ? AND CourseId = ? ORDER BY CASE WHEN DayOfWeek = 0 THEN 7 ELSE DayOfWeek END', [userId, courseId]);
+    if (results.length === 0) {
+      res.status(404).json({ error: 'No timechecks for user and course' });
+    } else {
+      res.json(results);
+    }
+  } catch (err) {
+    console.error('Error getting timechecks: ', err);
+    res.status(500).json({ error: 'Error getting timechecks' });
+  }
+};
+
 module.exports = {
     getTimechecks,
     getTimecheckById,
     createTimecheck,
     updateTimecheck,
+    updateBulkTimechecks,
     deleteTimecheck,
-    getTimechecksByUserId
+    getTimechecksByUserId,
+    getTimechecksByUserIdAndCourseId
   };

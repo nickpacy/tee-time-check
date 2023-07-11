@@ -19,7 +19,8 @@ export class AppMenuComponent implements OnInit {
                 items: [
                     { label: 'Users', icon: 'pi pi-fw pi-users', routerLink: ['/user'] },
                     { label: 'Courses', icon: 'fa fa-map-location', routerLink: ['/courses'] },
-                    { label: 'Timechecks', icon: 'fa fa-golf-ball-tee', routerLink: ['/timechecks/1'] }
+                    { label: 'Timechecks', icon: 'fa fa-golf-ball-tee', routerLink: ['/timechecks/1'] },
+                    { label: 'Setup', icon: 'fa fa-golf-ball-tee', routerLink: ['/timechecksbycourse/1'] }
                 ]
             },
             {

@@ -6,6 +6,7 @@ import { UserComponent } from './main/components/user/user.component';
 import { TimechecksComponent } from './main/components/timechecks/timechecks.component';
 import { CoursesComponent } from './main/components/courses/courses.component';
 import { AuthGuard } from './main/components/auth/auth.service';
+import { BycourseComponent } from './main/components/timechecks/bycourse/bycourse.component';
 
 @NgModule({
     imports: [
@@ -22,6 +23,7 @@ import { AuthGuard } from './main/components/auth/auth.service';
                     { path: 'user', component: UserComponent, canActivate: [AuthGuard] },
                     { path: 'courses', component: CoursesComponent, canActivate: [AuthGuard] },
                     { path: 'timechecks', component: TimechecksComponent, canActivate: [AuthGuard] },
+                    { path: 'timechecksbycourse/:userId', component: BycourseComponent, canActivate: [AuthGuard] },
                     { path: 'timechecks/:userId', component: TimechecksComponent, canActivate: [AuthGuard] },
                 ]
             },
