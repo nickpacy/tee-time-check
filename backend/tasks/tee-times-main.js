@@ -1,17 +1,17 @@
 // Import required dependencies
-const mysql = require("mysql2");
-const moment = require("moment-timezone");
-const dotenv = require("dotenv");
-const nodemailer = require("nodemailer");
-const cron = require("node-cron");
-const winston = require("winston");
+const mysql = require("mysql2"); // MySQL library
+const moment = require("moment-timezone"); // Date and time manipulation library
+const dotenv = require("dotenv"); // Environment variable management library
+const nodemailer = require("nodemailer"); // Email sending library
+const cron = require("node-cron"); // Cron job scheduler
+const winston = require("winston"); // Logging library
 
 // Import custom functions
-const util = require("./utility");
-const foreupFunction = require("./tee-times-foreup");
-const navyFunction = require("./tee-times-navy");
-const teeitupFunction = require("./tee-times-teeitup");
-const jcgolfFunction = require("./tee-times-jcgolf");
+const util = require("./utility"); // Utility functions
+const foreupFunction = require("./tee-times-foreup"); // Custom function for getting tee times from ForeUp
+const navyFunction = require("./tee-times-navy"); // Custom function for getting tee times from Navy
+const teeitupFunction = require("./tee-times-teeitup"); // Custom function for getting tee times from TeeItUp
+const jcgolfFunction = require("./tee-times-jcgolf"); // Custom function for getting tee times from JCGolf
 
 // Load environment variables from .env file
 dotenv.config();
@@ -32,21 +32,21 @@ const logger = winston.createLogger({
 
 // Create a connection pool for MySQL database
 const pool = mysql.createPool({
-  connectionLimit: process.env.POOL_LIMIT,
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  connectionLimit: process.env.POOL_LIMIT, // Maximum number of connections in the pool
+  host: process.env.DB_HOST, // MySQL database host
+  user: process.env.DB_USER, // MySQL database user
+  password: process.env.DB_PASSWORD, // MySQL database password
+  database: process.env.DB_NAME, // MySQL database name
 });
 
 // Create a transporter for sending emails
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: true,
+  host: process.env.SMTP_HOST, // SMTP host for sending emails
+  port: process.env.SMTP_PORT, // SMTP port for sending emails
+  secure: true, // Use SSL/TLS for secure connection
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
+    user: process.env.SMTP_USER, // SMTP username
+    pass: process.env.SMTP_PASSWORD, // SMTP password
   },
 });
 
@@ -101,16 +101,35 @@ const checkTeeTimes = async () => {
         let bookingLink = bookingUrl;
 
         // Setup date to use
-        const closestDate = util.getClosestDayOfWeek(dayOfWeek, 'MM-DD-YYYY');
+        const closestDate = util.getClosestDayOfWeek(dayOfWeek, "MM-DD-YYYY");
 
-        const formattedStartTime = moment.utc(startTime, 'HH:mm:ss').clone().tz('America/Los_Angeles').format('HH:mm:ss');
-        const formattedEndTime = moment.utc(endTime, 'HH:mm:ss').clone().tz('America/Los_Angeles').format('HH:mm:ss');
+        // Format the start and end times based on the user's timezone
+        const formattedStartTime = moment
+          .utc(startTime, "HH:mm:ss")
+          .clone()
+          .tz("America/Los_Angeles")
+          .format("HH:mm:ss");
+        const formattedEndTime = moment
+          .utc(endTime, "HH:mm:ss")
+          .clone()
+          .tz("America/Los_Angeles")
+          .format("HH:mm:ss");
 
-        const teeTimeStartDate = moment(`${closestDate} ${formattedStartTime}`, 'MM-DD-YYYY HH:mm:ss').format('YYYY-MM-DD HH:mm');
-        let teeTimeEndDate = moment(`${closestDate} ${formattedEndTime}`, 'MM-DD-YYYY HH:mm:ss').format('YYYY-MM-DD HH:mm');
+        // Format the tee time start and end dates
+        const teeTimeStartDate = moment(
+          `${closestDate} ${formattedStartTime}`,
+          "MM-DD-YYYY HH:mm:ss"
+        ).format("YYYY-MM-DD HH:mm");
+        let teeTimeEndDate = moment(
+          `${closestDate} ${formattedEndTime}`,
+          "MM-DD-YYYY HH:mm:ss"
+        ).format("YYYY-MM-DD HH:mm");
 
+        // If the end time is before the start time, add 1 day to the end time
         if (moment(teeTimeEndDate).isBefore(teeTimeStartDate)) {
-          teeTimeEndDate = moment(teeTimeEndDate).add(1, 'day').format('YYYY-MM-DD HH:mm');
+          teeTimeEndDate = moment(teeTimeEndDate)
+            .add(1, "day")
+            .format("YYYY-MM-DD HH:mm");
         }
 
         // Check the value of the "Method" column and run the corresponding function
@@ -127,7 +146,7 @@ const checkTeeTimes = async () => {
           }
         } else if (method === "navy") {
           try {
-            navyTimes = await navyFunction.getTeeTimes(
+            const navyTimes = await navyFunction.getTeeTimes(
               bookingClass,
               dayOfWeek,
               numPlayers,
@@ -145,7 +164,6 @@ const checkTeeTimes = async () => {
               dayOfWeek,
               numPlayers
             );
-            
           } catch (error) {
             logger.error("Error retrieving tee times from TeeItUp:", error);
           }
@@ -165,14 +183,18 @@ const checkTeeTimes = async () => {
 
         try {
           for (const teeTime of teeTimes) {
-            const teeTimeDate = moment(teeTime.time, 'YYYY-MM-DD HH:mm');
-            
-            if (teeTimeDate.isAfter(teeTimeStartDate) && teeTimeDate.isBefore(teeTimeEndDate)) {
+            const teeTimeDate = moment(teeTime.time, "YYYY-MM-DD HH:mm");
+
+            // Check if the tee time falls within the user's specified start and end time
+            if (
+              teeTimeDate.isAfter(teeTimeStartDate) &&
+              teeTimeDate.isBefore(teeTimeEndDate)
+            ) {
               if (notifiedTeeTimes && notifiedTeeTimes.includes(teeTime.time)) {
                 // This tee time has already been notified, skip it
                 continue;
               }
-        
+
               // Add the tee time to the object for this user
               if (!teeTimesByUser[email]) {
                 teeTimesByUser[email] = [];
@@ -183,7 +205,7 @@ const checkTeeTimes = async () => {
                 available_spots: teeTime.available_spots,
                 userId,
                 courseId,
-                bookingLink
+                bookingLink,
               });
             }
           }
@@ -226,6 +248,7 @@ const sendEmails = async (teeTimesByUser) => {
     for (const [email, teeTimes] of Object.entries(teeTimesByUser)) {
       const tableRows = teeTimes
         .map(({ courseName, teeTime, available_spots, bookingLink }) => {
+          // Format the tee time in the user's local time zone
           const options = {
             weekday: "short",
             year: "numeric",
@@ -243,9 +266,10 @@ const sendEmails = async (teeTimesByUser) => {
               <td>${localTime}</td>
               <td>${available_spots}</td>
             </tr>`;
-        }).join("");
+        })
+        .join("");
 
-        const htmlBody = `
+      const htmlBody = `
         <html>
           <head>
             <style>
@@ -290,19 +314,20 @@ const sendEmails = async (teeTimesByUser) => {
         </html>
       `;
 
-
-        const mailOptions = {
-          from: process.env.SMTP_FROM,
-          to: email,
-          subject: "Tee Time Alert",
-          html: htmlBody,
-        };
+      const mailOptions = {
+        from: process.env.SMTP_FROM, // Sender's email address
+        to: email, // Recipient's email address
+        subject: "Tee Time Alert",
+        html: htmlBody,
+      };
 
       await transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
           logger.error(`Error sending email to ${email}:`, error);
         } else {
-          logger.info(`Tee Time Found! Email sent to ${email}: ${info.response}`);
+          logger.info(
+            `Tee Time Found! Email sent to ${email}: ${info.response}`
+          );
         }
       });
     }
@@ -314,7 +339,6 @@ const sendEmails = async (teeTimesByUser) => {
 
 // Create a cron job to schedule tee time checks
 const startCronJob = () => {
-  
   const task = cron.schedule(`* 7-23,0-2 * * *`, () => {
     // logger.info("Cron scheduler running at: " + new Date().toLocaleString());
     checkTeeTimes();
