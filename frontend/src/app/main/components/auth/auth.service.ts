@@ -4,12 +4,13 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot } from '@angular/router';
 import jwt_decode from 'jwt-decode';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:5050/auth'; // Replace with your API URL
+  private apiUrl = `${environment.apiUrl}/auth`; // Replace with your API URL
   private tokenSubject = new BehaviorSubject<string | null>(null);
 
   constructor(private http: HttpClient) {}

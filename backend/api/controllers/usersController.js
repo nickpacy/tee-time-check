@@ -3,7 +3,7 @@ const pool = require('../database');
 // Get all users
 const getUsers = async (req, res) => {
     try {
-      const rows = await pool.query('SELECT * FROM Users');
+      const rows = await pool.query('SELECT * FROM users');
       res.json(rows);
     } catch (error) {
       console.error('Error getting users: ', error);
@@ -15,7 +15,7 @@ const getUsers = async (req, res) => {
 const getUserById = async (req, res) => {
     const userId = req.params.userId;
     try {
-        const rows = await pool.query('SELECT * FROM Users WHERE UserId = ?', [userId]);
+        const rows = await pool.query('SELECT * FROM users WHERE UserId = ?', [userId]);
         if (rows.length === 0) {
             res.status(404).json({ error: 'User not found' });
         } else {
@@ -31,7 +31,7 @@ const getUserById = async (req, res) => {
 const getUserByEmail = async (req, res) => {
     const email = req.params.email;
     try {
-        const rows = await pool.query('SELECT * FROM Users WHERE Email = ? LIMIT 1', [email]);
+        const rows = await pool.query('SELECT * FROM users WHERE Email = ? LIMIT 1', [email]);
         if (rows.length === 0) {
             res.status(404).json({ error: 'User not found' });
         } else {
@@ -47,7 +47,7 @@ const getUserByEmail = async (req, res) => {
 const createUser = async (req, res) => {
     const { Name, Email, Active } = req.body;
     try {
-      const [result] = await pool.query('INSERT INTO Users (Name, Email, Active) VALUES (?, ?, ?)', [Name, Email, Active]);
+      const [result] = await pool.query('INSERT INTO users (Name, Email, Active) VALUES (?, ?, ?)', [Name, Email, Active]);
       const newUserId = result.insertId;
 
       // Call the stored procedure to add inactive timechecks for the new user
@@ -65,7 +65,7 @@ const updateUser = async (req, res) => {
     const userId = req.params.userId;
     const { Name, Email, Active } = req.body;
     try {
-      const result = await pool.query('UPDATE Users SET UserName = ?, Email = ?, Password = ? WHERE UserId = ?', [Name, Email, Active, userId]);
+      const result = await pool.query('UPDATE users SET UserName = ?, Email = ?, Password = ? WHERE UserId = ?', [Name, Email, Active, userId]);
       if (result.affectedRows === 0) {
         res.status(404).json({ error: 'User not found' });
       } else {
@@ -81,7 +81,7 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     const userId = req.params.userId;
     try {
-      const result = await pool.query('DELETE FROM Users WHERE UserId = ?', [userId]);
+      const result = await pool.query('DELETE FROM users WHERE UserId = ?', [userId]);
       if (result.affectedRows === 0) {
         res.status(404).json({ error: 'User not found' });
       } else {

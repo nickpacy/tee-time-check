@@ -129,3 +129,6 @@ dist
 
 # angular files
 .angular/
+
+#
+backend/api_lambda

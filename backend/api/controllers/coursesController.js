@@ -3,7 +3,7 @@ const pool = require('../database');
 // Get all courses
 const getCourses = async (req, res) => {
   try {
-    const rows = await pool.query('SELECT * FROM Courses');
+    const rows = await pool.query('SELECT * FROM courses');
     res.json(rows);
   } catch (error) {
     console.error('Error getting courses: ', error);
@@ -15,7 +15,7 @@ const getCourses = async (req, res) => {
 const getCourseById = async (req, res) => {
   const courseId = req.params.courseId;
   try {
-    const rows = await pool.query('SELECT * FROM Courses WHERE CourseId = ?', [courseId]);
+    const rows = await pool.query('SELECT * FROM courses WHERE CourseId = ?', [courseId]);
     if (rows.length === 0) {
       res.status(404).json({ error: 'Course not found' });
     } else {
@@ -61,7 +61,7 @@ const updateCourse = async (req, res) => {
 const deleteCourse = async (req, res) => {
   const courseId = req.params.courseId;
   try {
-    const result = await pool.query('DELETE FROM Courses WHERE CourseId = ?', [courseId]);
+    const result = await pool.query('DELETE FROM courses WHERE CourseId = ?', [courseId]);
     if (result.affectedRows === 0) {
       res.status(404).json({ error: 'Course not found' });
     } else {

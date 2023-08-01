@@ -1,0 +1,113 @@
+Sure! To deploy an API on AWS Lambda using GitHub and AWS CodePipeline, follow these steps:
+
+**Step 1: Create a GitHub Repository**
+
+1. Create a GitHub repository and push your Node.js API code to it. Ensure you have a `package.json` file at the root level which can help AWS to build your project correctly.
+
+**Step 2: Create a Build Specification file (buildspec.yml)**
+
+This file provides instructions for AWS CodeBuild to create a deployment package for your Lambda function. Create a `buildspec.yml` file in the root of your repository. Here's an example:
+
+```yml
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14
+    commands:
+      - npm install
+  build:
+    commands:
+      - npm run build
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: './dist'  # Adjust this if your build output is in a different directory
+```
+
+This example assumes you have a `build` script in your `package.json` that compiles your TypeScript to JavaScript, if you're using TypeScript. The compiled JavaScript files will be placed in a `dist` directory, which are then used as the source for the AWS Lambda function.
+
+**Step 3: Create an IAM Role for AWS CodeBuild**
+
+This role is used to execute AWS CodeBuild and needs permission to access necessary resources. The AWS CodeBuild service role must include:
+
+- The `AWSLambdaFullAccess` policy
+- The `AmazonS3FullAccess` policy
+- The `IAMFullAccess` policy
+- A trust relationship for the `codebuild.amazonaws.com` service
+
+**Step 4: Set Up AWS CodeBuild**
+
+1. Open the AWS CodeBuild console.
+2. Choose 'Create build project'.
+3. For 'Project name', enter a name for this build project.
+4. For 'Source', choose 'GitHub' and connect to your GitHub repository.
+5. For 'Environment', choose 'Managed image', 'Ubuntu', 'Standard', 'aws/codebuild/standard:5.0'.
+6. For 'Role name', choose the IAM role that you created for AWS CodeBuild.
+7. For 'Buildspec', choose 'Use a buildspec file'.
+8. For 'Artifacts', choose 'Amazon S3', and then choose the name of the output bucket where the built artifacts will be stored.
+9. Choose 'Create build project'.
+
+**Step 5: Set Up AWS CodePipeline**
+
+1. Open the AWS CodePipeline console.
+2. Choose 'Create pipeline'.
+3. Enter a name for your pipeline.
+4. For 'Source', choose 'GitHub' and connect to your repository.
+5. For 'Build', choose 'AWS CodeBuild' and the project you created.
+6. For 'Deploy', choose 'AWS Lambda' and select your function.
+7. Choose 'Create pipeline'.
+
+Once the pipeline is created, any push to your GitHub repository will trigger the pipeline, build your code using AWS CodeBuild, and deploy the updated Lambda function using AWS CodeDeploy.
+
+Please remember to change the `buildspec.yml` and other settings according to your project requirements.
+
+Sure, I'll provide more details on step 3, which is about creating an IAM Role for AWS CodeBuild.
+
+To create an IAM role:
+
+1. Open the AWS Management Console and go to the IAM service.
+
+2. In the left-hand menu, click on "Roles" and then on the "Create role" button.
+
+3. In the "Create role" screen, under "Select type of trusted entity", select "AWS service". In the list below, select "CodeBuild" and then click "Next: Permissions".
+
+4. In the "Attach permissions policies" screen, search and select the following policies:
+    - AWSLambdaFullAccess
+    - AmazonS3FullAccess
+    - IAMFullAccess
+
+5. Click "Next: Tags" and then "Next: Review".
+
+6. Name your role and optionally provide a description.
+
+7. Click "Create role" to create the IAM role.
+
+To add a trust relationship:
+
+1. After creating the role, find it in the list and click on its name to go to its summary page.
+
+2. In the "Summary" page, click on the "Trust relationships" tab and then click "Edit trust relationship".
+
+3. In the "Policy Document" editor, add `codebuild.amazonaws.com` as a trusted entity. The updated policy should look like this:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": ["lambda.amazonaws.com", "codebuild.amazonaws.com"]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+```
+
+4. Click "Update Trust Policy" to save your changes.
+
+Now, CodeBuild will be able to assume this role when executing. This role provides CodeBuild with the permissions necessary to create and manage the necessary resources for building your project.

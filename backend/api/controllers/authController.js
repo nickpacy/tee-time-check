@@ -1,6 +1,6 @@
 const pool = require('../database');
 const dotenv = require('dotenv');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 dotenv.config();
@@ -35,7 +35,7 @@ const registerUser = async (req, res) => {
   const hashedPassword = await bcrypt.hash(Password, salt);
 
   try {
-    const result = await pool.query('INSERT INTO Users (Name, Email, Password) VALUES (?, ?, ?)', [Name, Email, hashedPassword]);
+    const result = await pool.query('INSERT INTO users (Name, Email, Password) VALUES (?, ?, ?)', [Name, Email, hashedPassword]);
     const userId = result.insertId;
 
     // Generate JWT

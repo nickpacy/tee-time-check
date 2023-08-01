@@ -3,7 +3,7 @@ const pool = require('../database');
 // Get all timechecks
 const getTimechecks = async (req, res) => {
   try {
-    const results = await pool.query('SELECT * FROM Timechecks');
+    const results = await pool.query('SELECT * FROM timechecks');
     res.json(results);
   } catch (err) {
     console.error('Error getting timechecks: ', err);
@@ -15,7 +15,7 @@ const getTimechecks = async (req, res) => {
 const getTimecheckById = async (req, res) => {
   const timecheckId = req.params.timecheckId;
   try {
-    const results = await pool.query('SELECT * FROM Timechecks WHERE Id = ?', [timecheckId]);
+    const results = await pool.query('SELECT * FROM timechecks WHERE Id = ?', [timecheckId]);
     if (results.length === 0) {
       res.status(404).json({ error: 'Timecheck not found' });
     } else {
@@ -31,7 +31,7 @@ const getTimecheckById = async (req, res) => {
 const createTimecheck = async (req, res) => {
   const { UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers } = req.body;
   try {
-    const result = await pool.query('INSERT INTO Timechecks (UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers) VALUES (?, ?, ?, ?, ?, ?)', [UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers]);
+    const result = await pool.query('INSERT INTO timechecks (UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers) VALUES (?, ?, ?, ?, ?, ?)', [UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers]);
     const newTimecheckId = result.insertId;
     res.status(201).json({ Id: newTimecheckId, UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers });
   } catch (err) {
@@ -45,7 +45,7 @@ const updateTimecheck = async (req, res) => {
   const timecheckId = req.params.timecheckId;
   const { UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers, Active } = req.body;
   try {
-    const result = await pool.query('UPDATE Timechecks SET UserId = ?, DayOfWeek = ?, StartTime = ?, EndTime = ?, CourseId = ?, NumPlayers = ?, Active = ? WHERE Id = ?', [UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers, Active, timecheckId]);
+    const result = await pool.query('UPDATE timechecks SET UserId = ?, DayOfWeek = ?, StartTime = ?, EndTime = ?, CourseId = ?, NumPlayers = ?, Active = ? WHERE Id = ?', [UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers, Active, timecheckId]);
     if (result.affectedRows === 0) {
       res.status(404).json({ error: 'Timecheck not found' });
     } else {
@@ -66,7 +66,7 @@ const updateBulkTimechecks = async (req, res) => {
       const { Id, UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers, Active } = timecheck;
 
       const result = await pool.query(
-        'UPDATE Timechecks SET UserId = ?, DayOfWeek = ?, StartTime = ?, EndTime = ?, CourseId = ?, NumPlayers = ?, Active = ? WHERE Id = ?',
+        'UPDATE timechecks SET UserId = ?, DayOfWeek = ?, StartTime = ?, EndTime = ?, CourseId = ?, NumPlayers = ?, Active = ? WHERE Id = ?',
         [UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers, Active, Id]
       );
 
@@ -89,7 +89,7 @@ const updateBulkTimechecks = async (req, res) => {
 const deleteTimecheck = async (req, res) => {
   const timecheckId = req.params.timecheckId;
   try {
-    const result = await pool.query('DELETE FROM Timechecks WHERE Id = ?', [timecheckId]);
+    const result = await pool.query('DELETE FROM timechecks WHERE Id = ?', [timecheckId]);
     if (result.affectedRows === 0) {
       res.status(404).json({ error: 'Timecheck not found' });
     } else {
@@ -104,9 +104,9 @@ const deleteTimecheck = async (req, res) => {
 // Get a specific timecheck by ID
 const getTimechecksByUserId = async (req, res) => {
   const userId = req.params.userId;
-  const q = `SELECT t.*, c.*, u.name, u.email FROM Timechecks t
-              JOIN Users u ON t.UserId = u.UserId
-              JOIN Courses c ON t.CourseID = c.CourseId
+  const q = `SELECT t.*, c.*, u.name, u.email FROM timechecks t
+              JOIN users u ON t.UserId = u.UserId
+              JOIN courses c ON t.CourseID = c.CourseId
               WHERE u.UserId = ?
               ORDER BY c.CourseName, CASE WHEN t.DayOfWeek = 0 THEN 7 ELSE t.DayOfWeek END, t.StartTime;
               `
@@ -128,7 +128,7 @@ const getTimechecksByUserIdAndCourseId = async (req, res) => {
   const userId = req.params.userId;
   const courseId = req.params.courseId;
   try {
-    const results = await pool.query('SELECT * FROM Timechecks WHERE UserId = ? AND CourseId = ? ORDER BY CASE WHEN DayOfWeek = 0 THEN 7 ELSE DayOfWeek END', [userId, courseId]);
+    const results = await pool.query('SELECT * FROM timechecks WHERE UserId = ? AND CourseId = ? ORDER BY CASE WHEN DayOfWeek = 0 THEN 7 ELSE DayOfWeek END', [userId, courseId]);
     if (results.length === 0) {
       res.status(404).json({ error: 'No timechecks for user and course' });
     } else {
