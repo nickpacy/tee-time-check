@@ -1,13 +1,15 @@
 // Import required dependencies
-const mysql = require("mysql2"); // MySQL library
+const mysql = require("mysql2/promise"); // MySQL library
 const moment = require("moment-timezone"); // Date and time manipulation library
 const dotenv = require("dotenv"); // Environment variable management library
 const nodemailer = require("nodemailer"); // Email sending library
-const cron = require("node-cron"); // Cron job scheduler
 const winston = require("winston"); // Logging library
+const fs = require('fs').promises; // Import the fs module
+// const AWS = require('aws-sdk');
+const twilio = require('twilio');
 
 // Import custom functions
-const util = require("./utility"); // Utility functions
+const uti = require("./utility"); // Utility functions
 const foreupFunction = require("./tee-times-foreup"); // Custom function for getting tee times from ForeUp
 const navyFunction = require("./tee-times-navy"); // Custom function for getting tee times from Navy
 const teeitupFunction = require("./tee-times-teeitup"); // Custom function for getting tee times from TeeItUp
@@ -23,21 +25,20 @@ const logger = winston.createLogger({
     winston.format.timestamp(),
     winston.format.json()
   ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: "error.log", level: "error" }),
-    new winston.transports.File({ filename: "combined.log" }),
-  ],
+  transports: [new winston.transports.Console()],
 });
 
 // Create a connection pool for MySQL database
-const pool = mysql.createPool({
-  connectionLimit: process.env.POOL_LIMIT, // Maximum number of connections in the pool
-  host: process.env.DB_HOST, // MySQL database host
-  user: process.env.DB_USER, // MySQL database user
-  password: process.env.DB_PASSWORD, // MySQL database password
-  database: process.env.DB_NAME, // MySQL database name
-});
+let pool;
+if (!pool) {
+  pool = mysql.createPool({
+    connectionLimit: process.env.POOL_LIMIT, // Maximum number of connections in the pool
+    host: process.env.DB_HOST, // MySQL database host
+    user: process.env.DB_USER, // MySQL database user
+    password: process.env.DB_PASSWORD, // MySQL database password
+    database: process.env.DB_NAME, // MySQL database name
+  });
+}
 
 // Create a transporter for sending emails
 const transporter = nodemailer.createTransport({
@@ -50,37 +51,40 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Create a Twilio client
+const smsClient = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+
+// AWS.config.update({
+//   region: 'us-east-1' // Choose your region
+// });
+
+// const sns = new AWS.SNS({apiVersion: '2010-03-31'});
+
 // Check tee times and send notifications
 const checkTeeTimes = async () => {
-  // Get a connection from the pool
-  pool.getConnection((err, connection) => {
-    if (err) {
-      logger.error("Error getting database connection:", err);
-      throw err;
-    }
 
-    // Query to fetch tee time data for active users
-    const query = `SELECT DISTINCT t.id, u.userId, u.email, t.dayOfWeek, t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, c.courseName, c.method, c.bookingUrl, n.notifiedTeeTimes
-                    FROM timeChecks t
+  try {
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+
+    try {
+      // Query to fetch tee time data for active users
+      const query = `SELECT DISTINCT t.id, u.userId, u.email, u.phone, t.dayOfWeek, t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, c.courseName, c.courseAbbr, c.method, c.bookingUrl, n.notifiedTeeTimes
+                    FROM timechecks t
                     JOIN users u ON u.userid = t.userId
                     JOIN courses c ON c.courseid = t.courseId
                     LEFT JOIN notifications n ON n.userId = t.userId AND n.courseId = t.courseId AND n.checkdate = CURDATE() 
                     WHERE u.active = 1 AND t.active = 1`;
 
-    connection.query(query, async (error, results) => {
-      connection.release();
-
-      if (error) {
-        logger.error("Database query error:", error);
-        throw error;
-      }
+      const results = await connection.execute(query);
 
       // Create an object to store the tee times for each user
       const teeTimesByUser = {};
 
-      for (const row of results) {
+      for (const row of results[0]) {
         const {
           email,
+          phone,
           dayOfWeek,
           startTime,
           endTime,
@@ -92,6 +96,7 @@ const checkTeeTimes = async () => {
           courseId,
           userId,
           courseName,
+          courseAbbr,
           method,
           bookingUrl,
           notifiedTeeTimes,
@@ -101,7 +106,7 @@ const checkTeeTimes = async () => {
         let bookingLink = bookingUrl;
 
         // Setup date to use
-        const closestDate = util.getClosestDayOfWeek(dayOfWeek, "MM-DD-YYYY");
+        const closestDate = uti.getClosestDayOfWeek(dayOfWeek, "MM-DD-YYYY");
 
         // Format the start and end times based on the user's timezone
         const formattedStartTime = moment
@@ -142,7 +147,7 @@ const checkTeeTimes = async () => {
               scheduleId
             );
           } catch (error) {
-            logger.error("Error retrieving tee times from ForeUp:", error);
+            console.log("Error retrieving tee times from ForeUp:", error);
           }
         } else if (method === "navy") {
           try {
@@ -155,7 +160,7 @@ const checkTeeTimes = async () => {
             teeTimes = navyTimes[0];
             bookingLink = navyTimes[1];
           } catch (error) {
-            logger.error("Error retrieving tee times from Navy:", error);
+            console.log("Error retrieving tee times from Navy:", error);
           }
         } else if (method === "teeitup") {
           try {
@@ -165,7 +170,7 @@ const checkTeeTimes = async () => {
               numPlayers
             );
           } catch (error) {
-            logger.error("Error retrieving tee times from TeeItUp:", error);
+            console.log("Error retrieving tee times from TeeItUp:", error);
           }
         } else if (method === "jcgolf") {
           try {
@@ -177,7 +182,7 @@ const checkTeeTimes = async () => {
               websiteId
             );
           } catch (error) {
-            logger.error("Error retrieving tee times from JCGolf:", error);
+            console.log("Error retrieving tee times from JCGolf:", error);
           }
         }
 
@@ -201,6 +206,7 @@ const checkTeeTimes = async () => {
               }
               teeTimesByUser[email].push({
                 courseName,
+                courseAbbr,
                 teeTime: teeTime.time,
                 available_spots: teeTime.available_spots,
                 userId,
@@ -210,35 +216,57 @@ const checkTeeTimes = async () => {
             }
           }
         } catch (error) {
-          logger.error("Error processing tee times:", error);
+          console.log("Error processing tee times:", error);
         }
       }
 
       // Send emails with tee time notifications
-      await sendEmails(teeTimesByUser);
+      // await sendEmails(teeTimesByUser);
+      await sendSMS(teeTimesByUser);
 
-      // Save the list of notified tee times for each user to the database
-      for (const email in teeTimesByUser) {
-        const notifiedTeeTimes = teeTimesByUser[email]
-          .map(({ teeTime }) => teeTime)
-          .join(",");
-        const userId = teeTimesByUser[email][0].userId;
-        const courseId = teeTimesByUser[email][0].courseId;
-        const updateQuery = `INSERT INTO notifications (userId, courseId, checkdate, notifiedTeeTimes) VALUES (?, ?, CURDATE(), ?) ON DUPLICATE KEY UPDATE notifiedTeeTimes = CONCAT(notifiedTeetimes, ',', ?)`;
-        connection.query(
-          updateQuery,
-          [userId, courseId, notifiedTeeTimes, notifiedTeeTimes],
-          async (err, results) => {
-            if (err) {
-              logger.error("Error updating notifications:", err);
-              throw err;
-            }
-            connection.release();
-          }
+      try {
+        // Save the list of notified tee times for each user to the database
+        const promises = []; // Array to hold all the promises
+        for (const email in teeTimesByUser) {
+          const notifiedTeeTimes = teeTimesByUser[email]
+            .map(({ teeTime }) => teeTime)
+            .join(",");
+          const userId = teeTimesByUser[email][0].userId;
+          const courseId = teeTimesByUser[email][0].courseId;
+          const updateQuery = `INSERT INTO notifications (userId, courseId, checkdate, notifiedTeeTimes) VALUES (?, ?, CURDATE(), ?) ON DUPLICATE KEY UPDATE notifiedTeeTimes = CONCAT(notifiedTeetimes, ',', ?);`;
+
+          // Add the promise to the array
+          // Add the promise to the array
+          promises.push(
+            connection.execute(updateQuery, [
+              userId,
+              courseId,
+              notifiedTeeTimes,
+              notifiedTeeTimes,
+            ])
+          );
+        }
+
+        // Wait for all the promises to resolve
+        await Promise.all(promises).catch((error) =>
+          console.log("Error in Promise.all: ", error)
         );
+
+      } catch (err) {
+        console.log("Error saving notified tee times:", err);
+      } finally {
+        // Release the connection and close the pool
+        if (connection && connection.release) connection.release();
       }
-    });
-  });
+    } catch (err) {
+      console.log("Error inthe database connection:", err);
+    } finally {
+      // Ensure the connection is released back to the pool even if an error occurred
+      connection.release();
+    }
+  } catch (err) {
+    console.log("Error getting database connection:", err);
+  }
 };
 
 // Send emails with tee time notifications
@@ -259,7 +287,8 @@ const sendEmails = async (teeTimesByUser) => {
             hour12: true,
             timeZone: "America/Los_Angeles", // Specify the desired time zone
           };
-          const localTime = new Date(teeTime).toLocaleString("en-US", options);
+          const teeTimeDate = moment.tz(teeTime, "America/Los_Angeles").toDate();
+          const localTime = teeTimeDate.toLocaleString("en-US", options);
           return `
             <tr>
               <td><a href="${bookingLink}">${courseName}</a></td>
@@ -269,50 +298,11 @@ const sendEmails = async (teeTimesByUser) => {
         })
         .join("");
 
-      const htmlBody = `
-        <html>
-          <head>
-            <style>
-              table {
-                width: 100%;
-                max-width: 600px;
-                border-collapse: collapse;
-              }
-              
-              th, td {
-                padding: 8px;
-                text-align: left;
-              }
-              
-              th {
-                background-color: #f2f2f2;
-              }
-              
-              @media screen and (max-width: 600px) {
-                table {
-                  width: 100%;
-                }
-                
-                th, td {
-                  display: block;
-                  width: 100%;
-                }
-              }
-            </style>
-          </head>
-          <body>
-            <h2>Tee Time Alert</h2>
-            <table>
-              <tr>
-                <th>Course Name</th>
-                <th>Tee Time</th>
-                <th>Available Spots</th>
-              </tr>
-              ${tableRows}
-            </table>
-          </body>
-        </html>
-      `;
+      // Read the HTML template from the file
+      let htmlTemplate = await fs.readFile('email-template.html', 'utf8');
+      
+      // Insert the table rows into the template
+      const htmlBody = htmlTemplate.replace('${tableRows}', tableRows);
 
       const mailOptions = {
         from: process.env.SMTP_FROM, // Sender's email address
@@ -321,32 +311,55 @@ const sendEmails = async (teeTimesByUser) => {
         html: htmlBody,
       };
 
-      await transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          logger.error(`Error sending email to ${email}:`, error);
-        } else {
-          logger.info(
-            `Tee Time Found! Email sent to ${email}: ${info.response}`
-          );
-        }
-      });
+      try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`Tee Time Found! Email sent to ${email}: ${info.response}`);
+      } catch (error) {
+        console.log(`Error sending email to ${email}:`, error);
+      }
     }
   } else {
     // No new tee times
-    logger.info("No New Tee Times as of " + new Date());
+    console.log("No New Tee Times as of " + new Date());
   }
 };
 
-// Create a cron job to schedule tee time checks
-const startCronJob = () => {
-  const task = cron.schedule(`* 7-23,0-2 * * *`, () => {
-    // logger.info("Cron scheduler running at: " + new Date().toLocaleString());
-    checkTeeTimes();
-  });
+const sendSMS = async (teeTimesByUser) => {
+  if (Object.keys(teeTimesByUser).length > 0) {
+    // Send an SMS to each user with their list of tee times
+    for (const [phoneNumber, teeTimes] of Object.entries(teeTimesByUser)) {
+      let message = 'New Tee Times';
+      for (const { courseAbbr, teeTime, available_spots, bookingLink } of teeTimes) {
+        const teeTimeDate = moment.tz(teeTime, "America/Los_Angeles").toDate();
+        const localTime = moment(teeTimeDate).format('M/D hh:mm');
+        const newMessage = `\n${courseAbbr} ${localTime} (${available_spots})`;
+        
+        // Check if adding the new message (and potentially '...') would exceed the SMS length limit
+        if ((message + newMessage + (message ? '...' : '')).length > 160) {
+          message += '...';
+          break;
+        }
+        message += newMessage;
+      }
 
-  checkTeeTimes();
-  task.start();
+      try {
+        // Send the SMS
+        await smsClient.messages.create({
+          body: message,
+          to: '+18023737297', // Recipient's phone number
+          from: '+18449764183' // Your Twilio number
+        });
+        console.log(`Tee Time Found! SMS sent to +18023737297`);
+      } catch (error) {
+        console.log(`Error sending SMS to +18023737297:`, error);
+      }
+    }
+  } else {
+    // No new tee times
+    console.log("No New Tee Times as of " + new Date());
+  }
 };
 
-// Start the cron job
-startCronJob();
+module.exports = {
+  checkTeeTimes,
+};

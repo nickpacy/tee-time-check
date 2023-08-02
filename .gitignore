@@ -130,5 +130,5 @@ dist
 # angular files
 .angular/
 
-#
-backend/api_lambda
+# Ignore lambda files
+*lambda*.zip
