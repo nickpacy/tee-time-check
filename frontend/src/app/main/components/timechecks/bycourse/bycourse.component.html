@@ -8,7 +8,8 @@
             <div *ngIf="!loading">
                 <p-toast></p-toast>
                 <div class="grid">
-                    <div *ngFor="let course of courses" class="col-3 course-card" (click)="onCourseClick(course)">
+                    <div *ngFor="let course of courses" class="col-12 lg:col-6 xl:col-3 course-card" (click)="onCourseClick(course)">
+                        
                         <div class="card" style="width: 100%; text-align: center;">
                             <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 200px;">
                               <div style="width: 200px; height: 100px; display: flex; justify-content: center; align-items: center;">

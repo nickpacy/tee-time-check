@@ -1,0 +1,44 @@
+<html>
+  <head>
+    <style>
+      table {
+        width: 100%;
+        max-width: 600px;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+
+      @media screen and (max-width: 600px) {
+        table {
+          width: 100%;
+        }
+
+        th,
+        td {
+          display: block;
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Tee Time Alert</h2>
+    <table>
+      <tr>
+        <th>Course Name</th>
+        <th>Tee Time</th>
+        <th>Available Spots</th>
+      </tr>
+      ${tableRows}
+    </table>
+  </body>
+</html>
