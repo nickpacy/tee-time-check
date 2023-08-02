@@ -104,6 +104,30 @@ VALUES ('11', 'Golf Club of California', '23', '0', 'pub32', '3fe876a0-f294-4819
 
 
 
+## *****AFTER SETUP******
+
+
+ALTER TABLE `TTC`.`users` 
+ADD COLUMN `Phone` VARCHAR(50) NULL AFTER `Email`,
+ADD COLUMN `EmailNotification` TINYINT(1) NOT NULL DEFAULT 1 AFTER `Phone`,
+ADD COLUMN `PhoneNotification` TINYINT(1) NOT NULL DEFAULT 0 AFTER `EmailNotification`,
+CHANGE COLUMN `Password` `Password` VARCHAR(250) NOT NULL AFTER `Name`,
+ADD UNIQUE INDEX `Phone_UNIQUE` (`Phone` ASC) VISIBLE;
+;
+
+UPDATE `TTC`.`courses` SET `CourseAbbr` = 'TPS' WHERE (`CourseId` = '1');
+UPDATE `TTC`.`courses` SET `CourseAbbr` = 'TPN' WHERE (`CourseId` = '2');
+UPDATE `TTC`.`courses` SET `CourseAbbr` = 'BP' WHERE (`CourseId` = '3');
+UPDATE `TTC`.`courses` SET `CourseAbbr` = 'ABN' WHERE (`CourseId` = '4');
+UPDATE `TTC`.`courses` SET `CourseAbbr` = 'CO' WHERE (`CourseId` = '5');
+UPDATE `TTC`.`courses` SET `CourseAbbr` = 'SnA' WHERE (`CourseId` = '6');
+UPDATE `TTC`.`courses` SET `CourseAbbr` = 'ER' WHERE (`CourseId` = '7');
+UPDATE `TTC`.`courses` SET `CourseAbbr` = 'CR' WHERE (`CourseId` = '8');
+UPDATE `TTC`.`courses` SET `CourseAbbr` = 'RB' WHERE (`CourseId` = '9');
+UPDATE `TTC`.`courses` SET `CourseAbbr` = 'TO' WHERE (`CourseId` = '10');
+UPDATE `TTC`.`courses` SET `CourseAbbr` = 'GCC' WHERE (`CourseId` = '11');
+
+
 
 
 DELIMITER $$
