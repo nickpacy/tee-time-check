@@ -63,13 +63,22 @@ const createUser = async (req, res) => {
 // Update an existing user
 const updateUser = async (req, res) => {
     const userId = req.params.userId;
-    const { Name, Email, Active } = req.body;
+    let { Name, Email, Phone, EmailNotification, PhoneNotification, Admin, Active } = req.body;
+    
+
+    if ('PhoneNotification' in req.body) {
+      PhoneNotification = PhoneNotification !== null ? PhoneNotification : false;
+    } else {
+        PhoneNotification = false;
+    }
+
     try {
-      const result = await pool.query('UPDATE users SET UserName = ?, Email = ?, Password = ? WHERE UserId = ?', [Name, Email, Active, userId]);
+      const result = await pool.query('UPDATE users SET Name = ?, Email = ?, Phone = ?, EmailNotification = ?, PhoneNotification = ?, Admin = ?, Active = ? WHERE UserId = ?', [Name, Email, Phone, EmailNotification, PhoneNotification, Admin, Active, userId]
+      );
       if (result.affectedRows === 0) {
         res.status(404).json({ error: 'User not found' });
       } else {
-        res.json({ UserId: userId, Name, Email, Active });
+        res.json({ UserId: userId, Name, Email, Phone, EmailNotification, PhoneNotification, Admin, Active});
       }
     } catch (error) {
       console.error('Error updating user: ', error);

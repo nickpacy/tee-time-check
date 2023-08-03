@@ -69,6 +69,8 @@ const loginUser = async (req, res) => {
     if (!results.length) {
       return res.status(400).send('Invalid username or password.');
     }
+
+    const user = results[0];
     const userId = results[0].UserId;
 
     // Check password
@@ -84,7 +86,19 @@ const loginUser = async (req, res) => {
     const token = jwt.sign({ _id: userId }, process.env.JWT_TOKEN, { expiresIn: '1h' });
 
     // Return JWT in response header and body
-    res.header('auth-token', token).send({ userId, token });
+    res.header('auth-token', token).send({ 
+      user: {
+        UserId: user.UserId,
+        Name: user.Name,
+        Email: user.Email,
+        Phone: user.Phone,
+        EmailNotification: user.EmailNotification,
+        PhoneNotification: user.PhoneNotification,
+        Active: user.Active,
+        Admin: user.Admin,
+      }
+      , token 
+    });
 
     // res.status(201).json({ CourseId: newCourseId, CourseName, BookingClass, ScheduleId });
   } catch (error) {

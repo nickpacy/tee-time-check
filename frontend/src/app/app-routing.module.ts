@@ -8,6 +8,7 @@ import { CoursesComponent } from './main/components/courses/courses.component';
 import { AuthGuard } from './main/components/auth/auth.service';
 import { BycourseComponent } from './main/components/timechecks/bycourse/bycourse.component';
 import { DashboardComponent } from './main/components/dashboard/dashboard.component';
+import { ProfileComponent } from './main/components/user/profile/profile.component';
 
 @NgModule({
     imports: [
@@ -17,10 +18,11 @@ import { DashboardComponent } from './main/components/dashboard/dashboard.compon
                 children: [
                     { path: '', component: DashboardComponent, canActivate: [AuthGuard] },
                     { path: 'user', component: UserComponent, canActivate: [AuthGuard] },
+                    { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
                     { path: 'courses', component: CoursesComponent, canActivate: [AuthGuard] },
                     { path: 'timechecks', component: TimechecksComponent, canActivate: [AuthGuard] },
-                    { path: 'timechecksbycourse/:userId', component: BycourseComponent, canActivate: [AuthGuard] },
-                    { path: 'timechecks/:userId', component: TimechecksComponent, canActivate: [AuthGuard] },
+                    { path: 'timechecksbycourse', component: BycourseComponent, canActivate: [AuthGuard] },
+                    { path: 'timechecks', component: TimechecksComponent, canActivate: [AuthGuard] },
                 ]
             },
             { path: 'auth', loadChildren: () => import('./main/components/auth/auth.module').then(m => m.AuthModule) },

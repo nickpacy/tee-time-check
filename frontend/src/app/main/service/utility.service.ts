@@ -82,4 +82,18 @@ export class UtilityService {
         return utcTimeString;
     }
 
+
+    transformKeysToCamelCase(obj: any): any {
+        const output: {[key: string]: any} = {}; // Declare output as an object with string keys
+        for (let key in obj) {
+          let newKey = this.toCamelCase(key);
+          output[newKey] = obj[key];
+        }
+        return output;
+      }
+      
+      toCamelCase(str: string): string {
+        return str.charAt(0).toLowerCase() + str.slice(1);
+      }
+
 }

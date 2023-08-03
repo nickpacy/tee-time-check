@@ -7,6 +7,7 @@ import { Message, MessageService } from 'primeng/api';
 import { CourseService } from '../../service/course.service';
 import { Course } from '../../models/course.model';
 import { UtilityService } from '../../service/utility.service';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 @Component({
@@ -41,6 +42,7 @@ export class TimechecksComponent implements OnInit {
 
   constructor(private route: ActivatedRoute,
               private router: Router,
+              private authService: AuthService,
               private utilityService: UtilityService,
               private messageService: MessageService,
               private userService: UserService,
@@ -48,22 +50,17 @@ export class TimechecksComponent implements OnInit {
               private timecheckService: TimecheckService) {}
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      this.USERID = Number(params.get('userId'));
-      if (this.USERID == 0) {
-        //No User:
+    this.USERID = this.authService.getUserId();
+    if (this.USERID == 0) {
+      //No User:
+      this.loading = false;
+      this.emailDialog = true;
+    } else {
+      this.getTimechecksByUser().finally(() => {
+        this.getCourses();
         this.loading = false;
-        this.emailDialog = true;
-      } else {
-        this.getTimechecksByUser().finally(() => {
-          this.getCourses();
-          this.loading = false;
-        });
-      }
-      
-      
-      
-    });
+      });
+    }
   }
 
   getTimechecksByUser() {

@@ -7,6 +7,7 @@ import { Message, MessageService } from 'primeng/api';
 import { CourseService } from '../../../service/course.service';
 import { Course } from '../../../models/course.model';
 import { UtilityService } from '../../../service/utility.service';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-bycourse',
@@ -16,7 +17,7 @@ import { UtilityService } from '../../../service/utility.service';
 export class BycourseComponent {
 
   loading: boolean = true;
-  USERID: number = 1;
+  USERID: number = 0;
   timechecks: FullTimeCheck[] = [];
   emailDialog: boolean = false;
   userEmail: string = '';
@@ -42,6 +43,7 @@ export class BycourseComponent {
 
   constructor(private route: ActivatedRoute,
               private router: Router,
+              private authService: AuthService,
               private utilityService: UtilityService,
               private messageService: MessageService,
               private userService: UserService,
@@ -49,21 +51,18 @@ export class BycourseComponent {
               private timecheckService: TimecheckService) {}
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      this.USERID = Number(params.get('userId'));
+    this.USERID = this.authService.getUserId();
 
-      if (this.USERID == 0) {
-        //No User:
+    if (this.USERID == 0) {
+      //No User:
+      this.loading = false;
+      this.emailDialog = true;
+    } else {
+      this.getCourses().finally(() => {
         this.loading = false;
-        this.emailDialog = true;
-      } else {
-        this.getCourses().finally(() => {
-          this.loading = false;
-        })
-      }
-      
-      
-    });
+      })
+    }
+
   }
 
   getTimechecksByUser() {
