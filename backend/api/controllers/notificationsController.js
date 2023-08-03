@@ -73,6 +73,22 @@ const deleteNotification = async (req, res) => {
   }
 };
 
+// Get a specific notification by ID
+const getAllNotificationsByUser = async (req, res) => {
+  const notificationId = req.params.notificationId;
+  try {
+    const results = await pool.query('SELECT * FROM notifications WHERE Id = ?', [notificationId]);
+    if (results.length === 0) {
+      res.status(404).json({ error: 'Notification not found' });
+    } else {
+      res.json(results[0]);
+    }
+  } catch (err) {
+    console.error('Error getting notification: ', err);
+    res.status(500).json({ error: 'Error getting notification' });
+  }
+};
+
 module.exports = {
   getNotifications,
   getNotificationById,
