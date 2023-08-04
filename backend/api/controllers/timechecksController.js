@@ -123,6 +123,27 @@ const getTimechecksByUserId = async (req, res) => {
   }
 };
 
+// Get count of active timechecks by UserId
+const getActiveTimecheckCountByUserId = async (req, res) => {
+  const userId = req.params.userId;
+  const q = `SELECT COUNT(*) as activeTimechecksCount 
+             FROM timechecks t
+             JOIN users u ON t.UserId = u.UserId
+             WHERE u.UserId = ? AND t.Active = true
+            `
+  try {
+    const results = await pool.query(q, [userId]);
+    if (results.length === 0) {
+      res.status(404).json({ error: 'No active timechecks for user' });
+    } else {
+      res.json(results[0].activeTimechecksCount);
+    }
+  } catch (err) {
+    console.error('Error getting active timecheck count: ', err);
+    res.status(500).json({ error: 'Error getting active timecheck count' });
+  }
+};
+
 // Get timechecks by UserId and CourseId
 const getTimechecksByUserIdAndCourseId = async (req, res) => {
   const userId = req.params.userId;
@@ -140,6 +161,31 @@ const getTimechecksByUserIdAndCourseId = async (req, res) => {
   }
 };
 
+
+const getTimechecksByCourse = async (req, res) => {
+  try {
+    // Call getCourses to get all courses
+    const courses = await pool.query('SELECT * FROM courses');
+
+    // For each course, call getTimechecksByUserIdAndCourseId to get its timechecks
+    const promises = courses.map(async (course) => {
+      const timechecks = await pool.query('SELECT * FROM timechecks WHERE UserId = ? AND CourseId = ? ORDER BY DayOfWeek', [req.params.userId, course.CourseId]);
+      course.Timechecks = timechecks; // Add timechecks as a new property to the course object
+      return course;
+    });
+
+    // Wait for all promises to resolve
+    const coursesWithTimechecks = await Promise.all(promises);
+
+    // Send the result back to the client
+    res.json(coursesWithTimechecks);
+  } catch (error) {
+    console.error('Error getting courses with timechecks: ', error);
+    res.status(500).json({ error: 'Error getting courses with timechecks' });
+  }
+};
+
+
 module.exports = {
     getTimechecks,
     getTimecheckById,
@@ -148,5 +194,7 @@ module.exports = {
     updateBulkTimechecks,
     deleteTimecheck,
     getTimechecksByUserId,
-    getTimechecksByUserIdAndCourseId
+    getTimechecksByUserIdAndCourseId,
+    getActiveTimecheckCountByUserId,
+    getTimechecksByCourse
   };

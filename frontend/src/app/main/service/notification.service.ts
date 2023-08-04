@@ -21,12 +21,16 @@ export class NotificationsService {
     return this.http.get<any>(`${this.apiUrl}/${notificationId}`);
   }
 
+  getNotificationsByUserId(userId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/byUser/${userId}`);
+  }
+
   createNotification(notification: any): Observable<any> {
     return this.http.post<any>(this.apiUrl, notification);
   }
 
-  updateNotification(notificationId: number, notification: any): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/${notificationId}`, notification);
+  removeNotification(notification: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/removeNotification`, notification);
   }
 
   deleteNotification(notificationId: number): Observable<any> {

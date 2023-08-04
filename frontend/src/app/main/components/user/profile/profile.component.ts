@@ -15,6 +15,7 @@ export class ProfileComponent implements OnInit {
   userForm!: FormGroup;
   isAdmin!: boolean;
   currentUser!: IUser;
+  passwordDialog: boolean = true;
   
   constructor(private authService: AuthService,
               private userService: UserService,
@@ -68,6 +69,10 @@ export class ProfileComponent implements OnInit {
 
   onSubmit() {
     if (this.userForm.valid) {
+      if (!this.userForm.value.PhoneNotification && !this.userForm.value.EmailNotification) {
+        const userConfirmed = window.confirm("Both Phone and Email notifications are turned off. Your timechecks will be set to inactive. Are you sure you want to proceed?");
+        if (!userConfirmed) return;
+      }
       console.log(this.userForm.value);
       this.userService.updateUser(this.currentUser.UserId, this.userForm.value).subscribe(res => {
         console.log("res", res);

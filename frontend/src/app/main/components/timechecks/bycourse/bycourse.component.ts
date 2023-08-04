@@ -8,6 +8,7 @@ import { CourseService } from '../../../service/course.service';
 import { Course } from '../../../models/course.model';
 import { UtilityService } from '../../../service/utility.service';
 import { AuthService } from '../../auth/auth.service';
+import { LayoutService } from 'src/app/layout/service/app.layout.service';
 
 @Component({
   selector: 'app-bycourse',
@@ -44,21 +45,23 @@ export class BycourseComponent {
   constructor(private route: ActivatedRoute,
               private router: Router,
               private authService: AuthService,
-              private utilityService: UtilityService,
+              public utilityService: UtilityService,
               private messageService: MessageService,
               private userService: UserService,
               private courseService: CourseService,
+              public layoutService: LayoutService,
               private timecheckService: TimecheckService) {}
 
   ngOnInit(): void {
     this.USERID = this.authService.getUserId();
+    console.log(this.USERID);
 
     if (this.USERID == 0) {
       //No User:
       this.loading = false;
       this.emailDialog = true;
     } else {
-      this.getCourses().finally(() => {
+      this.getTimechecksByCourse().finally(() => {
         this.loading = false;
       })
     }
@@ -211,10 +214,11 @@ export class BycourseComponent {
     });
   }
 
-  getCourses() {
+  getTimechecksByCourse() {
     return new Promise((resolve, reject) => {
-      this.courseService.getAllCourses().subscribe(
+      this.timecheckService.getTimechecksByCourse(this.USERID).subscribe(
         (data: any) => {
+          console.log(data)
           this.courses = data;
           resolve(true);
         },
@@ -284,6 +288,17 @@ export class BycourseComponent {
 
       this.timecheckService.bulkUpdateTimechecks(this.timechecks).subscribe(
         (data: any) => {
+          let courseId = this.timechecks[0].CourseId;
+    
+          // find the index of the course with the given courseId
+          let courseIndex = this.courses.findIndex(course => course.CourseId === courseId);
+
+          // check if a course was found
+          if (courseIndex !== -1) {
+            // update the timechecks for the course
+            this.courses[courseIndex].Timechecks = this.timechecks.sort((a, b) => a.DayOfWeek - b.DayOfWeek);
+          }
+
           this.timecheckDialog = false;
           this.loadingDialog = false;
         },
@@ -294,6 +309,14 @@ export class BycourseComponent {
       );
 
     }
+  }
+
+  hasActiveTimechecks(timechecks: any[]): boolean {
+    return timechecks && timechecks.some(x => x.Active);
+  }
+
+  numActiveTimechecks(timechecks: any[]): number {
+    return timechecks.filter(x => x.Active).length;
   }
   
 

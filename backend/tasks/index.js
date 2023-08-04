@@ -21,28 +21,28 @@ exports.handler = async (event, context) => {
 //     // Your Lambda handler
     
 //   } else {
-//     // Create a cron job to schedule tee time checks
-//     const startCronJob = () => {
-//       const task = cron.schedule(`* 7-23,0-2 * * *`, () => {
-//         // logger.info("Cron scheduler running at: " + new Date().toLocaleString());
-//         main.checkTeeTimes();
-//       });
-  
-//       main.checkTeeTimes();
-//       task.start();
-//     };
-  
-//     // Start the cron job
-//     startCronJob();
-// }
-
-const testCheckTeeTimes = async () => {
-    try {
-        await main.checkTeeTimes();
-        console.log("Completed checkTeeTimes successfully.");
-    } catch (err) {
-        console.error("An error occurred while running checkTeeTimes:", err);
-    }
-};
-
-testCheckTeeTimes();
+    // }
+    
+    // const testCheckTeeTimes = async () => {
+        //     try {
+            //         await main.checkTeeTimes();
+            //         console.log("Completed checkTeeTimes successfully.");
+            //     } catch (err) {
+                //         console.error("An error occurred while running checkTeeTimes:", err);
+                //     }
+                // };
+                
+                // testCheckTeeTimes();
+    // Create a cron job to schedule tee time checks
+    const startCronJob = () => {
+      const task = cron.schedule(`* 7-23,0-2 * * *`, () => {
+        // logger.info("Cron scheduler running at: " + new Date().toLocaleString());
+        main.checkTeeTimes();
+      });
+    
+      main.checkTeeTimes();
+      task.start();
+    };
+    
+    // Start the cron job
+    startCronJob();

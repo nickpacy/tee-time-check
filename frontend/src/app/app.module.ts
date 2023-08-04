@@ -16,6 +16,7 @@ import { DashboardComponent } from './main/components/dashboard/dashboard.compon
 import { AddUserComponent } from './main/components/user/add-user/add-user.component';
 import { ProfileComponent } from './main/components/user/profile/profile.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ChangePasswordFormComponent } from './main/components/user/change-password-form/change-password-form.component';
 
 
 @NgModule({
@@ -24,7 +25,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
         LocalTimePipe,
         BycourseComponent,
         AddUserComponent,
-        ProfileComponent
+        ProfileComponent,
+        ChangePasswordFormComponent
     ],
     imports: [
         AppRoutingModule,

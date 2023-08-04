@@ -1,6 +1,8 @@
 import { OnInit } from '@angular/core';
 import { Component } from '@angular/core';
 import { LayoutService } from './service/app.layout.service';
+import { AuthService } from '../main/components/auth/auth.service';
+import { IUser } from '../main/models/user.model';
 
 @Component({
     selector: 'app-menu',
@@ -9,24 +11,32 @@ import { LayoutService } from './service/app.layout.service';
 export class AppMenuComponent implements OnInit {
 
     model: any[] = [];
+    user!: IUser | null;
 
-    constructor(public layoutService: LayoutService) { }
+    constructor(public layoutService: LayoutService,
+                private authService: AuthService) { }
 
     ngOnInit() {
+        this.authService.getUser().subscribe(user => {
+            this.user = user;
+        
+
         this.model = [
             {
-                label: 'API',
+                label: `WELCOME ${this.user?.Name}`,
                 items: [
-                    { label: 'Users', icon: 'pi pi-fw pi-users', routerLink: ['/user'] },
-                    { label: 'Courses', icon: 'fa fa-map-location', routerLink: ['/courses'] },
-                    { label: 'Timechecks', icon: 'fa fa-golf-ball-tee', routerLink: ['/timechecks'] },
-                    { label: 'Setup', icon: 'fa fa-golf-ball-tee', routerLink: ['/timechecksbycourse'] }
+                    // { label: 'Users', icon: 'pi pi-fw pi-users', routerLink: ['/user'] },
+                    // { label: 'Courses', icon: 'fa fa-map-location', routerLink: ['/courses'] },
+                    { label: 'Home', icon: 'fa fa-home', routerLink: ['/'] },
+                    { label: 'Setup', icon: 'fa fa-golf-ball-tee', routerLink: ['/setup'] }
                 ]
             },
             {
-                label: 'Home',
+                label: 'ADMIN',
                 items: [
-                    { label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/'] }
+                    { label: 'Users', icon: 'fa fa-users', routerLink: ['/user'] },
+                    { label: 'Timechecks', icon: 'fa fa-golf-ball-tee', routerLink: ['/timechecks'] },
+                    { label: 'Courses', icon: 'fa fa-map-location', routerLink: ['/courses'] },
                 ]
             },
 
@@ -171,5 +181,6 @@ export class AppMenuComponent implements OnInit {
             //     ]
             // }
         ];
+        });
     }
 }

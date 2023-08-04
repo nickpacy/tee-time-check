@@ -11,10 +11,14 @@ export class UtilityService {
     constructor(private datePipe: DatePipe) {}
 
 
-    dayName(dayOfWeek: number) {
+    dayName(dayOfWeek: number, short: boolean = false) {
         const date = new Date();
         date.setDate(date.getDate() + dayOfWeek - date.getDay());
         const formattedDay = this.datePipe.transform(date, 'EEEE');
+
+        if (short) {
+            return formattedDay ? formattedDay.toString().substring(0,3) : '';
+        }
         return formattedDay ? formattedDay.toString() : '';
     }
 

@@ -2,7 +2,7 @@
     <a class="layout-topbar-logo" routerLink="">
         <img src="assets/layout/images/ttchecklogonotext.png" alt="logo">
         <!-- <img src="assets/layout/images/{{layoutService.config.colorScheme === 'light' ? 'logo-dark' : 'logo-white'}}.svg" alt="logo"> -->
-        <span>TTime Check</span>
+        <span>Tee Time Check</span>
     </a>
 
     <button #menubutton class="p-link layout-menu-button layout-topbar-button" (click)="layoutService.onMenuToggle()">
@@ -14,22 +14,22 @@
     </button>
 
     <div #topbarmenu class="layout-topbar-menu" [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
-        <button class="p-link layout-topbar-button">
+        <!-- <button class="p-link layout-topbar-button">
             <i class="pi pi-calendar"></i>
             <span>{{user?.Name}}</span>
-        </button>
-        <button class="p-link layout-topbar-button">
+        </button> -->
+        <!-- <button class="p-link layout-topbar-button">
             <i class="pi pi-calendar"></i>
             <span>Calendar</span>
-        </button>
+        </button> -->
         <button class="p-link layout-topbar-button" [routerLink]="'/profile'">
             <i class="pi pi-user"></i>
             <span>Profile</span>
         </button>
-        <button class="p-link layout-topbar-button" [routerLink]="'/documentation'">
+        <!-- <button class="p-link layout-topbar-button" [routerLink]="'/documentation'">
             <i class="pi pi-cog"></i>
             <span>Settings</span>
-        </button>
+        </button> -->
         <button class="p-link layout-topbar-button" (click)="authService.logout()">
             <i class="pi pi-sign-out"></i>
             <span>Logout</span>

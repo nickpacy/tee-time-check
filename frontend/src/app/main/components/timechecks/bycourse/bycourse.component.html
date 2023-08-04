@@ -11,12 +11,41 @@
                     <div *ngFor="let course of courses" class="col-12 lg:col-6 xl:col-3 course-card" (click)="onCourseClick(course)">
                         
                         <div class="card" style="width: 100%; text-align: center;">
-                            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 200px;">
+                            <div class="flex justify-content-between">
+                                <div></div>
+                                <div class="flex align-items-center justify-content-center bg-green-100 border-round" 
+                                [pTooltip]="'Active Timechecks for ' + course.CourseName"    
+                                [ngStyle]="{width: '2.5rem', height: '2.5rem', 'margin-top': '-10px', 'margin-right': '-10px'}">
+                                    <span class="text-green-500 text-xl">{{numActiveTimechecks(course.Timechecks)}}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 200px;margin-top: -30px;">
                               <div style="width: 200px; height: 100px; display: flex; justify-content: center; align-items: center;">
                                 <img [src]="'../../../../../assets/images/courses/' + course.ImageUrl" alt="..." height="60" style="max-width: 100%; max-height: 100%;">
                               </div>
                               <div class="card-body" style="margin-top: 5px;">
                                 <h5 class="card-title">{{course.CourseName}}</h5>
+                                <hr>
+                                <ng-template #noActiveTimeChecks>
+                                    <div style="color: red; font-weight: bold;padding: 0 2em">
+                                        No Active Timechecks
+                                    </div>
+                                </ng-template>
+                                <table *ngIf="hasActiveTimechecks(course.Timechecks); else noActiveTimeChecks">
+                                    <thead>
+                                      <tr>
+                                        <th *ngFor="let time of course.Timechecks">{{utilityService.dayName(time.DayOfWeek, true)}}</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      <tr>
+                                        <td *ngFor="let time of course.Timechecks">
+                                            <span *ngIf="time.Active" style="color: green;" class="fa fa-golf-ball-tee"></span>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                  
                               </div>
                             </div>
                           </div>
@@ -44,7 +73,7 @@
             <ng-template pTemplate="body" let-ttc>
                 <tr>
                     <td><p-checkbox [(ngModel)]="ttc.Active" [binary]="true"></p-checkbox></td>
-                    <td>{{ttc.DayName}}</td>
+                    <td>{{layoutService.isMobile() ? utilityService.dayName(ttc.DayOfWeek, true) : ttc.DayName}}</td>
                     <td style="text-align: center;width: 200px;">
                         <span>
                             {{convertToTime(ttc.TimeInterval[0])}} - {{convertToTime(ttc.TimeInterval[1])}} 
@@ -52,7 +81,7 @@
                         <!-- {{ttc.TimeInterval[0]}} - {{ttc.TimeInterval[1]}} -->
                         <br>
                         <p-slider [style]="{'margin-top': '5px'}" [(ngModel)]="ttc.TimeInterval" [step]="1" [min]="20" [max]="76" [range]="true"></p-slider></td>
-                    <td><p-dropdown [options]="[1, 2, 3, 4]" [(ngModel)]="ttc.NumPlayers"></p-dropdown></td>
+                    <td><p-dropdown [options]="[1, 2, 3, 4]" [(ngModel)]="ttc.NumPlayers" ></p-dropdown></td>
                     
                 </tr>
             </ng-template>

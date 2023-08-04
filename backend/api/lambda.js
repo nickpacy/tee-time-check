@@ -17,7 +17,7 @@ async function copyFiles(source, destination) {
   let files = await fs.readdir(source);
 
   // Files or directories to exclude
-  const excludedItems = ['api_lambda', 'node_modules', 'setup.txt', '.env', 'lambda.js', '.bin'];
+  const excludedItems = ['node_modules', '.env', 'lambda.js', '.bin', 'README.md'];
 
   // Filter out the excluded files/directories
   files = files.filter(file => !excludedItems.includes(file));
@@ -55,10 +55,29 @@ function zipDirectory(source, out) {
     });
   }
 
+// Function to delete the existing zip file
+async function deleteExistingZip(zipFilePath) {
+  try {
+    await fs.remove(zipFilePath);
+    console.log(`Deleted existing zip file: ${zipFilePath}`);
+  } catch (err) {
+    console.error(`Error deleting existing zip file: ${err}`);
+  }
+}
+
 // Use the functions
 async function run() {
+
+  // Prepare the zip file path
+  const zipFilePath = path.join(__dirname, `${destinationFolderName}.zip`);
+
+  // Delete the existing zip file if it exists
+  await deleteExistingZip(zipFilePath);
+
   await copyFiles('.', destinationFolder);
-  await zipDirectory(destinationFolder, `${path.join(__dirname, `${destinationFolderName}.zip`)}`);
+  
+  // Create the new zip file
+  await zipDirectory(destinationFolder, zipFilePath);
 
   // Delete the destination directory
   await fs.remove(destinationFolder);
