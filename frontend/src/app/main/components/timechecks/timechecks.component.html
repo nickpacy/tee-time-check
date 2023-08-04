@@ -10,12 +10,12 @@
                 <p-toolbar styleClass="mb-4">
                     <ng-template pTemplate="left">
                         <div class="my-1">
-                            <button pButton pRipple label="New" icon="pi pi-plus" class="p-button-success mr-2" (click)="onNew()"></button>
+                            <button pButton pRipple label="" icon="pi pi-plus" class="p-button-success mr-2" (click)="onNew()"></button>
                         </div>
                     </ng-template>
                 </p-toolbar>
                 <h5>Current Timechecks for <span *ngIf="timechecks[0]">{{timechecks[0].Name}}</span></h5>
-                <p-table [value]="timechecks" [paginator]="true" [rows]="10" responsiveLayout="scroll">
+                <p-table [style]="{'font-size': '10px'}" [value]="timechecks" [paginator]="false" [rows]="100" responsiveLayout="scroll">
                     <ng-template pTemplate="header">
                         <tr>
                             <th>Active</th>

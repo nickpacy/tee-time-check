@@ -1,3 +1,5 @@
+import { FullTimeCheck } from "./timecheck.model";
+
 export class Course {
     CourseId!: number;
     CourseName!: string;
@@ -5,4 +7,5 @@ export class Course {
     ScheduleId!: number;
     Method!: string;
     ImageUrl!: string;
+    Timechecks!: FullTimeCheck[];
 }

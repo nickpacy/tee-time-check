@@ -17,6 +17,13 @@
                     <input id="password1" type="password" [(ngModel)]="password" placeholder="Password" pInputText class="w-full md:w-30rem mb-5" style="padding:1rem" (keydown.enter)="login()">
                     <!-- <p-password id="password1" [(ngModel)]="password" placeholder="Password" [toggleMask]="false" style="width: 100%" styleClass="mb-5" inputStyleClass="w-full md:w-30rem" (keydown.enter)="login()"></p-password> -->
 
+                    <div class="flex align-items-center justify-content-between mb-5 gap-5">
+                        <div class="flex align-items-center">
+                            <p-checkbox id="rememberme1" [(ngModel)]="remember" [binary]="true" styleClass="mr-2"></p-checkbox>
+                            <label for="rememberme1">Remember me</label>
+                        </div>
+                        <a (click)="forgotDialog = true" class="font-medium no-underline ml-2 text-right cursor-pointer" style="color: var(--primary-color)">Forgot password?</a>
+                    </div>
 
                     <button pButton pRipple label="Sign In" class="w-full p-3 text-xl" (click)="login()"></button>
                 </div>
@@ -24,3 +31,19 @@
         </div>
     </div>
 </div>
+
+
+<p-dialog [(visible)]="forgotDialog" header="Forgot Password" [modal]="true" class="p-fluid">
+    <ng-template pTemplate="content">
+        <div class="field">
+            <label for="Email">Email</label>
+            <input type="text" pInputText id="email" placeholder="email@email.com" [(ngModel)]="email" required autofocus [ngClass]="{'ng-invalid ng-dirty' : submitted && !email}" [pKeyFilter]="'email'" [pValidateOnly]="true"/>
+            <small class="ng-dirty ng-invalid" *ngIf="submitted && !email">Email is required.</small>
+        </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text" (click)="forgotDialog = false"></button>
+        <button pButton pRipple label="Reset Password" icon="pi pi-email" class="p-button-text" (click)="forgotPassword()"></button>
+    </ng-template>
+</p-dialog>

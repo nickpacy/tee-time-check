@@ -73,15 +73,23 @@ const deleteNotification = async (req, res) => {
   }
 };
 
-// Get a specific notification by ID
-const getAllNotificationsByUser = async (req, res) => {
-  const notificationId = req.params.notificationId;
+const getNotificationsByUserId = async (req, res) => {
+  const userId = req.params.userId;
+  const showFutureDates = req.query.showFutureDates === 'true'; // The query parameter should be a string, 'true' or 'false'
+
   try {
-    const results = await pool.query('SELECT * FROM notifications WHERE Id = ?', [notificationId]);
+    let query = 'SELECT * FROM vw_notifications WHERE UserId = ?';
+
+    if (showFutureDates) {
+      query += ' AND TeeTimes > NOW()';
+    }
+
+    const results = await pool.query(query, [userId]);
+
     if (results.length === 0) {
       res.status(404).json({ error: 'Notification not found' });
     } else {
-      res.json(results[0]);
+      res.json(results);
     }
   } catch (err) {
     console.error('Error getting notification: ', err);
@@ -89,10 +97,63 @@ const getAllNotificationsByUser = async (req, res) => {
   }
 };
 
+
+const removeNotification = async (req, res) => {
+  const { UserId, CourseId, CheckDate, TeeTime } = req.body;
+
+  try {
+    // Fetch the existing notification from the database based on UserId, CourseId, and CheckDate
+    const existingNotification = await pool.query(
+      'SELECT NotifiedTeeTimes FROM notifications WHERE UserId = ? AND CourseId = ? AND CheckDate = ?',
+      [UserId, CourseId, CheckDate]
+    );
+
+    if (existingNotification.length === 0) {
+      res.status(404).json({ error: 'Notification not found' });
+      return;
+    }
+
+    // Parse the comma-separated datetime string from the database into an array
+    const notifiedTeeTimesArray = existingNotification[0].NotifiedTeeTimes.split(',');
+
+    // Check if the datetime string to remove is present in the array
+    const indexToRemove = notifiedTeeTimesArray.indexOf(TeeTime);
+    if (indexToRemove === -1) {
+      // The datetime string to remove is not present, just return the current values
+      res.json({ UserId, CourseId, CheckDate, NotifiedTeeTimes: existingNotification[0].NotifiedTeeTimes });
+      return;
+    }
+
+    // Remove the datetime string from the array
+    notifiedTeeTimesArray.splice(indexToRemove, 1);
+
+    // Convert the updated array back to a comma-separated string
+    const updatedNotifiedTeeTimes = notifiedTeeTimesArray.join(',');
+
+    // Perform the database update with the modified NotifiedTeeTimes string
+    const result = await pool.query(
+      'UPDATE notifications SET NotifiedTeeTimes = ? WHERE UserId = ? AND CourseId = ? AND CheckDate = ?',
+      [updatedNotifiedTeeTimes, UserId, CourseId, CheckDate]
+    );
+
+    if (result.affectedRows === 0) {
+      res.status(404).json({ error: 'Notification not found' });
+    } else {
+      res.json({ UserId, CourseId, CheckDate, NotifiedTeeTimes: updatedNotifiedTeeTimes });
+    }
+  } catch (err) {
+    console.error('Error updating notification: ', err);
+    res.status(500).json({ error: 'Error updating notification' });
+  }
+};
+
+
 module.exports = {
   getNotifications,
   getNotificationById,
   createNotification,
   updateNotification,
-  deleteNotification
+  deleteNotification,
+  getNotificationsByUserId,
+  removeNotification
 };

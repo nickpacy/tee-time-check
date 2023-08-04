@@ -2,12 +2,16 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { Subscription } from 'rxjs';
 import { LayoutService } from 'src/app/layout/service/app.layout.service';
+import { TimecheckService } from '../../service/timecheck.service';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
     templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
 
+    USERID!: number;
+    activeTimechecks!: number;
     items!: MenuItem[];
 
     // products!: Product[];
@@ -18,13 +22,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     subscription!: Subscription;
 
-    constructor(public layoutService: LayoutService) {
+    constructor(public layoutService: LayoutService,
+                private authService: AuthService,
+                private timecheckService: TimecheckService) {
         this.subscription = this.layoutService.configUpdate$.subscribe(() => {
             this.initChart();
         });
     }
 
     ngOnInit() {
+
+        this.USERID = this.authService.getUserId();
+        this.getActiveTimecheckCountByUserId();
+
         this.initChart();
         // this.productService.getProductsSmall().then(data => this.products = data);
 
@@ -98,4 +108,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.subscription.unsubscribe();
         }
     }
+
+    getActiveTimecheckCountByUserId() {
+        return new Promise((resolve, reject) => {
+          this.timecheckService.getActiveTimecheckCountByUserId(this.USERID).subscribe(
+            (data: any) => {
+              this.activeTimechecks = data;
+              resolve(true);
+            },
+            (error) => {
+              console.error('Error getting getTimechecksByUserId:', error);
+              reject(true);
+            }
+          );
+        })
+      }
+
 }

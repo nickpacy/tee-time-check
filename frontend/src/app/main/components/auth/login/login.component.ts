@@ -22,6 +22,9 @@ export class LoginComponent {
 
     email!: string;
     password!: string;
+    remember: boolean = false;
+    forgotDialog: boolean = false;
+    submitted: boolean = false;
 
     constructor(public layoutService: LayoutService,
                 private router: Router,
@@ -33,7 +36,7 @@ export class LoginComponent {
             return false;
         }
 
-        let user = {Email: this.email, Password: this.password};
+        let user = {Email: this.email, Password: this.password, Remember: this.remember};
         return new Promise((resolve, reject) => {
             this.authService.login(user)
                 .subscribe(result => {
@@ -46,6 +49,24 @@ export class LoginComponent {
                     reject(true);
                 })
         });
+
+    }
+
+    forgotPassword() {
+        this.submitted = true;
+        if (this.email) {
+            let user = {Email: this.email};
+            this.authService.forgotPassword(user)
+                .subscribe(result => {
+                    console.log("Login Result", result);
+                    this.messageService.add({severity:'success', summary:'Email Sent', detail: `Email sent to ${this.email}`});
+                    this.forgotDialog = false;
+                }, error => {
+                    console.error("Login Error", error);
+                    this.messageService.add({severity:'error', summary:'Error', detail: error.error});
+                    this.forgotDialog = false;
+                })
+        }
 
     }
 }

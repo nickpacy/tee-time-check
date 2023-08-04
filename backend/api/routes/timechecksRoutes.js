@@ -11,5 +11,8 @@ router.put('/:timecheckId', timechecksController.updateTimecheck);
 router.delete('/:timecheckId', timechecksController.deleteTimecheck);
 router.get('/timechecksByUserId/:userId', timechecksController.getTimechecksByUserId);
 router.get('/timechecksByUserIdAndCourseId/:userId/:courseId', timechecksController.getTimechecksByUserIdAndCourseId);
+router.get('/timechecksByCourse/:userId', timechecksController.getTimechecksByCourse);
+router.get('/activeTimecheckCount/:userId', timechecksController.getActiveTimecheckCountByUserId);
+
 
 module.exports = router;

@@ -18,11 +18,11 @@ import { ProfileComponent } from './main/components/user/profile/profile.compone
                 children: [
                     { path: '', component: DashboardComponent, canActivate: [AuthGuard] },
                     { path: 'user', component: UserComponent, canActivate: [AuthGuard] },
+                    { path: 'profile/:userId', component: ProfileComponent, canActivate: [AuthGuard] },
                     { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
                     { path: 'courses', component: CoursesComponent, canActivate: [AuthGuard] },
                     { path: 'timechecks', component: TimechecksComponent, canActivate: [AuthGuard] },
-                    { path: 'timechecksbycourse', component: BycourseComponent, canActivate: [AuthGuard] },
-                    { path: 'timechecks', component: TimechecksComponent, canActivate: [AuthGuard] },
+                    { path: 'setup', component: BycourseComponent, canActivate: [AuthGuard] },
                 ]
             },
             { path: 'auth', loadChildren: () => import('./main/components/auth/auth.module').then(m => m.AuthModule) },

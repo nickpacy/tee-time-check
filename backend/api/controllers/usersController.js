@@ -75,6 +75,14 @@ const updateUser = async (req, res) => {
     try {
       const result = await pool.query('UPDATE users SET Name = ?, Email = ?, Phone = ?, EmailNotification = ?, PhoneNotification = ?, Admin = ?, Active = ? WHERE UserId = ?', [Name, Email, Phone, EmailNotification, PhoneNotification, Admin, Active, userId]
       );
+
+      // if EmailNotification and PhoneNotification are both false
+      // update the Timechecks table and set Active = false for all the timechecks related to this user
+      if (!EmailNotification && !PhoneNotification) {
+        await pool.query('UPDATE timechecks SET Active = false WHERE UserId = ?', [userId]);
+      }
+
+
       if (result.affectedRows === 0) {
         res.status(404).json({ error: 'User not found' });
       } else {

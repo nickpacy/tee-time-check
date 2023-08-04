@@ -24,6 +24,14 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/register`, user);
   }
 
+  forgotPassword(user: {Email: string}): Observable<any> {
+    return this.http.post(`${this.apiUrl}/forgotPassword`, user);
+  }
+
+  changePassword(user: {UserId: number,  OldPassword: string, NewPassword: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/changePassword`, user);
+  }
+
   login(user: { Email: string, Password: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, user).pipe(
       tap((response: any)=> {
@@ -48,7 +56,7 @@ export class AuthService {
     localStorage.removeItem('authToken');
     this.tokenSubject.next(null);
     this.userSubject.next(null);
-    this.router.navigate(['']);
+    this.router.navigate(['/logout']);
   }
 
   isLoggedIn(): boolean {
@@ -115,6 +123,7 @@ export class AuthService {
     } else {
       console.log("NO TOKEN");
       // Handle no token situation here
+      this.logout();
     }
   }
 

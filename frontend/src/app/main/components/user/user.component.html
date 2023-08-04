@@ -10,7 +10,7 @@
                 </ng-template>
             </p-toolbar>
             
-            <p-table [value]="users" [paginator]="true" [rows]="5" responsiveLayout="scroll" [globalFilterFields]="['Name','Email']">
+            <p-table styleClass="p-datatable-sm" [value]="users" [paginator]="true" [rows]="20" responsiveLayout="scroll" [globalFilterFields]="['Name','Email']">
                 <ng-template pTemplate="header">
                     <tr>
                         <th pSortableColumn="Name">Name <p-sortIcon field="Name"></p-sortIcon><p-columnFilter type="text" field="Name" display="menu"></p-columnFilter></th>
