@@ -88,26 +88,26 @@ export class BycourseComponent {
     })
   }  
 
-  onSubmit() {
-    if (!this.userEmail) {
-      this.messageService.add({severity:'error', summary:'Service Message', detail:'Need an email'})
-      return false;
-    }
-    return new Promise((resolve, reject) => {
-      this.userService.getUserByEmail(this.userEmail).subscribe(
-        (data: any) => {
-          console.log(data);
-          this.router.navigate([`timechecks/${data.UserId}`]);
-          resolve(true);
-        },
-        (error) => {
-          this.messageService.add({severity:'error', summary:'Service Message', detail:'No user found'})
-          console.error('Error getting user:', error);
-          reject(true);
-        }
-      );
-    });
-  }
+  // onSubmit() {
+  //   if (!this.userEmail) {
+  //     this.messageService.add({severity:'error', summary:'Service Message', detail:'Need an email'})
+  //     return false;
+  //   }
+  //   return new Promise((resolve, reject) => {
+  //     this.userService.getUserByEmail(this.userEmail).subscribe(
+  //       (data: any) => {
+  //         console.log(data);
+  //         this.router.navigate([`timechecks/${data.UserId}`]);
+  //         resolve(true);
+  //       },
+  //       (error) => {
+  //         this.messageService.add({severity:'error', summary:'Service Message', detail:'No user found'})
+  //         console.error('Error getting user:', error);
+  //         reject(true);
+  //       }
+  //     );
+  //   });
+  // }
 
   onNew() {
     this.timecheck = new TimecheckEntry();

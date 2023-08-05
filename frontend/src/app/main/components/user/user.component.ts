@@ -14,16 +14,12 @@ export class UserComponent implements OnInit {
   user: User =  new User();
   userDialog: boolean = false;
   submitted: boolean = false;
-  loading: boolean = true;
-  loadingDialog: boolean = false;
   deleteUserDialog: boolean = false;
 
   constructor(private userService: UserService) { }
 
   ngOnInit() {
-    this.getUsers().finally(() => {
-      this.loading = false;
-    });
+    this.getUsers();
   }
 
   getUsers() {
@@ -64,7 +60,6 @@ export class UserComponent implements OnInit {
     this.submitted = true;
 
     if (this.user.Name?.trim() && this.user.Email?.trim()) {
-      this.loadingDialog = true;
       if (this.user.UserId) {
         //Existing User
 
@@ -72,9 +67,7 @@ export class UserComponent implements OnInit {
           .subscribe(data => {
             console.log(data);
             this.userDialog = false;
-            this.getUsers().finally(() => {
-              this.loadingDialog = false;
-            });
+            this.getUsers();
           }, error => {
             console.error(error);
           });
@@ -88,12 +81,9 @@ export class UserComponent implements OnInit {
             console.log("New User:", data);
             this.userDialog = false;
             
-            this.getUsers().finally(() => {
-              this.loadingDialog = false;
-            });
+            this.getUsers();
           }, error => {
             console.error('Error adding user:', error);
-            this.loadingDialog = false;
           });
       }
 
@@ -107,15 +97,12 @@ export class UserComponent implements OnInit {
   onConfirmDelete() {
     const userId = this.user.UserId
     if (userId) {
-      this.loadingDialog = true;
       return new Promise((resolve, reject) => {
         this.userService.deleteUser(userId).subscribe(
           (data: any[]) => {
             console.log(data);
             this.deleteUserDialog = false;
-            this.getUsers().finally(() => {
-              this.loadingDialog = false;
-            });
+            this.getUsers();
             resolve(true);
           },
           (error) => {

@@ -10,7 +10,7 @@
                 </ng-template>
             </p-toolbar>
             
-            <p-table styleClass="p-datatable-sm" [value]="users" [paginator]="true" [rows]="20" responsiveLayout="scroll" [globalFilterFields]="['Name','Email']">
+            <p-table styleClass="p-datatable-sm" [value]="users" [paginator]="false" [rows]="20" responsiveLayout="scroll" [globalFilterFields]="['Name','Email']">
                 <ng-template pTemplate="header">
                     <tr>
                         <th pSortableColumn="Name">Name <p-sortIcon field="Name"></p-sortIcon><p-columnFilter type="text" field="Name" display="menu"></p-columnFilter></th>
@@ -64,16 +64,6 @@
     <ng-template pTemplate="footer">
         <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text" (click)="onCancel()"></button>
         <button pButton pRipple label="Save" icon="pi pi-check" class="p-button-text" (click)="onSave()"></button>
-    </ng-template>
-</p-dialog>
-
-<p-dialog [(visible)]="loadingDialog" [style]="{width: '450px'}" [modal]="true" class="p-fluid" [closable]="false">
-    <ng-template pTemplate="content">
-        <div style="text-align: center;">
-            <p-progressSpinner></p-progressSpinner>
-            <br>
-            Saving...
-        </div>
     </ng-template>
 </p-dialog>
 

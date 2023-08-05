@@ -186,6 +186,23 @@ const getTimechecksByCourse = async (req, res) => {
 };
 
 
+// Reset all timechecks for a specific user
+const resetTimechecks = async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const result = await pool.query('UPDATE timechecks SET Active = false WHERE UserId = ?', [userId]);
+    if (result.affectedRows === 0) {
+      res.status(404).json({ error: 'No timechecks found for user to reset' });
+    } else {
+      res.json({ success: 'Successfully reset all timechecks for user' });
+    }
+  } catch (err) {
+    console.error('Error resetting timechecks: ', err);
+    res.status(500).json({ error: 'Error resetting timechecks' });
+  }
+};
+
+
 module.exports = {
     getTimechecks,
     getTimecheckById,
@@ -196,5 +213,6 @@ module.exports = {
     getTimechecksByUserId,
     getTimechecksByUserIdAndCourseId,
     getActiveTimecheckCountByUserId,
-    getTimechecksByCourse
+    getTimechecksByCourse,
+    resetTimechecks
   };

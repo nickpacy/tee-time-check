@@ -1,7 +1,7 @@
 <div class="surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden">
     <div class="flex flex-column align-items-center justify-content-center">
         <!-- <img src="assets/layout/images/{{layoutService.config.colorScheme === 'light' ? 'logo-dark' : 'logo-white'}}.svg" alt="Sakai logo" class="mb-5 w-6rem flex-shrink-0">                 -->
-        <div style="border-radius:56px; padding:0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%);">
+        <div style="border-radius:56px; padding:0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%);width: 98vw;max-width: 40em;">
             <div class="w-full surface-card py-8 px-5 sm:px-8" style="border-radius:53px">
                 <div class="text-center mb-5">
                     <img src="assets/layout/images/ttchecklogo.png" alt="Image" height="100" class="mb-3">
@@ -25,7 +25,7 @@
                         <a (click)="forgotDialog = true" class="font-medium no-underline ml-2 text-right cursor-pointer" style="color: var(--primary-color)">Forgot password?</a>
                     </div>
 
-                    <button pButton pRipple label="Sign In" class="w-full p-3 text-xl" (click)="login()"></button>
+                    <button pButton pRipple icon="fa fa-user" label="Sign In" class="w-full p-3 text-xl" (click)="login()"></button>
                 </div>
             </div>
         </div>

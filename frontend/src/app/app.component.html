@@ -1,1 +1,24 @@
+
 <router-outlet></router-outlet>
+<style>
+    .loading-container {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.8); /* Optional: Add a semi-transparent background to make the spinner more prominent */
+        z-index: 9999;
+        padding: 1em;
+    }
+    .loading-container.show {
+        display: flex; /* Show the container when the 'show' class is applied */
+    }
+</style>
+<div class="loading-container" [ngClass]="{ 'show': isLoading }">
+    <p-progressSpinner styleClass="w-4rem h-4rem" strokeWidth="3" fill="var(--surface-ground)" animationDuration="1s"></p-progressSpinner>
+</div>
+<p-toast position="top-center"></p-toast>

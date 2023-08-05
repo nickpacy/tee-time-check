@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormControl, Validators, FormBuilder } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
-import { UtilityService } from 'src/app/main/service/utility.service';
+import { MessageService } from 'primeng/api';
 import { UserService } from 'src/app/main/service/user.service';
 import { IUser } from 'src/app/main/models/user.model';
-import { resolve } from 'path';
+import { ActivatedRoute } from '@angular/router';
+
 
 @Component({
   selector: 'app-profile',
@@ -15,10 +16,12 @@ export class ProfileComponent implements OnInit {
   userForm!: FormGroup;
   isAdmin!: boolean;
   currentUser!: IUser;
-  passwordDialog: boolean = true;
+  passwordDialog: boolean = false;
   
   constructor(private authService: AuthService,
               private userService: UserService,
+              private route: ActivatedRoute,
+              private messageService: MessageService,
               private formBuilder: FormBuilder) {}
 
   ngOnInit() {
@@ -32,20 +35,35 @@ export class ProfileComponent implements OnInit {
       Active: [false]
     });
 
+    
+
     this.authService.loadUserFromToken();
-    this.authService.getUser().subscribe(user => {
-      if (user) {
-        this.currentUser = user;
-        this.isAdmin = user.Admin;
+    this.authService.getUser().subscribe(loggedInUser => {
+      if (loggedInUser) {
+        this.isAdmin = loggedInUser.Admin;
 
-        // Transform 0/1 values to false/true
-        user.EmailNotification = Boolean(user.EmailNotification);
-        user.PhoneNotification = Boolean(user.PhoneNotification);
-        user.Admin = Boolean(user.Admin);
-        user.Active = Boolean(user.Active);
-
-        console.log(user)
-        this.userForm.patchValue(user);
+        if (this.isAdmin) {
+          this.route.params.subscribe(params => {
+            const userId = params['userId'];
+      
+            // Check if the logged-in user is an Admin
+            if (this.isAdmin && userId > 0) {
+              this.userService.getUserById(userId).subscribe(user => {
+                if (user) {
+                  this.currentUser = user;
+                  this.setUserForm(user);
+                }
+              });
+            } else {
+              this.currentUser = loggedInUser;
+              this.setUserForm(loggedInUser);
+            }
+          });
+        } else {
+          this.currentUser = loggedInUser;
+          this.setUserForm(loggedInUser);
+        }
+        
       }
     });
 
@@ -63,8 +81,21 @@ export class ProfileComponent implements OnInit {
   get name() { return this.userForm?.get('Name') ?? null; }
   get email() { return this.userForm?.get('Email') ?? null; }
 
-  loadUser() {
+  setUserForm(user: IUser) {
+    // Transform 0/1 values to false/true
+    user.EmailNotification = Boolean(user.EmailNotification);
+    user.PhoneNotification = Boolean(user.PhoneNotification);
+    user.Admin = Boolean(user.Admin);
+    user.Active = Boolean(user.Active);
 
+    console.log(user)
+    this.userForm.patchValue(user);
+  }
+
+  onChangePasswordFormSaved(e: any) {
+    
+    this.passwordDialog = false;
+    this.messageService.add(e);
   }
 
   onSubmit() {
@@ -76,9 +107,11 @@ export class ProfileComponent implements OnInit {
       console.log(this.userForm.value);
       this.userService.updateUser(this.currentUser.UserId, this.userForm.value).subscribe(res => {
         console.log("res", res);
+        this.messageService.add({severity:'success', detail: `${res.message}`, life: 3000});
         this.authService.loadUserFromToken();
       }, (error: any) => {
         console.error(error);
+        this.messageService.add({severity:'error',detail: error.error.message});
       });
     }
   }

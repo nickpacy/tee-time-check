@@ -17,6 +17,9 @@ import { AddUserComponent } from './main/components/user/add-user/add-user.compo
 import { ProfileComponent } from './main/components/user/profile/profile.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ChangePasswordFormComponent } from './main/components/user/change-password-form/change-password-form.component';
+import { NotificationsComponent } from './main/components/notifications/notifications.component';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { LoadingInterceptor } from './shared/loading.interceptor';
 
 
 @NgModule({
@@ -26,7 +29,8 @@ import { ChangePasswordFormComponent } from './main/components/user/change-passw
         BycourseComponent,
         AddUserComponent,
         ProfileComponent,
-        ChangePasswordFormComponent
+        ChangePasswordFormComponent,
+        NotificationsComponent
     ],
     imports: [
         AppRoutingModule,
@@ -38,6 +42,7 @@ import { ChangePasswordFormComponent } from './main/components/user/change-passw
     ],
     providers: [
         { provide: LocationStrategy, useClass: HashLocationStrategy },
+        { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor, multi: true },
         UserService, CourseService, DatePipe
     ],
     bootstrap: [AppComponent]
