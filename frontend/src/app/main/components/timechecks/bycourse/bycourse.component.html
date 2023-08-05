@@ -96,17 +96,7 @@
 </p-dialog>
 
 
-<p-dialog [(visible)]="loadingDialog" [style]="{width: '450px'}" [modal]="true" class="p-fluid" [closable]="false">
-    <ng-template pTemplate="content">
-        <div style="text-align: center;">
-            <p-progressSpinner></p-progressSpinner>
-            <br>
-            Saving...
-        </div>
-    </ng-template>
-</p-dialog>
-
-<p-dialog [(visible)]="emailDialog" [style]="{width: '450px'}" header="New User" [modal]="true" class="p-fluid">
+<!-- <p-dialog [(visible)]="emailDialog" [style]="{width: '450px'}" header="New User" [modal]="true" class="p-fluid">
     <p-messages></p-messages>
     <ng-template pTemplate="content">
         <div class="field">
@@ -119,4 +109,4 @@
     <ng-template pTemplate="footer">
         <button pButton pRipple label="Check" icon="pi pi-check" class="p-button-text" (click)="onSubmit()"></button>
     </ng-template>
-</p-dialog>
+</p-dialog> -->

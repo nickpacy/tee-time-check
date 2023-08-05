@@ -13,6 +13,7 @@ router.get('/timechecksByUserId/:userId', timechecksController.getTimechecksByUs
 router.get('/timechecksByUserIdAndCourseId/:userId/:courseId', timechecksController.getTimechecksByUserIdAndCourseId);
 router.get('/timechecksByCourse/:userId', timechecksController.getTimechecksByCourse);
 router.get('/activeTimecheckCount/:userId', timechecksController.getActiveTimecheckCountByUserId);
+router.get('/resetTimechecks/:userId', timechecksController.resetTimechecks);
 
 
 module.exports = router;

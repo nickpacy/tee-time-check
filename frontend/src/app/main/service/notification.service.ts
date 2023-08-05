@@ -21,8 +21,10 @@ export class NotificationsService {
     return this.http.get<any>(`${this.apiUrl}/${notificationId}`);
   }
 
-  getNotificationsByUserId(userId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/byUser/${userId}`);
+  getNotificationsByCourse(userId: number, futureDates = true): Observable<any> {
+    let url = `${this.apiUrl}/byCourse/${userId}`;
+    if (futureDates) url += '?showFutureDates=true'
+    return this.http.get<any>(url);
   }
 
   createNotification(notification: any): Observable<any> {

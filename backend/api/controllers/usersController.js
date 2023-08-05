@@ -1,4 +1,5 @@
 const pool = require('../database');
+const email = require('./emailController');
 
 // Get all users
 const getUsers = async (req, res) => {
@@ -7,7 +8,7 @@ const getUsers = async (req, res) => {
       res.json(rows);
     } catch (error) {
       console.error('Error getting users: ', error);
-      res.status(500).json({ error: 'Error getting users' });
+      res.status(500).json({ message: 'Error getting users' });
     }
 };
 
@@ -17,13 +18,13 @@ const getUserById = async (req, res) => {
     try {
         const rows = await pool.query('SELECT * FROM users WHERE UserId = ?', [userId]);
         if (rows.length === 0) {
-            res.status(404).json({ error: 'User not found' });
+            res.status(404).json({ message: 'User not found' });
         } else {
             res.json(rows[0]);
         }
     } catch (error) {
         console.error('Error getting user: ', error);
-        res.status(500).json({ error: 'Error getting user' });
+        res.status(500).json({ message: 'Error getting user' });
     }
 };
 
@@ -33,13 +34,13 @@ const getUserByEmail = async (req, res) => {
     try {
         const rows = await pool.query('SELECT * FROM users WHERE Email = ? LIMIT 1', [email]);
         if (rows.length === 0) {
-            res.status(404).json({ error: 'User not found' });
+            res.status(404).json({ message: 'User not found' });
         } else {
             res.json(rows[0]);
         }
     } catch (error) {
         console.error('Error getting user: ', error);
-        res.status(500).json({ error: 'Error getting user' });
+        res.status(500).json({ message: 'Error getting user' });
     }
 };
 
@@ -47,16 +48,30 @@ const getUserByEmail = async (req, res) => {
 const createUser = async (req, res) => {
     const { Name, Email, Active } = req.body;
     try {
-      const [result] = await pool.query('INSERT INTO users (Name, Email, Active) VALUES (?, ?, ?)', [Name, Email, Active]);
+      const tempPassword = 'NEW';
+      const result = await pool.query('INSERT INTO users (Name, Email, Password, Active) VALUES (?, ?, ?, ?)', [Name, Email, tempPassword, Active]);
       const newUserId = result.insertId;
 
       // Call the stored procedure to add inactive timechecks for the new user
       await pool.query('CALL AddTimechecksForNewUser(?)', [newUserId]);
 
+      const rows = await pool.query('SELECT * FROM users WHERE UserId = ?', [newUserId]);
+      console.log(rows)
+      const user = rows[0];
+      console.log(user);
+
+      const mailOptions = {
+        from: '"Welcome" <donotreply@teetimecheck.com>',
+        to: user.Email,
+        subject: 'Welcome - Tee Time Check',
+        template: 'welcome.html'
+      };
+      await email.setAndSendPassword(user, mailOptions)
+
       res.status(201).json({ UserId: newUserId, Name, Email, Active });
     } catch (error) {
       console.error('Error creating user: ', error);
-      res.status(500).json({ error: 'Error creating user' });
+      res.status(500).json({ message: 'Error creating user' });
     }
   };
 
@@ -84,31 +99,49 @@ const updateUser = async (req, res) => {
 
 
       if (result.affectedRows === 0) {
-        res.status(404).json({ error: 'User not found' });
+        res.status(404).json({ message: 'User not found' });
       } else {
-        res.json({ UserId: userId, Name, Email, Phone, EmailNotification, PhoneNotification, Admin, Active});
+        res.json({ UserId: userId, Name, Email, Phone, EmailNotification, PhoneNotification, Admin, Active, message: 'Profile updated successfully!'});
       }
     } catch (error) {
       console.error('Error updating user: ', error);
-      res.status(500).json({ error: 'Error updating user' });
+      let message = 'Error updating user';
+      if (error.code == 'ER_DUP_ENTRY') {
+        if (error.sqlMessage && error.sqlMessage.includes('email')) {
+          message = 'Email already exists.';
+        }
+        if (error.sqlMessage && error.sqlMessage.includes('phone')) {
+          message = 'Phone # already exists.';
+        }
+      }
+      res.status(500).json({ message: message, error });
     }
   };
 
 // Delete an existing user
 const deleteUser = async (req, res) => {
-    const userId = req.params.userId;
-    try {
-      const result = await pool.query('DELETE FROM users WHERE UserId = ?', [userId]);
-      if (result.affectedRows === 0) {
-        res.status(404).json({ error: 'User not found' });
-      } else {
-        res.sendStatus(204);
-      }
-    } catch (error) {
-      console.error('Error deleting user: ', error);
-      res.status(500).json({ error: 'Error deleting user' });
+  const userId = req.params.userId;
+  try {
+     // First, delete the related notifications for this user
+     await pool.query('DELETE FROM notifications WHERE UserId = ?', [userId]);
+    
+    // Second, delete the related timechecks for this user
+    await pool.query('DELETE FROM timechecks WHERE UserId = ?', [userId]);
+
+    // Then, delete the user
+    const result = await pool.query('DELETE FROM users WHERE UserId = ?', [userId]);
+
+    if (result.affectedRows === 0) {
+      res.status(404).json({ message: 'User not found' });
+    } else {
+      res.sendStatus(204);
     }
+  } catch (error) {
+    console.error('Error deleting user: ', error);
+    res.status(500).json({ message: 'Error deleting user' });
+  }
 };
+
 
 module.exports = {
   getUsers,

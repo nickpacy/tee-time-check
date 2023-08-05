@@ -2,35 +2,9 @@ const pool = require('../database');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const nodemailer = require("nodemailer"); 
-const fs = require('fs').promises;
-const crypto = require('crypto');
+const email = require('./emailController');
 
 dotenv.config();
-
-// Create a transporter for sending emails
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST, // SMTP host for sending emails
-  port: process.env.SMTP_PORT, // SMTP port for sending emails
-  secure: true, // Use SSL/TLS for secure connection
-  auth: {
-    user: process.env.SMTP_USER, // SMTP username
-    pass: process.env.SMTP_PASSWORD, // SMTP password
-  },
-});
-
-
-const generateRandomPassword = (length = 12) => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+';
-  const buffer = crypto.randomBytes(length);
-  const passwordArray = [];
-
-  for (let i = 0; i < length; i++) {
-    passwordArray.push(characters[buffer[i] % characters.length]);
-  }
-
-  return passwordArray.join('');
-};
 
 
 // Register a new user
@@ -41,13 +15,13 @@ const registerUser = async (req, res) => {
 
   // Validate request body
   if (!Email || !Password) {
-    return res.status(400).send('Email and password are required.');
+    return res.status(400).json({ message: 'Email and password are required.' });
   }
 
   // Check if user already exists
   const results = await pool.query('SELECT * FROM users WHERE Email = ?',[Email]);
   if (results.length) {
-    return res.status(400).send('User already exists.');
+    return res.status(400).json({ message: 'User already exists.' });
   }
 
   // Hash password
@@ -64,10 +38,10 @@ const registerUser = async (req, res) => {
     // Return JWT in response header and body
     res.header('auth-token', token).send({ userId, token });
 
-    // res.status(201).json({ CourseId: newCourseId, CourseName, BookingClass, ScheduleId });
+    // res.status(201).json({ message: { CourseId: newCourseId, CourseName, BookingClass, ScheduleId } });
   } catch (error) {
     console.error('Error creating course: ', error);
-    res.status(500).json({ error: 'Error creating course' });
+    res.status(500).json({ message: { error: 'Error creating course' } });
   }
 };
 
@@ -80,14 +54,14 @@ const loginUser = async (req, res) => {
 
   // Validate request body
   if (!Email || !Password) {
-    return res.status(400).send('Email and password are required.');
+    return res.status(400).json({ message: 'Email and password are required.' });
   }
 
   try {
     // Check if user already exists
     const results = await pool.query('SELECT * FROM users WHERE Email = ?',[Email]);
     if (!results.length) {
-      return res.status(400).send('Invalid username or password.');
+      return res.status(400).json({ message: 'Invalid username or password.' });
     }
 
     const user = results[0];
@@ -99,8 +73,12 @@ const loginUser = async (req, res) => {
       results[0].Password
     );
     if (!validPassword) {
-      return res.status(400).send('Invalid email or password.');
+      return res.status(400).json({ message: 'Invalid email or password.' });
     }
+
+     // Update LastLoginDate
+     const lastLoginDate = new Date();
+     await pool.query('UPDATE users SET LastLoginDate = ? WHERE UserId = ?', [lastLoginDate, userId]); 
 
     // Generate JWT
     const token = jwt.sign({ _id: userId }, process.env.JWT_TOKEN, { expiresIn: Remember ? '365d' : '1h' });
@@ -120,10 +98,10 @@ const loginUser = async (req, res) => {
       , token 
     });
 
-    // res.status(201).json({ CourseId: newCourseId, CourseName, BookingClass, ScheduleId });
+    // res.status(201).json({ message: { CourseId: newCourseId, CourseName, BookingClass, ScheduleId } });
   } catch (error) {
     console.error('Error creating course: ', error);
-    res.status(500).json({ error: 'Error creating course' });
+    res.status(500).json({ message: { error: 'Error creating course' } });
   }
 };
 
@@ -133,7 +111,7 @@ const changePassword = async (req, res) => {
 
   // Validate request body
   if (!UserId || !OldPassword || !NewPassword) {
-    return res.status(400).send('UserId, old password, and new password are required.');
+    return res.status(400).json({ message: 'UserId, old password, and new password are required.' });
   }
 
   try {
@@ -141,7 +119,7 @@ const changePassword = async (req, res) => {
     const results = await pool.query('SELECT * FROM users WHERE UserId = ?', [UserId]);
 
     if (!results.length) {
-      return res.status(404).send('User not found.');
+      return res.status(404).json({ message: 'User not found.' });
     }
 
     const user = results[0];
@@ -150,7 +128,7 @@ const changePassword = async (req, res) => {
     // Check if the old password matches the stored hashed password
     const validPassword = await bcrypt.compare(OldPassword, user.Password);
     if (!validPassword) {
-      return res.status(400).send('Invalid old password.');
+      return res.status(400).json({ message: 'Invalid old password.' });
     }
 
     // Hash the new password
@@ -160,10 +138,10 @@ const changePassword = async (req, res) => {
     // Update the user's password in the database
     await pool.query('UPDATE users SET Password = ? WHERE UserId = ?', [hashedPassword, UserId]);
 
-    res.status(200).send('Password changed successfully.');
+    res.status(200).json({ message: 'Password changed successfully.' });
   } catch (error) {
     console.error('Error changing password: ', error);
-    res.status(500).send('Error changing password');
+    res.status(500).json({ message: 'Error changing password' });
   }
 };
 
@@ -173,7 +151,7 @@ const forgotPassword = async (req, res) => {
 
   // Validate request body
   if (!Email) {
-    return res.status(400).send('Email is required.');
+    return res.status(400).json({ message: 'Email is required.' });
   }
 
   try {
@@ -181,46 +159,22 @@ const forgotPassword = async (req, res) => {
     const results = await pool.query('SELECT * FROM users WHERE Email = ?', [Email]);
 
     if (!results.length) {
-      return res.status(404).send('User not found.');
+      return res.status(404).json({ message: 'User not found.' });
     }
 
     const user = results[0];
+    const mailOptions = {
+      from: '"Password Reset" <donotreply@teetimecheck.com>',
+      to: Email,
+      subject: 'Forgot Password - Tee Time Check',
+      template: 'forgotPassword.html'
+    };
+    await email.setAndSendPassword(user, mailOptions);
 
-    // Generate a random password
-    const randomPassword = generateRandomPassword(); // You can adjust the length as needed
-
-    // Hash the new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(randomPassword, salt);
-
-    // Update the user's password in the database
-    await pool.query('UPDATE users SET Password = ? WHERE Email = ?', [hashedPassword, Email]);
-
-    try {
-      // Read the HTML template from the file
-      let htmlTemplate = await fs.readFile('./assets/forgotPassword.html', 'utf8');
-      htmlTemplate = htmlTemplate.replace('[User]', user.Name);
-      htmlTemplate = htmlTemplate.replace('[GeneratedPassword]', randomPassword);
-  
-      const mailOptions = {
-        from: '"Password Reset" <donotreply@teetimecheck.com>',
-        to: Email,
-        subject: 'Forgot Password - Tee Time Check',
-        html: htmlTemplate
-      };
-  
-      // Send the Email
-      const info = await transporter.sendMail(mailOptions);
-      console.log('Email sent: ', info.messageId);
-    } catch (error) {
-      console.error('Error sending email: ', error);
-    }
-
-
-    res.status(200).send('Password reset successful. Check your email for the new password.');
+    res.status(200).json({ message: 'Password reset successful. Check your email for the new password.' });
   } catch (error) {
     console.error('Error resetting password: ', error);
-    res.status(500).send('Error resetting password');
+    res.status(500).json({ message: 'Error resetting password' });
   }
 };
 

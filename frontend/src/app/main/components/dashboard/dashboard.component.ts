@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { MenuItem } from 'primeng/api';
+import { MenuItem, MessageService } from 'primeng/api';
 import { Subscription } from 'rxjs';
 import { LayoutService } from 'src/app/layout/service/app.layout.service';
 import { TimecheckService } from '../../service/timecheck.service';
@@ -24,6 +24,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     constructor(public layoutService: LayoutService,
                 private authService: AuthService,
+                private messagingService: MessageService,
                 private timecheckService: TimecheckService) {
         this.subscription = this.layoutService.configUpdate$.subscribe(() => {
             this.initChart();
@@ -122,6 +123,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
             }
           );
         })
+      }
+
+
+      setTimechecksInactive() {
+        const userConfirmed = window.confirm("You will no longer be notified for tee times until you setup new ones")
+        if (!userConfirmed) return;
+        console.log(this.USERID);
+        this.timecheckService.resetTimechecks(this.USERID).subscribe(
+            (data: any) => {
+              this.activeTimechecks = 0;
+              this.messagingService.add({severity: 'success', detail: 'Tee Times Updated', life: 2000})
+            },
+            (error) => {
+              console.error('Error getting getTimechecksByUserId:', error);
+            }
+          );
       }
 
 }

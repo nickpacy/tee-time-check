@@ -9,6 +9,7 @@ import { AuthGuard } from './main/components/auth/auth.service';
 import { BycourseComponent } from './main/components/timechecks/bycourse/bycourse.component';
 import { DashboardComponent } from './main/components/dashboard/dashboard.component';
 import { ProfileComponent } from './main/components/user/profile/profile.component';
+import { NotificationsComponent } from './main/components/notifications/notifications.component';
 
 @NgModule({
     imports: [
@@ -21,6 +22,7 @@ import { ProfileComponent } from './main/components/user/profile/profile.compone
                     { path: 'profile/:userId', component: ProfileComponent, canActivate: [AuthGuard] },
                     { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
                     { path: 'courses', component: CoursesComponent, canActivate: [AuthGuard] },
+                    { path: 'notifications', component: NotificationsComponent, canActivate: [AuthGuard] },
                     { path: 'timechecks', component: TimechecksComponent, canActivate: [AuthGuard] },
                     { path: 'setup', component: BycourseComponent, canActivate: [AuthGuard] },
                 ]

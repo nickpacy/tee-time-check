@@ -1,5 +1,5 @@
     <div class="grid">
-        <div class="col-12 lg:col-6 xl:col-3">
+        <div class="col-12 lg:col-6 xl:col-4">
             <div class="card mb-0">
                 <div class="flex justify-content-between mb-3">
                     <div>
@@ -7,7 +7,7 @@
                         <div class="text-900 font-medium text-xl"><span class="text-blue-500">{{activeTimechecks}}</span> active timechecks</div>
                     </div>
                     <div class="flex align-items-center justify-content-center bg-blue-100 border-round" [ngStyle]="{width: '2.5rem', height: '2.5rem'}">
-                        <i class="pi pi-search text-blue-500 text-xl"></i>
+                        <i class="fa fa-search fa-beat text-blue-500 text-xl" style="--fa-animation-duration: 1s;--fa-animation-iteration-count: 5;"></i>
                     </div>
                 </div>
                 <span class="text-green-500 font-medium">24 tee times </span>
@@ -15,20 +15,34 @@
             </div>
         </div>
         
-        <div class="col-12 lg:col-6 xl:col-3">
+        <div class="col-12 lg:col-6 xl:col-4">
             <div class="px-4 py-5 shadow-2 flex flex-column md:flex-row md:align-items-center justify-content-between mb-3" [ngStyle]="{borderRadius: '1rem', background: 'linear-gradient(0deg, rgba(0, 123, 255, 0.5), rgba(0, 123, 255, 0.5)), linear-gradient(92.54deg, #1C80CF 47.88%, #FFFFFF 100.01%)'}">
                 <div>
                     <div class="text-blue-100 font-medium text-xl mt-2 mb-3">EDIT TEE TIME SELECTIONS</div>
-                    <div class="text-white font-medium text-5xl">Configure Tee Times</div>
+                    <div class="text-white font-medium text-2xl">Configure Tee Times</div>
                 </div>
                 <div class="mt-4 mr-auto md:mt-0 md:mr-0">
-                    <a [routerLink]="['/setup']" class="p-button font-bold px-5 py-3 p-button-success p-button-rounded p-button-raised">
+                    <a [routerLink]="['/setup']" class="p-button font-bold px-3 py-3 p-button-success p-button-rounded p-button-raised">
                         Setup Now
                     </a>
                 </div>
              </div>    
         </div>
-        <div class="col-12 lg:col-6 xl:col-3">
+
+        <div class="col-12 lg:col-6 xl:col-4" *ngIf="activeTimechecks > 0">
+            <div class="px-4 py-5 shadow-2 flex flex-column md:flex-row md:align-items-center justify-content-between mb-3" [ngStyle]="{borderRadius: '1rem', background: 'linear-gradient(0deg, rgba(255, 0, 0, 0.5), rgba(255, 0, 0, 0.5)), linear-gradient(92.54deg, #FFFFFF 47.88%, rgba(255, 0, 0, 0.5) 100.01%)'}">
+                <div>
+                    <div class="text-blue-100 font-medium text-xl mt-2 mb-3">SET TIMECHECKS TO INACTIVE</div>
+                    <div class="text-white font-medium text-2xl">Not Looking?</div>
+                </div>
+                <div class="mt-4 mr-auto md:mt-0 md:mr-0">
+                    <button type="button" (click)="setTimechecksInactive()" class="p-button font-bold px-3 py-3 p-button-warning p-button-rounded p-button-raised">
+                        Stop Searching
+                    </button>
+                </div>
+             </div>    
+        </div>
+        <div class="col-12 lg:col-6 xl:col-4">
             <div class="card mb-0">
                 <div class="flex justify-content-between mb-3">
                     <div>
@@ -43,7 +57,7 @@
                 <span class="text-500">since last week</span>
             </div>
         </div>
-        <div class="col-12 lg:col-6 xl:col-3">
+        <div class="col-12 lg:col-6 xl:col-4">
             <div class="card mb-0">
                 <div class="flex justify-content-between mb-3">
                     <div>
@@ -58,7 +72,7 @@
                 <span class="text-500">newly registered</span>
             </div>
         </div>
-        <div class="col-12 lg:col-6 xl:col-3">
+        <div class="col-12 lg:col-6 xl:col-4">
             <div class="card mb-0">
                 <div class="flex justify-content-between mb-3">
                     <div>

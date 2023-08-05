@@ -16,6 +16,7 @@ import { CardModule } from 'primeng/card';
 import { CarouselModule } from 'primeng/carousel';
 import { CascadeSelectModule } from 'primeng/cascadeselect';
 import { CheckboxModule } from 'primeng/checkbox';
+import { ChipModule } from 'primeng/chip';
 import { ChipsModule } from 'primeng/chips';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -176,6 +177,7 @@ import { TreeTableModule } from 'primeng/treetable';
         CarouselModule,
         CascadeSelectModule,
         CheckboxModule,
+        ChipModule,
         ChipsModule,
         ColorPickerModule,
         ConfirmDialogModule,

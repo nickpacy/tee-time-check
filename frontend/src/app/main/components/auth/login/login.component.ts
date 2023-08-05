@@ -45,7 +45,8 @@ export class LoginComponent {
                     resolve(true);
                 }, error => {
                     console.error("Login Error", error);
-                    this.messageService.add({severity:'error', summary:'Login Error', detail: error.error});
+                    this.messageService.clear();
+                    this.messageService.add({severity:'error', summary:'Login Error', detail: error.error.message, life: 3000});
                     reject(true);
                 })
         });
@@ -59,11 +60,11 @@ export class LoginComponent {
             this.authService.forgotPassword(user)
                 .subscribe(result => {
                     console.log("Login Result", result);
-                    this.messageService.add({severity:'success', summary:'Email Sent', detail: `Email sent to ${this.email}`});
+                    this.messageService.add({severity:'success', summary:'Email Sent', detail: `Email sent to ${this.email}`, life: 2000});
                     this.forgotDialog = false;
                 }, error => {
                     console.error("Login Error", error);
-                    this.messageService.add({severity:'error', summary:'Error', detail: error.error});
+                    this.messageService.add({severity:'error', summary:'Error', detail: error.error.message, life: 2000});
                     this.forgotDialog = false;
                 })
         }

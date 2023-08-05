@@ -80,6 +80,13 @@ export class TimecheckService {
       catchError(this.handleError)
     );
   }
+  
+  resetTimechecks(userId: number): Observable<any> {
+    const url = `${this.baseUrl}/resetTimechecks/${userId}`;
+    return this.http.get<any>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
 
 
   private handleError(error: any) {
