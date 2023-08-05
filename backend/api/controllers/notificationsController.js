@@ -46,14 +46,14 @@ const updateNotification = async (req, res) => {
 
 const getNotificationsByCourse = async (req, res) => {
   const userId = req.params.userId;
-  const showFutureDates = req.query.showFutureDates === 'true';
+  // const showFutureDates = req.query.showFutureDates === 'true';
 
   try {
     let query = 'SELECT DISTINCT UserId, c.CourseId, c.CourseName, c.ImageUrl, DATE(TeeTimes) as Date FROM vw_notifications n JOIN courses c ON n.CourseId = c.CourseId WHERE UserId = ? AND CheckDate = CURDATE()';
 
-    if (showFutureDates) {
-      query += ' AND TeeTimes > NOW()';
-    }
+    // if (showFutureDates) {
+    // }
+    query += ' AND TeeTimes > NOW()';
 
     const results = await pool.query(query, [userId]);
 

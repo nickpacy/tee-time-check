@@ -23,7 +23,7 @@ export class NotificationsService {
 
   getNotificationsByCourse(userId: number, futureDates = true): Observable<any> {
     let url = `${this.apiUrl}/byCourse/${userId}`;
-    if (futureDates) url += '?showFutureDates=true'
+    // if (futureDates) url += '?showFutureDates=true'
     return this.http.get<any>(url);
   }
 
