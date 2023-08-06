@@ -18,10 +18,10 @@
             <i class="pi pi-calendar"></i>
             <span>{{user?.Name}}</span>
         </button> -->
-        <!-- <button class="p-link layout-topbar-button">
-            <i class="pi pi-calendar"></i>
-            <span>Calendar</span>
-        </button> -->
+        <button class="p-link layout-topbar-button" (click)="setDarkMode(!darkMode)">
+            <i class="fa fa-circle-half-stroke"></i>
+            <span>{{darkMode ? 'Light Mode' : 'Dark Mode'}}</span>
+        </button>
         <button class="p-link layout-topbar-button" [routerLink]="'/profile'">
             <i class="pi pi-user"></i>
             <span>Profile</span>
