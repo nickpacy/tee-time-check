@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { NotificationsService } from '../../service/notification.service';
 import { AuthService } from '../auth/auth.service';
 import { UtilityService } from '../../service/utility.service';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-notifications',
@@ -15,6 +16,7 @@ export class NotificationsComponent implements OnInit{
 
   constructor(private notificationService: NotificationsService,
               private authService: AuthService,
+              private datePipe: DatePipe,
               private utilService: UtilityService){}
 
   ngOnInit(): void {
@@ -28,34 +30,34 @@ export class NotificationsComponent implements OnInit{
       console.error(error);
     });
   }
+
+  transformDate(date: string): string {
+    return this.datePipe.transform(date, 'fullDate', '-1400');
+  }
   
-  removeNotification(courseId, tDate, teeTime) {
+  transformTime(time: string): string {
+    return this.datePipe.transform(time, 'hh:mm a', '-1400');
+  }
+  
+  removeNotification(courseId, tDate, notifiedTeeTimeId) {
 
-    const n = {
-      UserId: this.USERID,
-      CourseId: courseId, 
-      CheckDate: tDate,
-      TeeTime: teeTime
-    }
-
-    console.log(n)
-    this.notificationService.removeNotification(n)
+    this.notificationService.removeNotification(notifiedTeeTimeId)
     .subscribe(res => {
       this.notifications = this.notifications.map(course => {
         if (course.CourseId === courseId) {
           course.Dates = course.Dates.map(d => {
             if (d.Date === tDate) {
-              d.TeeTimes = d.TeeTimes.filter(tt => tt !== teeTime);
+              d.TeeTimes = d.TeeTimes.filter(tt => tt.notifiedTeeTimeId !== notifiedTeeTimeId);
             }
             return d;
           });
         }
         return course;
       });
-      console.log("Notify removeed", res);
-      
+      console.log("Notify removed", res);
     }, (error: any) => {
       console.error(error);
     });
+
   }
 }

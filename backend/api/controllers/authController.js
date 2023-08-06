@@ -81,7 +81,7 @@ const loginUser = async (req, res) => {
      await pool.query('UPDATE users SET LastLoginDate = ? WHERE UserId = ?', [lastLoginDate, userId]); 
 
     // Generate JWT
-    const token = jwt.sign({ _id: userId }, process.env.JWT_TOKEN, { expiresIn: Remember ? '365d' : '1h' });
+    const token = jwt.sign({ _id: userId }, process.env.JWT_TOKEN, { expiresIn: Remember ? '7d' : '1h' });
 
     // Return JWT in response header and body
     res.header('auth-token', token).send({ 

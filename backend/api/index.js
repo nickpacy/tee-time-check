@@ -26,6 +26,8 @@ if (process.env.STATIC == 'true') {
 } else {
     const PORT = process.env.PORT || 5050;
     app.listen(PORT, () => {
+      const date = new Date();
+      console.log(date.toString());
       console.log(`Server listening on port ${PORT}`);
     });
 }
