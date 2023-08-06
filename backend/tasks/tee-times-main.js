@@ -68,13 +68,38 @@ const checkTeeTimes = async () => {
     const connection = await pool.getConnection();
 
     try {
-      // Query to fetch tee time data for active users
-      const query = `SELECT DISTINCT t.id, u.userId, u.email, u.phone, t.dayOfWeek, t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, c.courseName, c.courseAbbr, c.method, c.bookingUrl, n.notifiedTeeTimes
-                    FROM timechecks t
-                    JOIN users u ON u.userid = t.userId
-                    JOIN courses c ON c.courseid = t.courseId
-                    LEFT JOIN notifications n ON n.userId = t.userId AND n.courseId = t.courseId AND n.checkdate = CURDATE() 
-                    WHERE u.active = 1 AND t.active = 1`;
+      /*
+      This SQL query retrieves distinct tee time checks for active users who have logged in within the past week and have chosen to be notified either by email or phone.
+
+      Specifically, the query performs the following:
+      1. Fetches relevant columns including user details, tee time check details, course details, and any notifications sent today.
+      2. Joins the 'timechecks' table (aliased as 't') with:
+          a. The 'users' table (aliased as 'u') based on matching user IDs.
+          b. The 'courses' table (aliased as 'c') based on matching course IDs.
+      3. Additionally, it performs a LEFT JOIN with the 'notifications' table (aliased as 'n') to fetch any notifications sent today for the specific user and course combination.
+      4. The WHERE clause filters the results to:
+          a. Only consider active users (u.active = 1).
+          b. Only consider active tee time checks (t.active = 1).
+          c. Users who have provided an email and opted for email notifications OR provided a phone number and opted for phone notifications.
+          d. Users who have logged in within the last 7 days.
+      */
+      const query = `SELECT DISTINCT t.id, u.userId, u.email, u.phone, u.emailNotification, u.phoneNotification, t.dayOfWeek, 
+                          t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, 
+                          c.courseName, c.courseAbbr, c.method, c.bookingUrl, GROUP_CONCAT(ntt.TeeTime) AS notifiedTeeTimes 
+                      FROM timechecks t
+                      JOIN users u ON u.userid = t.userId
+                      JOIN courses c ON c.courseid = t.courseId
+                      LEFT JOIN notifications n ON n.userId = t.userId AND n.courseId = t.courseId AND n.checkdate = CURDATE()
+                      LEFT JOIN notified_tee_times ntt ON ntt.NotificationId = n.NotificationId
+                      WHERE u.active = 1
+                          AND t.active = 1
+                          AND ((u.email is not null AND u.emailNotification = 1 )
+                            OR (u.phone is not null AND u.phoneNotification = 1))
+                          AND u.lastLoginDate BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND NOW()
+                      GROUP BY t.id, u.userId, u.email, u.phone, u.emailNotification, u.phoneNotification, t.dayOfWeek, 
+                          t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, 
+                          c.courseName, c.courseAbbr, c.method, c.bookingUrl;  
+      `;
 
       const results = await connection.execute(query);
 
@@ -84,7 +109,9 @@ const checkTeeTimes = async () => {
       for (const row of results[0]) {
         const {
           email,
+          emailNotification,
           phone,
+          phoneNotification,
           dayOfWeek,
           startTime,
           endTime,
@@ -195,16 +222,18 @@ const checkTeeTimes = async () => {
               teeTimeDate.isAfter(teeTimeStartDate) &&
               teeTimeDate.isBefore(teeTimeEndDate)
             ) {
-              if (notifiedTeeTimes && notifiedTeeTimes.includes(teeTime.time)) {
+              const utcTeeTimeString = moment.tz(teeTime.time, "America/Los_Angeles").utc().format('YYYY-MM-DD HH:mm:ss');
+
+              if (notifiedTeeTimes && notifiedTeeTimes.includes(utcTeeTimeString)) {
                 // This tee time has already been notified, skip it
                 continue;
               }
 
               // Add the tee time to the object for this user
-              if (!teeTimesByUser[email]) {
-                teeTimesByUser[email] = [];
+              if (!teeTimesByUser[userId]) {
+                teeTimesByUser[userId] = [];
               }
-              teeTimesByUser[email].push({
+              teeTimesByUser[userId].push({
                 courseName,
                 courseAbbr,
                 teeTime: teeTime.time,
@@ -212,6 +241,10 @@ const checkTeeTimes = async () => {
                 userId,
                 courseId,
                 bookingLink,
+                email,
+                phone,
+                emailNotification,
+                phoneNotification
               });
             }
           }
@@ -221,43 +254,49 @@ const checkTeeTimes = async () => {
       }
 
       // Send emails with tee time notifications
-      // await sendEmails(teeTimesByUser);
+      await sendEmails(teeTimesByUser);
       await sendSMS(teeTimesByUser);
 
       try {
-        // Save the list of notified tee times for each user to the database
-        const promises = []; // Array to hold all the promises
-        for (const email in teeTimesByUser) {
-          const notifiedTeeTimes = teeTimesByUser[email]
-            .map(({ teeTime }) => teeTime)
-            .join(",");
-          const userId = teeTimesByUser[email][0].userId;
-          const courseId = teeTimesByUser[email][0].courseId;
-          const updateQuery = `INSERT INTO notifications (userId, courseId, checkdate, notifiedTeeTimes) VALUES (?, ?, CURDATE(), ?) ON DUPLICATE KEY UPDATE notifiedTeeTimes = CONCAT(notifiedTeetimes, ',', ?);`;
+          // Save the list of notified tee times for each user to the database
+          const promises = []; // Array to hold all the promises
+          for (const userId in teeTimesByUser) {
+              const notifiedTeeTimes = teeTimesByUser[userId].map(({ teeTime }) => teeTime);
+              
+              // First, ensure that the notification record exists
+              const notificationQuery = `INSERT INTO notifications (userId, courseId, checkdate) VALUES (?, ?, CURDATE()) ON DUPLICATE KEY UPDATE userId=VALUES(userId);`;
+              const courseId = teeTimesByUser[userId][0].courseId;
+              
+              // Add the promise to the array
+              promises.push(connection.execute(notificationQuery, [userId, courseId]));
+      
+              // Then, for each tee time, insert a new record into the notified_tee_times table
+              for (const teeTime of notifiedTeeTimes) {
+                  const insertTeeTimeQuery = `
+                      INSERT INTO notified_tee_times (NotificationId, TeeTime)
+                      SELECT NotificationId, ?
+                      FROM notifications
+                      WHERE userId = ? AND courseId = ? AND checkdate = CURDATE();
+                  `;
+      
+                  // Convert to UTC Time
+                  const utcTeeTime = moment.tz(teeTime, "America/Los_Angeles").utc().format('YYYY-MM-DD HH:mm:ss');
 
-          // Add the promise to the array
-          // Add the promise to the array
-          promises.push(
-            connection.execute(updateQuery, [
-              userId,
-              courseId,
-              notifiedTeeTimes,
-              notifiedTeeTimes,
-            ])
-          );
-        }
-
-        // Wait for all the promises to resolve
-        await Promise.all(promises).catch((error) =>
-          console.log("Error in Promise.all: ", error)
-        );
-
+                  // Add the promise to the array
+                  promises.push(connection.execute(insertTeeTimeQuery, [utcTeeTime, userId, courseId]));
+              }
+          }
+      
+          // Wait for all the promises to resolve
+          await Promise.all(promises).catch((error) => console.log("Error in Promise.all: ", error));
+      
       } catch (err) {
-        console.log("Error saving notified tee times:", err);
+          console.log("Error saving notified tee times:", err);
       } finally {
-        // Release the connection and close the pool
-        if (connection && connection.release) connection.release();
+          // Release the connection and close the pool
+          if (connection && connection.release) connection.release();
       }
+    
     } catch (err) {
       console.log("Error inthe database connection:", err);
     } finally {
@@ -273,7 +312,13 @@ const checkTeeTimes = async () => {
 const sendEmails = async (teeTimesByUser) => {
   if (Object.keys(teeTimesByUser).length > 0) {
     // Send an email to each user with their list of tee times
-    for (const [email, teeTimes] of Object.entries(teeTimesByUser)) {
+    for (const [userId, teeTimes] of Object.entries(teeTimesByUser)) {
+      
+      const emailNotification = teeTimes[0].emailNotification;
+      if (!emailNotification) break;
+
+      const email = teeTimes[0].email;
+
       const tableRows = teeTimes
         .map(({ courseName, teeTime, available_spots, bookingLink }) => {
           // Format the tee time in the user's local time zone
@@ -313,7 +358,7 @@ const sendEmails = async (teeTimesByUser) => {
 
       try {
         const info = await transporter.sendMail(mailOptions);
-        console.log(`Tee Time Found! Email sent to ${email}: ${info.response}`);
+        console.log(`Tee Time Found! Email sent to ${email}`);
       } catch (error) {
         console.log(`Error sending email to ${email}:`, error);
       }
@@ -327,7 +372,16 @@ const sendEmails = async (teeTimesByUser) => {
 const sendSMS = async (teeTimesByUser) => {
   if (Object.keys(teeTimesByUser).length > 0) {
     // Send an SMS to each user with their list of tee times
-    for (const [phoneNumber, teeTimes] of Object.entries(teeTimesByUser)) {
+    for (const [userId, teeTimes] of Object.entries(teeTimesByUser)) {
+      
+      const phoneNotification = teeTimes[0].phoneNotification;
+      if (!phoneNotification) break
+
+      let phoneNumber = teeTimes[0].phone;
+      if (!phoneNumber.startsWith('+1')) {
+        phoneNumber = '+1' + phoneNumber;
+      }
+      
       let message = 'New Tee Times';
       for (const { courseAbbr, teeTime, available_spots, bookingLink } of teeTimes) {
         const teeTimeDate = moment.tz(teeTime, "America/Los_Angeles").toDate();
@@ -346,17 +400,17 @@ const sendSMS = async (teeTimesByUser) => {
         // Send the SMS
         await smsClient.messages.create({
           body: message,
-          to: '+18023737297', // Recipient's phone number
-          from: '+18449764183' // Your Twilio number
+          to: phoneNumber, // Recipient's phone number
+          from: process.env.TWILIO_FROM // Your Twilio number
         });
-        console.log(`Tee Time Found! SMS sent to +18023737297`);
+        console.log(`Tee Time Found! SMS sent to ${phoneNumber}`);
       } catch (error) {
-        console.log(`Error sending SMS to +18023737297:`, error);
+        console.log(`Error sending SMS to ${phoneNumber}:`, error);
       }
     }
   } else {
     // No new tee times
-    console.log("No New Tee Times as of " + new Date());
+    console.log(`No New Tee Times as of ${new Date()}`);
   }
 };
 

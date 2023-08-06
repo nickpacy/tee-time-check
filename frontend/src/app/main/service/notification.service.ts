@@ -31,8 +31,8 @@ export class NotificationsService {
     return this.http.post<any>(this.apiUrl, notification);
   }
 
-  removeNotification(notification: any): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/removeNotification`, notification);
+  removeNotification(notifiedTeeTimeId: any): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/removeNotification/${notifiedTeeTimeId}`);
   }
 
   deleteNotification(notificationId: number): Observable<any> {

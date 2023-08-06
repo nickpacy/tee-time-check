@@ -1,6 +1,6 @@
 Use TTC;
 
-CREATE TABLE Users (
+CREATE TABLE users (
   UserId INT AUTO_INCREMENT PRIMARY KEY,
   Name VARCHAR(50) NOT NULL,
   Password VARCHAR(250) NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE Users (
   Admin BOOLEAN NOT NULL DEFAULT false
 );
 
-CREATE TABLE Courses (
+CREATE TABLE courses (
   CourseId INT AUTO_INCREMENT PRIMARY KEY,
   CourseName VARCHAR(50) NOT NULL,
   BookingClass INT NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE Courses (
 );
 
 
-CREATE TABLE Timechecks (
+CREATE TABLE timechecks (
   Id INT AUTO_INCREMENT PRIMARY KEY,
   UserId INT NOT NULL,
   DayOfWeek INT NOT NULL,
@@ -36,20 +36,27 @@ CREATE TABLE Timechecks (
 );
 
 
-CREATE TABLE Notifications (
-  Id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE notifications (
+  NotificationId INT AUTO_INCREMENT PRIMARY KEY,
   UserId INT NOT NULL,
   CourseId INT NOT NULL,
   CheckDate DATE NOT NULL,
-  NotifiedTeeTimes VARCHAR(4000) NOT NULL,
-  CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (UserId) REFERENCES Users(UserId),
-  FOREIGN KEY (CourseId) REFERENCES Courses(CourseId)
+  FOREIGN KEY (CourseId) REFERENCES Courses(CourseId),
+  UNIQUE KEY unique_user_course_date (UserId, CourseId, CheckDate)
+);
+
+CREATE TABLE notified_tee_times (
+    NotifiedTeeTimeId INT AUTO_INCREMENT PRIMARY KEY,
+    NotificationId INT,
+    TeeTime DATETIME,
+    NotifiedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (NotificationId) REFERENCES notifications(NotificationId)
 );
 
 
 
-INSERT INTO `TTC`.`Users`
+INSERT INTO `TTC`.`users`
 (
 `Name`,
 `Email`,
@@ -85,7 +92,7 @@ INSERT INTO Courses (CourseId, CourseName, BookingClass, ScheduleId, BookingPref
 VALUES ('5', 'Coronado', '20610', '0', NULL, NULL, 'teeitup', 'coronado.png', 'https://www.golfcoronado.com/teetimes');
 
 INSERT INTO Courses (CourseId, CourseName, BookingClass, ScheduleId, BookingPrefix, WebsiteId, Method, ImageUrl, BookingUrl)
-VALUES ('6', 'Sea \'N Air', '27', '0', NULL, NULL, 'navy', 'sea-n-air.png', NULL);
+--VALUES ('6', 'Sea \'N Air', '27', '0', NULL, NULL, 'navy', 'sea-n-air.png', NULL);
 
 INSERT INTO Courses (CourseId, CourseName, BookingClass, ScheduleId, BookingPrefix, WebsiteId, Method, ImageUrl, BookingUrl)
 VALUES ('7', 'Encinitas Ranch', '6', '0', 'sc5', '94ce5060-0b39-444f-2756-08d8d81fed21', 'jcgolf', 'encinitas-ranch.png', 'https://jcgsc5.cps.golf/onlineresweb/search-teetime');
@@ -136,7 +143,7 @@ CREATE PROCEDURE `AddTimechecksForNewUser`(
 )
 BEGIN
     -- Insert inactive timechecks for the user for every course and day combination
-    INSERT INTO Timechecks (UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers, Active)
+    INSERT INTO timechecks (UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers, Active)
     SELECT
         p_UserId AS UserId,
         dw.DayOfWeek,
@@ -146,7 +153,7 @@ BEGIN
         1 AS NumPlayers,
         0 AS Active
     FROM
-        Courses c
+        courses c
     CROSS JOIN
         (
             SELECT 0 AS DayOfWeek UNION ALL
@@ -159,7 +166,7 @@ BEGIN
         ) dw
     WHERE NOT EXISTS (
         SELECT 1
-        FROM Timechecks t
+        FROM timechecks t
         WHERE t.UserId = p_UserId
           AND t.CourseId = c.CourseId
           AND t.DayOfWeek = dw.DayOfWeek
@@ -169,17 +176,6 @@ DELIMITER ;
 
 
 CALL `TTC`.`AddTimechecksForNewUser`(1);
-
-
--- Query for Getting Unique found tee times
-SELECT UserId, CourseId, TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(NotifiedTeeTimes, ',', numbers.n), ',', -1)) AS TeeTimes
-FROM TTC.Notifications
-JOIN (SELECT @row := @row + 1 AS n FROM (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) t, (SELECT @row := 0) r) numbers
-ON CHAR_LENGTH(NotifiedTeeTimes) - CHAR_LENGTH(REPLACE(NotifiedTeeTimes, ',', '')) >= numbers.n - 1
-ORDER BY TeeTimes;
-
-
-
 
 
 

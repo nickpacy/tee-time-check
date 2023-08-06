@@ -10,20 +10,20 @@
             <span>Click the <i class="fa fa-times-circle"></i> to re-add alert</span>
           </div>
         </div>
-        <div *ngFor="let dates of course.Dates">
+        <div *ngFor="let dates of course.Dates; let isLast = last">
           <p-tag severity="warning" styleClass="text-xl p-2" [rounded]="true" styleClass="w-full mb-2">
-            <span style="font-size: large;">{{dates.Date | date: 'fullDate'}}</span>
+            <span style="font-size: large;">{{transformDate(dates.Date)}}</span>
           </p-tag>
           
           <div class="p-d-flex p-flex-column mb-3">
             <p-tag *ngFor="let tt of dates.TeeTimes" severity="info" [rounded]="true" styleClass="m-1">
                 <div class="flex align-items-center justify-content-between">
                   <!-- <i class="fa fa-clock px-2"></i> -->
-                  <span style="width: 70px;" class="text-base pl-2">{{tt | date: 'hh:mm a'}}</span>
-                  <i class="fa fa-times-circle p-1" style="cursor: pointer;" (click)="removeNotification(course.CourseId, dates.Date, tt)"></i>
+                  <span style="width: 70px;" class="text-base pl-2">{{transformTime(tt.teeTime)}}</span>
+                  <i class="fa fa-times-circle p-1" style="cursor: pointer;" (click)="removeNotification(course.CourseId, dates.Date, tt.notifiedTeeTimeId)"></i>
                 </div>
               </p-tag>
-              <hr>
+              <hr *ngIf="!isLast">
           </div>
         </div>
       </div>
