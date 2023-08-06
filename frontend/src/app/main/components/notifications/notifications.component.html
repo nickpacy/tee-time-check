@@ -1,49 +1,59 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card">
+      <h4>Welcome to Your Course Alerts Dashboard!</h4>
+      <p>Here's what you can do on this page:</p>
+      <p><strong>Review Today's Alerts:</strong> This page displays alerts you've received today for specific tee times across different courses. Alerts reset daily.</p>
+      <p><strong>Missed Out on a Tee Time?:</strong> See the 'X' icon next to each tee time? Clicking on it allows you to express interest in a tee time you may have missed earlier. If that time becomes available again, we'll notify you right away!</p>
+      <p *ngIf="notifications?.length < 1"><strong>No Notifications Today?:</strong> If you don't see any alerts, it means you have not received any notifications today. But don't worry! You can easily configure your tee times by clicking on the "Setup Now" button.</p>
+    </div>
+  </div>
+</div>
 <div class="grid" *ngIf="notifications?.length > 0; else noNotifications">
-    <div class="col-12 lg:col-6 xl:col-4" *ngFor="let course of notifications;">
-      <div class="card mb-0">
-        <div class="flex justify-content-between mb-3">
-          <div class="flex" [ngStyle]="{width: '4rem', height: '4rem'}">
-            <img [src]="'../../../../assets/images/courses/' + course.ImageUrl" [alt]="course.CourseName" width="50" height="50">
-          </div>
-          <div>
-            <span class="block text-xl font-medium" style="text-align: right;">{{course.CourseName}} Alerts</span>
-            <span>Click the <i class="fa fa-times-circle"></i> to re-add alert</span>
-          </div>
+  <div class="col-12 lg:col-6 xl:col-4" *ngFor="let course of notifications;">
+    <div class="card mb-0">
+      <div class="flex justify-content-between mb-3">
+        <div class="flex" [ngStyle]="{width: '4rem', height: '4rem'}">
+          <img [src]="'../../../../assets/images/courses/' + course.ImageUrl" [alt]="course.CourseName" width="50" height="50">
         </div>
-        <div *ngFor="let dates of course.Dates; let isLast = last">
-          <p-tag severity="warning" styleClass="text-xl p-2" [rounded]="true" styleClass="w-full mb-2">
-            <span style="font-size: large;">{{transformDate(dates.Date)}}</span>
-          </p-tag>
-          
-          <div class="p-d-flex p-flex-column mb-3">
-            <p-tag *ngFor="let tt of dates.TeeTimes" severity="info" [rounded]="true" styleClass="m-1">
-                <div class="flex align-items-center justify-content-between">
-                  <!-- <i class="fa fa-clock px-2"></i> -->
-                  <span style="width: 70px;" class="text-base pl-2">{{transformTime(tt.teeTime)}}</span>
-                  <i class="fa fa-times-circle p-1" style="cursor: pointer;" (click)="removeNotification(course.CourseId, dates.Date, tt.notifiedTeeTimeId)"></i>
-                </div>
-              </p-tag>
-              <hr *ngIf="!isLast">
-          </div>
+        <div>
+          <span class="block text-xl font-medium" style="text-align: right;">{{course.CourseName}} Alerts</span>
+          <span>Click the x to re-add alert</span>
+        </div>
+      </div>
+      <div *ngFor="let dates of course.Dates; let isLast = last">
+        <p-tag severity="warning" styleClass="text-xl p-2" [rounded]="true" styleClass="w-full mb-2">
+          <span style="font-size: large;">{{transformDate(dates.Date)}}</span>
+        </p-tag>
+        
+        <div class="p-d-flex p-flex-column mb-3">
+          <p-tag *ngFor="let tt of dates.TeeTimes" severity="info" [rounded]="true" styleClass="m-1">
+              <div class="flex align-items-center justify-content-between">
+                <!-- <i class="fa fa-clock px-2"></i> -->
+                <span style="width: 70px;" class="text-base pl-2">{{transformTime(tt.teeTime)}}</span>
+                <i class="fa fa-times-circle p-1" style="cursor: pointer;" (click)="removeNotification(course.CourseId, dates.Date, tt.notifiedTeeTimeId)"></i>
+              </div>
+            </p-tag>
+            <hr *ngIf="!isLast">
         </div>
       </div>
     </div>
   </div>
+</div>
 
   <ng-template #noNotifications>
-    <div class="grid">
-        <div class="col-12 lg:col-6 xl:col-4">
-            <div class="px-4 py-5 shadow-2 flex flex-column md:flex-row md:align-items-center justify-content-between mb-3" [ngStyle]="{borderRadius: '1rem', background: 'linear-gradient(0deg, rgba(0, 123, 255, 0.5), rgba(0, 123, 255, 0.5)), linear-gradient(92.54deg, #1C80CF 47.88%, #FFFFFF 100.01%)'}">
-                <div>
-                    <div class="text-blue-100 font-medium text-xl mt-2 mb-3">NO NOTIFICATIONS TODAY</div>
-                    <div class="text-white font-medium text-2xl">Configure Tee Times</div>
-                </div>
-                <div class="mt-4 mr-auto md:mt-0 md:mr-0">
-                    <a [routerLink]="['/setup']" class="p-button font-bold px-3 py-3 p-button-success p-button-rounded p-button-raised">
-                        Setup Now
-                    </a>
-                </div>
-             </div>    
-        </div>
+    
+    <div class="col-12 lg:col-6 xl:col-4">
+        <div class="px-4 py-5 shadow-2 flex flex-column md:flex-row md:align-items-center justify-content-between mb-3" [ngStyle]="{borderRadius: '1rem', background: 'linear-gradient(0deg, rgba(0, 123, 255, 0.5), rgba(0, 123, 255, 0.5)), linear-gradient(92.54deg, #1C80CF 47.88%, #FFFFFF 100.01%)'}">
+            <div>
+                <div class="text-blue-100 font-medium text-xl mt-2 mb-3">NO NOTIFICATIONS TODAY</div>
+                <div class="text-white font-medium text-2xl">Configure Tee Times</div>
+            </div>
+            <div class="mt-4 mr-auto md:mt-0 md:mr-0">
+                <a [routerLink]="['/setup']" class="p-button font-bold px-3 py-3 p-button-success p-button-rounded p-button-raised">
+                    Setup Now
+                </a>
+            </div>
+          </div>    
     </div>
   </ng-template>

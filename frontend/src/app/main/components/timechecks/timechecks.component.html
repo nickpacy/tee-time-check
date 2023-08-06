@@ -91,29 +91,3 @@
 </p-dialog>
 
 
-<p-dialog [(visible)]="loadingDialog" [style]="{width: '450px'}" [modal]="true" class="p-fluid" [closable]="false">
-    <ng-template pTemplate="content">
-        <div style="text-align: center;">
-            <p-progressSpinner></p-progressSpinner>
-            <br>
-            Saving...
-        </div>
-    </ng-template>
-</p-dialog>
-
-
-
-<p-dialog [(visible)]="emailDialog" [style]="{width: '450px'}" header="New User" [modal]="true" class="p-fluid">
-    <p-messages></p-messages>
-    <ng-template pTemplate="content">
-        <div class="field">
-            <label for="Email">Email</label>
-            <input type="text" pInputText id="email" placeholder="email@email.com" [(ngModel)]="userEmail" required autofocus [ngClass]="{'ng-invalid ng-dirty' : !userEmail}" [pKeyFilter]="'email'" [pValidateOnly]="true"/>
-            <small class="ng-dirty ng-invalid" *ngIf="userEmail">Email is required.</small>
-        </div>  
-    </ng-template>
-
-    <ng-template pTemplate="footer">
-        <button pButton pRipple label="Check" icon="pi pi-check" class="p-button-text" (click)="onSubmit()"></button>
-    </ng-template>
-</p-dialog>

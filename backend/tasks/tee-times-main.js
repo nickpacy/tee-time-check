@@ -14,6 +14,7 @@ const foreupFunction = require("./tee-times-foreup"); // Custom function for get
 const navyFunction = require("./tee-times-navy"); // Custom function for getting tee times from Navy
 const teeitupFunction = require("./tee-times-teeitup"); // Custom function for getting tee times from TeeItUp
 const jcgolfFunction = require("./tee-times-jcgolf"); // Custom function for getting tee times from JCGolf
+const coronadoFunction = require("./tee-times-coronado"); // Custom function for getting tee times from Coronado
 
 // Load environment variables from .env file
 dotenv.config();
@@ -192,12 +193,22 @@ const checkTeeTimes = async () => {
         } else if (method === "teeitup") {
           try {
             teeTimes = await teeitupFunction.getTeeTimes(
-              bookingClass,
+              bookingPrefix,
               dayOfWeek,
               numPlayers
             );
           } catch (error) {
             console.log("Error retrieving tee times from TeeItUp:", error);
+          }
+        } else if (method === "coronado") {
+          try {
+            teeTimes = await coronadoFunction.getTeeTimes(
+              bookingClass,
+              dayOfWeek,
+              numPlayers
+            );
+          } catch (error) {
+            console.log("Error retrieving tee times from Coronado:", error);
           }
         } else if (method === "jcgolf") {
           try {
