@@ -52,8 +52,6 @@ const getNotificationsByCourse = async (req, res) => {
                   ORDER BY ntt.TeeTime
               `, [userId, result.CourseId, result.Date]);
 
-              console.log(result.Date);
-
               // Extract TeeTimes and NotifiedTeeTimeId from the results
               const teeTimes = teeTimesResults.map(row => ({
                   teeTime: row.TeeTime,

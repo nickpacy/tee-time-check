@@ -88,6 +88,7 @@ const updateUser = async (req, res) => {
     }
 
     try {
+      Phone = Phone === '' ? null : Phone;
       const result = await pool.query('UPDATE users SET Name = ?, Email = ?, Phone = ?, EmailNotification = ?, PhoneNotification = ?, Admin = ?, Active = ? WHERE UserId = ?', [Name, Email, Phone, EmailNotification, PhoneNotification, Admin, Active, userId]
       );
 
