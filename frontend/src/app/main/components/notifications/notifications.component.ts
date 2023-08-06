@@ -32,11 +32,11 @@ export class NotificationsComponent implements OnInit{
   }
 
   transformDate(date: string): string {
-    return this.datePipe.transform(date, 'fullDate', '-1400');
+    return this.datePipe.transform(date, 'fullDate', '-700');
   }
   
   transformTime(time: string): string {
-    return this.datePipe.transform(time, 'hh:mm a', '-1400');
+    return this.datePipe.transform(time, 'hh:mm a', '-700');
   }
   
   removeNotification(courseId, tDate, notifiedTeeTimeId) {

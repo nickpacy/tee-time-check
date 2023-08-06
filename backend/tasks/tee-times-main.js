@@ -384,8 +384,8 @@ const sendSMS = async (teeTimesByUser) => {
       
       let message = 'New Tee Times';
       for (const { courseAbbr, teeTime, available_spots, bookingLink } of teeTimes) {
-        const teeTimeDate = moment.tz(teeTime, "America/Los_Angeles").toDate();
-        const localTime = moment(teeTimeDate).format('M/D hh:mm');
+        // const teeTimeDate = moment.tz(teeTime, "America/Los_Angeles").toDate();
+        const localTime = moment(teeTime).format('M/D hh:mm');
         const newMessage = `\n${courseAbbr} ${localTime} (${available_spots})`;
         
         // Check if adding the new message (and potentially '...') would exceed the SMS length limit
