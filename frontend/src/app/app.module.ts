@@ -20,6 +20,7 @@ import { ChangePasswordFormComponent } from './main/components/user/change-passw
 import { NotificationsComponent } from './main/components/notifications/notifications.component';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { LoadingInterceptor } from './shared/loading.interceptor';
+import { SearchComponent } from './main/components/search/search.component';
 
 
 @NgModule({
@@ -30,7 +31,8 @@ import { LoadingInterceptor } from './shared/loading.interceptor';
         AddUserComponent,
         ProfileComponent,
         ChangePasswordFormComponent,
-        NotificationsComponent
+        NotificationsComponent,
+        SearchComponent
     ],
     imports: [
         AppRoutingModule,

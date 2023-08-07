@@ -10,6 +10,7 @@ import { BycourseComponent } from './main/components/timechecks/bycourse/bycours
 import { DashboardComponent } from './main/components/dashboard/dashboard.component';
 import { ProfileComponent } from './main/components/user/profile/profile.component';
 import { NotificationsComponent } from './main/components/notifications/notifications.component';
+import { SearchComponent } from './main/components/search/search.component';
 
 @NgModule({
     imports: [
@@ -25,6 +26,7 @@ import { NotificationsComponent } from './main/components/notifications/notifica
                     { path: 'notifications', component: NotificationsComponent, canActivate: [AuthGuard] },
                     { path: 'timechecks', component: TimechecksComponent, canActivate: [AuthGuard] },
                     { path: 'setup', component: BycourseComponent, canActivate: [AuthGuard] },
+                    { path: 'search', component: SearchComponent, canActivate: [AuthGuard] },
                 ]
             },
             { path: 'auth', loadChildren: () => import('./main/components/auth/auth.module').then(m => m.AuthModule) },
