@@ -8,6 +8,8 @@ const coursesRoutes = require('./routes/coursesRoutes');
 const timechecksRoutes = require('./routes/timechecksRoutes');
 const notificationsRoutes = require('./routes/notificationsRoutes');
 
+const teeTimeRoutes = require('./routes/teeTimeRoutes');
+
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -20,6 +22,8 @@ app.use(`${stage}/users`, usersRoutes);
 app.use(`${stage}/courses`, coursesRoutes);
 app.use(`${stage}/timechecks`, timechecksRoutes);
 app.use(`${stage}/notifications`, notificationsRoutes);
+
+app.use(`${stage}/teetimes`, teeTimeRoutes);
 
 if (process.env.STATIC == 'true') {
     module.exports.handler = serverless(app) 

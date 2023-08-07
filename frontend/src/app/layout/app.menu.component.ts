@@ -29,7 +29,8 @@ export class AppMenuComponent implements OnInit {
                     // { label: 'Courses', icon: 'fa fa-map-location', routerLink: ['/courses'] },
                     { label: 'Home', icon: 'fa fa-home', routerLink: ['/'] },
                     { label: 'Setup', icon: 'fa fa-golf-ball-tee', routerLink: ['/setup'] },
-                    { label: 'Notifications', icon: 'fa fa-bell', routerLink: ['/notifications'] }
+                    { label: 'Notifications', icon: 'fa fa-bell', routerLink: ['/notifications'] },
+                    { label: 'Global Search', icon: 'fa fa-search', routerLink: ['/search'] }
                 ]
             },
             

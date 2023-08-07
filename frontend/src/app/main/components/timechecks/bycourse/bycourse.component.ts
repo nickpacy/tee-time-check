@@ -234,19 +234,6 @@ export class BycourseComponent {
     this.onSave(timecheck);
   }
 
-  convertToTime(interval: number): string {
-    if (!interval) {
-      return "false";
-    }
-    const hours = Math.floor(interval / 4);
-    const minutes = (interval % 4) * 15;
-  
-    const formattedHours = (hours === 0 || hours === 12) ? 12 : hours % 12;
-    const formattedMinutes = minutes.toString().padStart(2, '0');
-    const period = (hours < 12) ? 'AM' : 'PM';
-  
-    return `${formattedHours}:${formattedMinutes} ${period}`;
-  }
 
   onCourseClick(course: Course) {
     this.selectedCourse = course;

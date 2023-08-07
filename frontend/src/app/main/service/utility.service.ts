@@ -73,17 +73,37 @@ export class UtilityService {
         return Math.floor(interval);
     }
 
-    convertIntervalToUTCTimeString(interval: number): string {
+    convertIntervalToLocalTimeString(interval: number): string {
         const localDate = new Date();
         localDate.setHours(Math.floor(interval / 4), (interval % 4) * 15, 0, 0);
+        return this.datePipe.transform(localDate, 'HH:mm');
+    }
 
-        const utcHours = localDate.getUTCHours().toString().padStart(2, '0');
-        const utcMinutes = localDate.getUTCMinutes().toString().padStart(2, '0');
-        const utcSeconds = localDate.getUTCSeconds().toString().padStart(2, '0');
+    convertIntervalToUTCTimeString(interval: number): string {
+      const localDate = new Date();
+      localDate.setHours(Math.floor(interval / 4), (interval % 4) * 15, 0, 0);
 
-        const utcTimeString = `${utcHours}:${utcMinutes}:${utcSeconds}`;
+      const utcHours = localDate.getUTCHours().toString().padStart(2, '0');
+      const utcMinutes = localDate.getUTCMinutes().toString().padStart(2, '0');
+      const utcSeconds = localDate.getUTCSeconds().toString().padStart(2, '0');
 
-        return utcTimeString;
+      const utcTimeString = `${utcHours}:${utcMinutes}:${utcSeconds}`;
+
+      return utcTimeString;
+  }
+
+    convertIntervalToTime(interval: number): string {
+      if (!interval) {
+        return "false";
+      }
+      const hours = Math.floor(interval / 4);
+      const minutes = (interval % 4) * 15;
+    
+      const formattedHours = (hours === 0 || hours === 12) ? 12 : hours % 12;
+      const formattedMinutes = minutes.toString().padStart(2, '0');
+      const period = (hours < 12) ? 'AM' : 'PM';
+    
+      return `${formattedHours}:${formattedMinutes} ${period}`;
     }
 
 

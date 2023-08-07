@@ -72,7 +72,7 @@
                     <td>{{layoutService.isMobile() ? utilityService.dayName(ttc.DayOfWeek, true) : ttc.DayName}}</td>
                     <td style="text-align: center;width: 200px;">
                         <span>
-                            {{convertToTime(ttc.TimeInterval[0])}} - {{convertToTime(ttc.TimeInterval[1])}} 
+                            {{utilityService.convertIntervalToTime(ttc.TimeInterval[0])}} - {{utilityService.convertIntervalToTime(ttc.TimeInterval[1])}} 
                         </span>
                         <!-- {{ttc.TimeInterval[0]}} - {{ttc.TimeInterval[1]}} -->
                         <br>
