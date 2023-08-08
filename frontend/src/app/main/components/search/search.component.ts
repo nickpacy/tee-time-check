@@ -82,4 +82,10 @@ export class SearchComponent implements OnInit {
 
   }
 
+  openBookingLink(bookingUrl) {
+    if (bookingUrl) {
+      window.open(bookingUrl, '_blank');
+    }
+  }
+
 }

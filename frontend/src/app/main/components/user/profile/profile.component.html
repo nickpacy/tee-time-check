@@ -40,11 +40,15 @@
       </div> -->
 
       <div class="p-field p-col-12">
-        <button pButton type="button" icon="fa fa-key" (click)="passwordDialog= true" label="Change Password" class="p-button-secondary w-full md:w-30rem mb-5" style="padding:1rem"></button>
+        <button pButton type="button" icon="fa fa-key" (click)="passwordDialog= true" label="Change Password" class="p-button-secondary w-full md:w-30rem mb-3" style="padding:1rem"></button>
       </div>
       
       <div class="p-field p-col-12">
         <button pButton type="submit" icon="fa fa-save" label="Save Changes" [disabled]="!userForm.valid" class="w-full md:w-30rem mb-3" style="padding:1rem"></button>
+      </div>
+      
+      <div class="p-field p-col-12" *ngIf="isAdmin && currentUser.UserId != 1">
+        <button pButton type="button" icon="fa fa-trash" label="Delete User" class="p-button-danger w-full md:w-30rem mb-3" style="padding:1rem" (click)="deleteUser(currentUser.UserId)"></button>
       </div>
     </form>
   </div>

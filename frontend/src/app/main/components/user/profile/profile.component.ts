@@ -4,7 +4,8 @@ import { AuthService } from '../../auth/auth.service';
 import { MessageService } from 'primeng/api';
 import { UserService } from 'src/app/main/service/user.service';
 import { IUser } from 'src/app/main/models/user.model';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { error } from 'console';
 
 
 @Component({
@@ -21,6 +22,7 @@ export class ProfileComponent implements OnInit {
   constructor(private authService: AuthService,
               private userService: UserService,
               private route: ActivatedRoute,
+              private router: Router,
               private messageService: MessageService,
               private formBuilder: FormBuilder) {}
 
@@ -115,4 +117,19 @@ export class ProfileComponent implements OnInit {
       });
     }
   }
+
+  deleteUser(userid) {
+
+    if (window.confirm('This will remove the user from the database.')) {
+      this.userService.deleteUser(userid)
+        .subscribe((res) => {
+          console.log(res);
+          this.router.navigate(['/user'])
+        }, error => {
+          console.log(error);
+        });
+    }
+
+  }
+
 }

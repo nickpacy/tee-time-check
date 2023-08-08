@@ -28,7 +28,7 @@
               </div>
         </div>
     </div>
-    <div class="col-12 lg:col-6 xl:col-4" *ngFor="let tt of teeTimes;">
+    <div class="col-12 lg:col-6 xl:col-4 course-card" *ngFor="let tt of teeTimes;" (click)="openBookingLink(tt.course.BookingUrl)">
             <div class="card">
                 <div class="flex justify-content-between mb-2">
                     <div class="flex">
