@@ -26,8 +26,6 @@ app.use(`${stage}/notifications`, notificationsRoutes);
 app.use(`${stage}/teetimes`, teeTimeRoutes);
 
 if (process.env.STATIC == 'true') {
-    const date = new Date();
-    console.log(date.toString());
     module.exports.handler = serverless(app) 
 } else {
     const PORT = process.env.PORT || 5050;

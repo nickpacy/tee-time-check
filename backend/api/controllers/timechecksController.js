@@ -129,7 +129,8 @@ const getActiveTimecheckCountByUserId = async (req, res) => {
   const q = `SELECT COUNT(*) as activeTimechecksCount 
              FROM timechecks t
              JOIN users u ON t.UserId = u.UserId
-             WHERE u.UserId = ? AND t.Active = true
+             JOIN courses c ON t.CourseId = c.CourseId
+             WHERE u.UserId = ? AND t.Active = 1 AND c.Active = 1
             `
   try {
     const results = await pool.query(q, [userId]);

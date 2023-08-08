@@ -5,64 +5,90 @@ const moment = require('moment');
 require('moment-timezone');
 
 // API to search for TEE TIMES
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 const searchTeeTimes = async (req, res) => {
     try {
         const { courseIds, date, startTime, endTime, numPlayers } = req.body;
 
-        // 1. Query the courses table for the provided courseIds
+        // Query the courses table for the provided courseIds
         const courses = await getCoursesByIds(courseIds);
 
-        const teeTimesResults = [];
+        const promises = [];
 
-        // 2. Loop through each course and call another function to retrieve the tee times
         for (const course of courses) {
-            teeTimes = [];
-            if (course.Method == 'foreup') {
-                teeTimes = await getTeeTimes_foreup(date, course.BookingClass, course.ScheduleId);
-            } else if (course.Method == 'jcgolf') {
-                teeTimes = await getTeeTimes_jcgolf(date, course.BookingClass, course.BookingPrefix, course.WebsiteId);
-            } else if (course.Method == 'navy') {
-                const navyTimes = await getTeeTimes_navy(date, course.BookingClass, numPlayers, startTime);
-                teeTimes = navyTimes[0];
-                course.BookingUrl = navyTimes[1];
-            } else if (course.Method == 'teeitup') {
-                teeTimes = await getTeeTimes_teeitup(date, course.BookingPrefix);
-            } else if (course.Method == 'coronado') {
-                coronadoTimes = await getTeeTimes_coronado(date, course.BookingClass);
-                if (!coronadoTimes[1]) {
-                    coronadoTimes = await getTeeTimes_coronado(date, '20066');
-                }
-                teeTimes = coronadoTimes[0];
-            } else {
-                teeTimes = [];
+            switch (course.Method) {
+                case 'foreup':
+                    promises.push(getTeeTimes_foreup(date, course.BookingClass, course.ScheduleId));
+                    break;
+                case 'jcgolf':
+                    const lastPromise = promises[promises.length - 1] || Promise.resolve();
+                    const delayedPromise = lastPromise
+                        .then(() => delay(1200))
+                        .then(() => getTeeTimes_jcgolf(date, course.BookingClass, course.BookingPrefix, course.WebsiteId));
+                    promises.push(delayedPromise);
+                    break;
+                case 'navy':
+                    promises.push(getTeeTimes_navy(date, course.BookingClass, numPlayers, startTime)
+                        .then(navyTimes => {
+                            course.BookingUrl = navyTimes[1];
+                            return navyTimes[0];
+                        }));
+                    break;
+                case 'teeitup':
+                    promises.push(getTeeTimes_teeitup(date, course.BookingPrefix));
+                    break;
+                    case 'coronado':
+                      const currentDate = moment(); // This will include the current time
+                      const twoDaysOut = moment().add(2, 'days').startOf('day'); // Set it to the start of the day (midnight) two days from now
+                      
+                      if (moment(date).isSameOrAfter(currentDate) && moment(date).isBefore(twoDaysOut)) {
+                          promises.push(getTeeTimes_coronado(date, course.BookingClass)
+                              .then(coronadoTimes => {
+                                  if (!coronadoTimes[1]) {
+                                      return getTeeTimes_coronado(date, '20066').then(times => times[0]);
+                                  }
+                                  return coronadoTimes[0];
+                              }));
+                      } else {
+                          promises.push(getTeeTimes_coronado(date, '20066'));
+                      }
+                      break;
+                default:
+                    promises.push(Promise.resolve([]));
+                    break;
             }
-            
-            teeTimes = teeTimes.map(item => ({
-                ...item,
-                course: course
-            }));
-            
-            teeTimesResults.push(...teeTimes);
         }
 
-        // 3. Filter the results based on startTime, endTime, and numPlayers
+        const teeTimesArrays = await Promise.all(promises);
+
+        let teeTimesResults = [];
+        teeTimesArrays.forEach((teeTimes, idx) => {
+            teeTimes = teeTimes.map(item => ({
+                ...item,
+                course: courses[idx]
+            }));
+            teeTimesResults.push(...teeTimes);
+        });
+
+        // Filtering logic 
         const filteredTeeTimes = teeTimesResults.filter(teeTime => {
-            // Convert the times to full date-time format
             const startDateTime = moment(`${date} ${startTime}`, 'YYYY-MM-DD HH:mm');
             const endDateTime = moment(`${date} ${endTime}`, 'YYYY-MM-DD HH:mm');
             const teeTimeMoment = moment(teeTime.time, 'YYYY-MM-DD HH:mm');
-        
-            // Compare the moment objects
-            return teeTimeMoment.isSameOrAfter(startDateTime) 
-                && teeTimeMoment.isSameOrBefore(endDateTime) 
+
+            return teeTimeMoment.isSameOrAfter(startDateTime)
+                && teeTimeMoment.isSameOrBefore(endDateTime)
                 && teeTime.available_spots >= numPlayers;
         });
 
         res.json(filteredTeeTimes);
+
     } catch (error) {
-        res.status(500).json({ error: 'Failed to get tee times', error });
+        res.status(500).json({ error: 'Failed to get tee times', details: error.message });
     }
 };
+
 
 async function getCoursesByIds(courseIds) {
     if (!Array.isArray(courseIds) || courseIds.length === 0) {
@@ -71,7 +97,7 @@ async function getCoursesByIds(courseIds) {
 
     try {
         // Construct the query with the appropriate number of placeholders based on courseIds length
-        const query = `SELECT * FROM courses WHERE CourseId IN (${Array(courseIds.length).fill('?').join(',')})`;
+        const query = `SELECT * FROM courses WHERE Active = 1 AND CourseId IN (${Array(courseIds.length).fill('?').join(',')})`;
 
         const rows = await pool.query(query, courseIds);
         if (rows.length === 0) {

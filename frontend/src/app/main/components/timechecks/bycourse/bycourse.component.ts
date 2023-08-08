@@ -25,11 +25,14 @@ export class BycourseComponent {
   timecheck: TimecheckEntry = new TimecheckEntry();
   submitted: boolean = false;
   timecheckDialog: boolean = false;
-  loadingDialog: boolean = false;
+  helpDialog: boolean = false;
 
   timeRange: number[] = [20, 65];
 
   selectedCourse: Course = new Course;
+
+  activeTemplate: boolean = false;
+  copyTemplate: any[] = [];
 
   courses: Course[] = [];
   daysOfWeek = [
@@ -138,7 +141,6 @@ export class BycourseComponent {
       this.timecheck.EndTime = this.utilityService.utcTime(this.timecheck.EndDate)
   
       update = this.timecheck;
-      this.loadingDialog = true;
       console.log("NOT PASSED IN");
     } else {
       update = timecheck;
@@ -153,13 +155,11 @@ export class BycourseComponent {
           (data: any) => {
             this.timecheckDialog = false;
             this.getTimechecksByUser().finally(() => {
-              this.loadingDialog = false;
             });
             resolve(true);
           },
           (error) => {
             console.error('Error updating timecheck:', error);
-            this.loadingDialog = false;
             reject(true);
           }
         );
@@ -170,13 +170,11 @@ export class BycourseComponent {
           (data: any) => {
             this.timecheckDialog = false;
             this.getTimechecksByUser().finally(() => {
-              this.loadingDialog = false;
             });
             resolve(true);
           },
           (error) => {
             console.error('Error creating timecheck:', error);
-            this.loadingDialog = false;
             reject(true);
           }
         );
@@ -190,19 +188,16 @@ export class BycourseComponent {
 
     const id = timecheck.Id;
     
-    this.loadingDialog = true;
     return new Promise((resolve, reject) => {
       if (id) {
         this.timecheckService.deleteTimecheck(id).subscribe(
           (data: any) => {
             console.log(data);
             this.getTimechecksByUser().finally(() => {
-              this.loadingDialog = false;
             });
             resolve(true);
           },
           (error) => {
-            this.loadingDialog = false;
             console.error('Error getting user:', error);
             reject(true);
           }
@@ -264,9 +259,8 @@ export class BycourseComponent {
   }
 
 
-  onBulkSaveTimechecks() {
+  onBulkSaveTimechecks(setTemplate = false) {
     if (this.timechecks.length > 0) {
-      this.loadingDialog = true;
       
       this.timechecks.map((x: FullTimeCheck) => {
         x.StartTime = this.utilityService.convertIntervalToUTCTimeString(x.TimeInterval[0]);
@@ -286,12 +280,16 @@ export class BycourseComponent {
             this.courses[courseIndex].Timechecks = this.timechecks.sort((a, b) => a.DayOfWeek - b.DayOfWeek);
           }
 
+          if (this.activeTemplate && this.copyTemplate?.length == 0) {
+            // Setup copy template
+            this.copyTemplate = JSON.parse(JSON.stringify(this.timechecks));
+            console.log(this.copyTemplate);
+          }
+
           this.timecheckDialog = false;
-          this.loadingDialog = false;
         },
         (error) => {
           console.error('Error creating timecheck:', error);
-          this.loadingDialog = false;
         }
       );
 
@@ -306,5 +304,33 @@ export class BycourseComponent {
     return timechecks.filter(x => x.Active).length;
   }
   
+  pasteTemplateToCourse() {
+     // If no template is set, exit early
+    if (this.copyTemplate?.length == 0) {
+        console.warn('No template set');
+    }
+    
+    // Iterate over the current timechecks
+    let newTimechecks = this.timechecks.map((timecheck, index) => {
+        if (index < this.copyTemplate.length) {
+            // Overwrite the properties from the template while preserving courseId and id
+            let templateCopy = { ...this.copyTemplate[index] };
+            delete templateCopy.CourseId;
+            delete templateCopy.Id;
+
+            return { ...timecheck, ...templateCopy };
+        }
+        return timecheck;  // if index exceeds copyTemplate length, return original
+    });
+
+    // Sort the timechecks based on DayOfWeek
+    this.timechecks = newTimechecks.sort((a, b) => {
+      if (a.DayOfWeek === 0) return 1;
+      if (b.DayOfWeek === 0) return -1;
+      return a.DayOfWeek - b.DayOfWeek;
+    });
+
+    console.log("New Timecheck copy", this.timechecks)
+  }
 
 }

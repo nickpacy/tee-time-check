@@ -77,6 +77,7 @@ const checkTeeTimes = async () => {
                       LEFT JOIN notified_tee_times ntt ON ntt.NotificationId = n.NotificationId
                       WHERE u.active = 1
                           AND t.active = 1
+                          AND c.active = 1
                           AND ((u.email is not null AND u.emailNotification = 1 )
                             OR (u.phone is not null AND u.phoneNotification = 1))
                           AND u.lastLoginDate BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND NOW()
@@ -248,8 +249,8 @@ const checkTeeTimes = async () => {
       }
 
       // Send emails with tee time notifications
-      // await sendEmails(teeTimesByUser);
-      // await sendSMS(teeTimesByUser);
+      await sendEmails(teeTimesByUser);
+      await sendSMS(teeTimesByUser);
 
       try {
           // Save the list of notified tee times for each user to the database
