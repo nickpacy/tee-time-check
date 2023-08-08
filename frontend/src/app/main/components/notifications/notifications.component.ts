@@ -35,11 +35,15 @@ export class NotificationsComponent implements OnInit{
   }
 
   transformDate(date: string): string {
-    return this.datePipe.transform(date, 'fullDate');
+    const dateWithZ = date;
+    const dateWithoutZ = dateWithZ.replace('Z', '');
+    return this.datePipe.transform(dateWithoutZ, 'fullDate', 'America/Los_Angeles');
   }
   
   transformTime(time: string): string {
-    return this.datePipe.transform(time, 'hh:mm a');
+    const dateWithZ = time;
+    const dateWithoutZ = dateWithZ.replace('Z', '');
+    return this.datePipe.transform(dateWithoutZ, 'hh:mm a', 'America/Los_Angeles');
   }
   
   removeNotification(courseId, tDate, notifiedTeeTimeId) {
