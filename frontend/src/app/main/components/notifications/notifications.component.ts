@@ -20,6 +20,9 @@ export class NotificationsComponent implements OnInit{
               private utilService: UtilityService){}
 
   ngOnInit(): void {
+
+    console.log("Live Date: ", new Date());
+
     this.USERID = this.authService.getUserId();
     this.notificationService.getNotificationsByCourse(this.USERID)
     .subscribe(res => {
