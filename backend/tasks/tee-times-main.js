@@ -2,11 +2,11 @@
 const mysql = require("mysql2/promise"); // MySQL library
 const moment = require("moment-timezone"); // Date and time manipulation library
 const dotenv = require("dotenv"); // Environment variable management library
-const nodemailer = require("nodemailer"); // Email sending library
 const winston = require("winston"); // Logging library
 const fs = require('fs').promises; // Import the fs module
 // const AWS = require('aws-sdk');
 const twilio = require('twilio');
+const sgMail = require('@sendgrid/mail');
 
 // Import custom functions
 const uti = require("./utility"); // Utility functions
@@ -41,25 +41,8 @@ if (!pool) {
   });
 }
 
-// Create a transporter for sending emails
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST, // SMTP host for sending emails
-  port: process.env.SMTP_PORT, // SMTP port for sending emails
-  secure: true, // Use SSL/TLS for secure connection
-  auth: {
-    user: process.env.SMTP_USER, // SMTP username
-    pass: process.env.SMTP_PASSWORD, // SMTP password
-  },
-});
-
 // Create a Twilio client
 const smsClient = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
-
-// AWS.config.update({
-//   region: 'us-east-1' // Choose your region
-// });
-
-// const sns = new AWS.SNS({apiVersion: '2010-03-31'});
 
 // Check tee times and send notifications
 const checkTeeTimes = async () => {
@@ -90,7 +73,7 @@ const checkTeeTimes = async () => {
                       FROM timechecks t
                       JOIN users u ON u.userid = t.userId
                       JOIN courses c ON c.courseid = t.courseId
-                      LEFT JOIN notifications n ON n.userId = t.userId AND n.courseId = t.courseId AND n.checkdate = CURDATE()
+                      LEFT JOIN notifications n ON n.userId = t.userId AND n.courseId = t.courseId AND DATE(n.checkdate - INTERVAL 7 HOUR) = DATE(CURDATE() - INTERVAL 7 HOUR)
                       LEFT JOIN notified_tee_times ntt ON ntt.NotificationId = n.NotificationId
                       WHERE u.active = 1
                           AND t.active = 1
@@ -265,8 +248,8 @@ const checkTeeTimes = async () => {
       }
 
       // Send emails with tee time notifications
-      await sendEmails(teeTimesByUser);
-      await sendSMS(teeTimesByUser);
+      // await sendEmails(teeTimesByUser);
+      // await sendSMS(teeTimesByUser);
 
       try {
           // Save the list of notified tee times for each user to the database
@@ -287,7 +270,7 @@ const checkTeeTimes = async () => {
                       INSERT INTO notified_tee_times (NotificationId, TeeTime)
                       SELECT NotificationId, ?
                       FROM notifications
-                      WHERE userId = ? AND courseId = ? AND checkdate = CURDATE();
+                      WHERE userId = ? AND courseId = ? AND date(checkdate) = CURDATE();
                   `;
       
                   // Convert to UTC Time
@@ -368,7 +351,7 @@ const sendEmails = async (teeTimesByUser) => {
       };
 
       try {
-        const info = await transporter.sendMail(mailOptions);
+        const info = await sendMail(mailOptions);
         console.log(`Tee Time Found! Email sent to ${email}`);
       } catch (error) {
         console.log(`Error sending email to ${email}:`, error);
@@ -422,6 +405,24 @@ const sendSMS = async (teeTimesByUser) => {
   } else {
     // No new tee times
     console.log(`No New Tee Times as of ${new Date()}`);
+  }
+};
+
+const sendMail = async (mail) => {
+  try {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+    const result = await sgMail.send({
+      from: mail.from,
+      to: mail.to,
+      subject: mail.subject,
+      html: mail.html
+    });
+
+    return result; // Return the result object on successful email send
+  } catch (err) {
+    console.error('Error sending email:', err);
+    throw err; // Rethrow the error to be caught by the caller or handle it accordingly
   }
 };
 

@@ -30,7 +30,8 @@ export class AppMenuComponent implements OnInit {
                     { label: 'Home', icon: 'fa fa-home', routerLink: ['/'] },
                     { label: 'Setup', icon: 'fa fa-golf-ball-tee', routerLink: ['/setup'] },
                     { label: 'Notifications', icon: 'fa fa-bell', routerLink: ['/notifications'] },
-                    { label: 'Global Search', icon: 'fa fa-search', routerLink: ['/search'] }
+                    { label: 'Courses', icon: 'fa fa-map-location-dot', routerLink: ['/courses'] },
+                    { label: 'Global Search (Beta)', icon: 'fa fa-search', routerLink: ['/search'] }
                 ]
             },
             
@@ -42,7 +43,6 @@ export class AppMenuComponent implements OnInit {
                 items: [
                     { label: 'Users', icon: 'fa fa-users', routerLink: ['/user'] },
                     { label: 'Timechecks', icon: 'fa fa-golf-ball-tee', routerLink: ['/timechecks'] },
-                    { label: 'Courses', icon: 'fa fa-map-location', routerLink: ['/courses'] },
                 ]
             },)
         }

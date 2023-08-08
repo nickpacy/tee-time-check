@@ -24,7 +24,7 @@ const searchTeeTimes = async (req, res) => {
             } else if (course.Method == 'navy') {
                 const navyTimes = await getTeeTimes_navy(date, course.BookingClass, numPlayers, startTime);
                 teeTimes = navyTimes[0];
-                course.BookingLink = navyTimes[1];
+                course.BookingUrl = navyTimes[1];
             } else if (course.Method == 'teeitup') {
                 teeTimes = await getTeeTimes_teeitup(date, course.BookingPrefix);
             } else if (course.Method == 'coronado') {

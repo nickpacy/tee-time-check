@@ -8,16 +8,16 @@ const getNotificationsByCourse = async (req, res) => {
   try {
       let query = `
           SELECT DISTINCT 
-              n.UserId, 
-              c.CourseId, 
-              c.CourseName, 
-              c.ImageUrl, 
-              DATE(ntt.TeeTime) as Date
-          FROM notified_tee_times ntt
-          JOIN notifications n ON ntt.NotificationId = n.NotificationId
-          JOIN courses c ON n.CourseId = c.CourseId 
-          WHERE n.UserId = ? 
-          AND DATE(ntt.NotifiedDate) = CURDATE()
+          n.UserId, 
+          c.CourseId, 
+          c.CourseName, 
+          c.ImageUrl, 
+          DATE(ntt.TeeTime - INTERVAL 7 HOUR) as Date
+      FROM notified_tee_times ntt
+      JOIN notifications n ON ntt.NotificationId = n.NotificationId
+      JOIN courses c ON n.CourseId = c.CourseId 
+      WHERE n.UserId = ?
+      AND DATE(ntt.NotifiedDate - INTERVAL 7 HOUR) = DATE(CURDATE() - INTERVAL 7 HOUR)
       `;
 
       const results = await pool.query(query, [userId]);
@@ -41,15 +41,15 @@ const getNotificationsByCourse = async (req, res) => {
 
               // Fetch TeeTimes and NotifiedTeeTimeId for each unique CourseId and Date
               const teeTimesResults = await pool.query(`
-                  SELECT DISTINCT
-                      ntt.TeeTime,
+                  SELECT DISTINCT 
+                      (ntt.TeeTime - INTERVAL 7 HOUR) TeeTime,
                       ntt.NotifiedTeeTimeId
                   FROM notified_tee_times ntt
                   JOIN notifications n ON ntt.NotificationId = n.NotificationId
                   WHERE n.UserId = ? 
                   AND n.CourseId = ? 
-                  AND DATE(ntt.TeeTime) = ?
-                  ORDER BY ntt.TeeTime
+                  AND DATE(ntt.TeeTime - INTERVAL 7 HOUR) = ?
+                  ORDER BY (ntt.TeeTime - INTERVAL 7 HOUR)
               `, [userId, result.CourseId, result.Date]);
 
               // Extract TeeTimes and NotifiedTeeTimeId from the results

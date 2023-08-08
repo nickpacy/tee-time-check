@@ -3,7 +3,7 @@ const pool = require('../database');
 // Get all courses
 const getCourses = async (req, res) => {
   try {
-    const rows = await pool.query('SELECT * FROM courses');
+    const rows = await pool.query('SELECT * FROM courses ORDER BY CourseName');
     res.json(rows);
   } catch (error) {
     console.error('Error getting courses: ', error);

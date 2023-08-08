@@ -2,20 +2,17 @@
     <div class="col-12">
         <div class="card px-6 py-6">
             <p-toast></p-toast>
-            <p-toolbar styleClass="mb-4">
-                <ng-template pTemplate="left">
-                    <div class="my-2">
-                        <button pButton pRipple label="New" icon="pi pi-plus" class="p-button-success mr-2" (click)="onNew()"></button>
-                    </div>
-                </ng-template>
-            </p-toolbar>
+            <h2>
+                
+                <button pButton pRipple label="New User" style="float: right;" icon="pi pi-plus" class="p-button-success p-button-sm" (click)="onNew()"></button> 
+                <span class="pi pi-users" style="font-size: 2rem;margin-right: .5em;"></span>Users
+            </h2><hr>
             
             <p-table styleClass="p-datatable-sm" [value]="users" [paginator]="false" [rows]="20" responsiveLayout="scroll" [globalFilterFields]="['Name','Email']">
                 <ng-template pTemplate="header">
                     <tr>
                         <th pSortableColumn="Name">Name <p-sortIcon field="Name"></p-sortIcon><p-columnFilter type="text" field="Name" display="menu"></p-columnFilter></th>
                         <th pSortableColumn="Email">Email <p-sortIcon field="Email"></p-sortIcon></th>
-                        <th>Edit</th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-user>
@@ -24,15 +21,15 @@
                             <span *ngIf="user.Active"><i class="fa fa-user" style="color: green;"></i></span>
                             <span *ngIf="!user.Active"><i class="fa fa-user" style="color: red;"></i></span>
                             &nbsp;
-                            {{user.Name}}
+                            <a [routerLink]="['/profile', user.UserId]">{{user.Name}}</a>
                         </td>
                         <td style="width: 35%; min-width: 7rem;">{{user.Email}}</td>
-                        <td>
+                        <!-- <td>
                             <div class="flex">
                                 <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" (click)="onEdit(user)"></button>
                                 <button pButton pRipple icon="pi pi-trash" class="p-button-rounded p-button-warning" (click)="onDelete(user)"></button>
                             </div>
-                        </td>
+                        </td> -->
                     </tr>
                 </ng-template>
             </p-table>
@@ -43,7 +40,7 @@
 
 
 
-<p-dialog [(visible)]="userDialog" [style]="{width: '450px'}" header="New User" [modal]="true" class="p-fluid">
+<p-dialog [(visible)]="userDialog" [style]="{'max-wdith': '95vw'}" header="New User" [modal]="true" class="p-fluid">
     <ng-template pTemplate="content">
         <div class="field">
             <label for="name">Name</label>
@@ -63,7 +60,7 @@
 
     <ng-template pTemplate="footer">
         <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text" (click)="onCancel()"></button>
-        <button pButton pRipple label="Save" icon="pi pi-check" class="p-button-text" (click)="onSave()"></button>
+        <button pButton pRipple label="Invite" icon="pi pi-envelope" class="p-button-text" (click)="onSave()"></button>
     </ng-template>
 </p-dialog>
 

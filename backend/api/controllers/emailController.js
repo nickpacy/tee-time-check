@@ -1,16 +1,17 @@
 const pool = require("../database");
 const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
-const nodemailer = require("nodemailer");
+const sgMail = require('@sendgrid/mail');
 const fs = require("fs").promises;
 const crypto = require("crypto");
 const escapeHtml = require('escape-html');
+
 
 dotenv.config();
 
 const generateRandomPassword = (length = 12) => {
   const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+";
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$";
   const buffer = crypto.randomBytes(length);
   const passwordArray = [];
 
@@ -20,18 +21,6 @@ const generateRandomPassword = (length = 12) => {
 
   return passwordArray.join("");
 };
-
-// Create a transporter for sending emails
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST, // SMTP host for sending emails
-  port: process.env.SMTP_PORT, // SMTP port for sending emails
-  secure: true, // Use SSL/TLS for secure connection
-  auth: {
-    user: process.env.SMTP_USER, // SMTP username
-    pass: process.env.SMTP_PASSWORD, // SMTP password
-  },
-});
-
 
 const setAndSendPassword = async (user, mailOptions) => {
     // Generate a random password
@@ -49,8 +38,6 @@ const setAndSendPassword = async (user, mailOptions) => {
       let htmlTemplate = await fs.readFile(`./assets/${mailOptions.template}`, 'utf8');
       htmlTemplate = htmlTemplate.replace('[User]', escapeHtml(user.Name));
       htmlTemplate = htmlTemplate.replace('[GeneratedPassword]', escapeHtml(randomPassword));
-
-      console.log(htmlTemplate);
   
       const mailer = {
         from: mailOptions.from,
@@ -60,12 +47,30 @@ const setAndSendPassword = async (user, mailOptions) => {
       };
   
       // Send the Email
-      const info = await transporter.sendMail(mailer);
-      console.log('Email sent: ', info.messageId);
+      const info = await sendMail(mailer);
+      console.log(`Email sent to ${mailer.to}`);
     } catch (error) {
       console.error('Error sending email: ', error);
     }
   };
+
+const sendMail = async (mail) => {
+  try {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+    const result = await sgMail.send({
+      from: mail.from,
+      to: mail.to,
+      subject: mail.subject,
+      html: mail.html
+    });
+
+    return result; // Return the result object on successful email send
+  } catch (err) {
+    console.error('Error sending email:', err);
+    throw err; // Rethrow the error to be caught by the caller or handle it accordingly
+  }
+};
 
 module.exports = {
     setAndSendPassword
