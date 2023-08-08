@@ -4,6 +4,7 @@ import { CourseService } from '../../service/course.service';
 import { TeeTimeService } from '../../service/teetime.service';
 import { Course } from '../../models/course.model';
 import { DatePipe } from '@angular/common';
+import { LayoutService } from 'src/app/layout/service/app.layout.service';
 
 @Component({
   selector: 'app-search',
@@ -20,18 +21,21 @@ export class SearchComponent implements OnInit {
   endTime: string;
   numberOfPlayers: number = 1;
   courses: Course[]; // Add your course names here
-  selectedCourses: number[] = [1,2,3];
+  selectedCourses: number[] = [1,2];
   timeRange: number[] = [30, 65];
   teeTimes: any[];
+  hasSearched: boolean = false;
 
   playerOptions: number[] = [1, 2, 3, 4];
 
   constructor(public utilityService: UtilityService,
               private courseService: CourseService,
               private teeTimeService: TeeTimeService,
+              private layoutService: LayoutService,
               private datePipe: DatePipe) {}
 
   ngOnInit(): void {
+      if (this.layoutService.isOverlay()) this.layoutService.onMenuToggle();
       this.getAllCourses();
   }
 
@@ -39,7 +43,7 @@ export class SearchComponent implements OnInit {
     return new Promise((resolve, reject) => {
       this.courseService.getAllCourses().subscribe(
         (data: any[]) => {
-          this.courses = data;
+          this.courses = data.filter(x => Boolean(x.Active));
           console.log('Courses:', this.courses);
           resolve(true);
         },
@@ -70,6 +74,7 @@ export class SearchComponent implements OnInit {
           this.teeTimes = data.sort((a, b) => {
             return new Date(a.time).getTime() - new Date(b.time).getTime();
           });
+          this.hasSearched = true;
           console.log('Search Data:', this.teeTimes);
           resolve(true);
         },

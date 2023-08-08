@@ -1,9 +1,11 @@
 <div class="grid">
-    <div class="col-12 lg:col-6 xl:col-4">
+    <div class="col-12 xl:col-4">
         <div class="card">
             <div class="p-field p-col-12">
                 <label for="">Courses:</label>
-                <p-multiSelect [options]="courses" styleClass="w-full mb-5" optionLabel="CourseName" optionValue="CourseId" display="chip" [selectedItemsLabel]="'Selected Course'" [(ngModel)]="selectedCourses" [style]="{width: '300px'}"></p-multiSelect>
+                <p-multiSelect [options]="courses" selectedItemsLabel="Searching {0} courses..."
+                    [displaySelectedLabel]="true" [maxSelectedLabels]="2" styleClass="w-full mb-5" optionLabel="CourseName" optionValue="CourseId" 
+                    [(ngModel)]="selectedCourses"></p-multiSelect>
               </div>
             <div class="p-field p-col-12">
                 <p-calendar [(ngModel)]="searchDate" [inline]="true" dateFormat="yyyy-mm-dd" [maxDate]="maxDate" [minDate]="minDate" styleClass="w-full mb-5"></p-calendar>
@@ -28,7 +30,73 @@
               </div>
         </div>
     </div>
-    <div class="col-12 lg:col-6 xl:col-4 course-card" *ngFor="let tt of teeTimes;" (click)="openBookingLink(tt.course.BookingUrl)">
+    <div class="col-12 xl:col-8">
+        <div class="grid">
+            <div class="col-12" *ngIf="hasSearched && teeTimes?.length == 0">
+                <div class="card text-center">
+                    <h4 class="pt-2 text-red-500"><i class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp;No Tee Times Found!&nbsp;&nbsp;<i class="fa fa-exclamation-triangle"></i></h4>
+                </div>
+            </div>
+            <div class="col-12 lg:col-6 xl:col-4 course-card" *ngFor="let tt of teeTimes;" (click)="openBookingLink(tt.course.BookingUrl)">
+                <div class="card">
+                    <div class="flex justify-content-between mb-2">
+                        <div class="flex">
+                            <img [src]="'../../../../assets/images/courses/' + tt.course.ImageUrl" [alt]="tt.course.CourseName" height="50" style="border-radius: 5px;">
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="block text-xl font-medium" style="text-align: right;">{{tt.course.CourseName}}</span>
+                            <span style="font-weight: bold;font-size: large;text-align: right;">{{tt.time | date: 'EEE h:mm a'}}</span>
+                            
+                        </div>
+                    </div>
+                    <div class="flex justify-content-between">
+                        <div class="flex">
+                            <span class="text-green-500 font-medium">{{tt.green_fee | currency}}</span>
+                        </div>
+                        <div>
+                            <span class="text-500"> {{tt.available_spots}} Players</span>
+                        </div>
+                    </div>
+                    
+                    
+                </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<!-- 
+<div class="grid">
+    <div class="col-12 lg:col-6 xl:col-5">
+        <div class="card">
+            <div class="p-field p-col-12">
+                <label for="">Courses:</label>
+                <p-multiSelect [options]="courses" styleClass="w-full mb-5" optionLabel="CourseName" optionValue="CourseId" display="chip" [selectedItemsLabel]="'Selected Course'" [(ngModel)]="selectedCourses" [style]="{width: '200px'}"></p-multiSelect>
+              </div>
+            <div class="p-field p-col-12">
+                <p-calendar [(ngModel)]="searchDate" [inline]="true" dateFormat="yyyy-mm-dd" [maxDate]="maxDate" [minDate]="minDate" styleClass="mb-5"></p-calendar>
+            </div>
+            <div class="p-field p-col-12">
+                <label>Tee Time:</label>
+                <span>
+                    {{utilityService.convertIntervalToTime(searchTimeInterval[0])}} - {{utilityService.convertIntervalToTime(searchTimeInterval[1])}} 
+                </span>
+                <p-slider [style]="{'margin-top': '5px'}" [(ngModel)]="searchTimeInterval" [step]="1" [min]="20" [max]="76" [range]="true" styleClass="w-full mb-5"></p-slider>
+              </div>
+
+              <div class="p-field p-col-12">
+                <label>Number of Players:</label>
+                <p-dropdown [options]="playerOptions" [(ngModel)]="numberOfPlayers" styleClass="w-full mb-5"></p-dropdown>
+              </div>
+              
+              
+
+              <div class="p-field p-col-12">
+                <button pButton type="button" icon="fa fa-filter" label="Filter" class="w-full mb-3" style="padding:1rem" (click)="search()"></button>
+              </div>
+        </div>
+    </div>
+    <div class="col-12 lg:col-6 xl:col-3 course-card" *ngFor="let tt of teeTimes;" (click)="openBookingLink(tt.course.BookingUrl)">
             <div class="card">
                 <div class="flex justify-content-between mb-2">
                     <div class="flex">
@@ -52,4 +120,4 @@
                 
             </div>
     </div>
-</div>
+</div> -->

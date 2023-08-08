@@ -1,21 +1,34 @@
+<h3>
+    <span class="fa fa-question-circle" style="float: right;font-size: 2rem;margin-right: .5em;cursor: pointer;" [pTooltip]="'Configuration Guide'" (click)="helpDialog=true"></span>
+    
+    Setup Tee Time Monitoring
+</h3><hr>
 <div class="grid" *ngIf="USERID">
     <div class="col-12">
-        <div class="card px-6 py-6">
+        <!-- <div class="card px-6 py-6"> -->
             <div *ngIf="!loading">
                 <p-toast></p-toast>
                 <div class="grid">
+                    <div class="col-12" *ngIf="copyTemplate?.length > 0">
+                        <p-messages severity="error">
+                            <ng-template pTemplate>
+                                <span>Done with the Template?</span>&nbsp;&nbsp;
+                                <button pButton pRipple label="Clear Template" icon="fa fa-trash" class="p-button-danger" [style]="{'float': 'right'}" (click)="copyTemplate = []; activeTemplate = false"></button>
+                            </ng-template>
+                        </p-messages>
+                    </div>
                     <div *ngFor="let course of courses" class="col-12 lg:col-6 xl:col-3 course-card" (click)="onCourseClick(course)">
                         
                         <div class="card" style="width: 100%; text-align: center;">
-                            <div class="flex justify-content-between">
+                            <!-- <div class="flex justify-content-between">
                                 <div></div>
                                 <div class="flex align-items-center justify-content-center bg-green-100 border-round" 
                                 [pTooltip]="'Active Timechecks for ' + course.CourseName"    
                                 [ngStyle]="{width: '2.5rem', height: '2.5rem', 'margin-top': '-10px', 'margin-right': '-10px'}">
                                     <span class="text-green-500 text-xl">{{numActiveTimechecks(course.Timechecks)}}</span>
                                 </div>
-                            </div>
-                            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 200px;margin-top: -30px;">
+                            </div> -->
+                            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 200px;">
                               <div style="width: 200px; height: 100px; display: flex; justify-content: center; align-items: center;">
                                 <img [src]="'../../../../../assets/images/courses/' + course.ImageUrl" alt="..." height="60" style="max-width: 100%; max-height: 100%;">
                               </div>
@@ -27,20 +40,24 @@
                                         No Active Timechecks
                                     </div>
                                 </ng-template>
-                                <table *ngIf="hasActiveTimechecks(course.Timechecks); else noActiveTimeChecks">
-                                    <thead>
-                                      <tr>
-                                        <th *ngFor="let time of course.Timechecks">{{utilityService.dayName(time.DayOfWeek, true)}}</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      <tr>
-                                        <td *ngFor="let time of course.Timechecks">
-                                            <span *ngIf="time.Active" style="color: green;" class="fa fa-golf-ball-tee"></span>
-                                        </td>
-                                      </tr>
-                                    </tbody>
-                                  </table>
+                                <div *ngIf="hasActiveTimechecks(course.Timechecks); else noActiveTimeChecks">
+                                    <table>
+                                        <thead>
+                                          <tr>
+                                            <th *ngFor="let time of course.Timechecks">{{utilityService.dayName(time.DayOfWeek, true)}}</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          <tr>
+                                            <td *ngFor="let time of course.Timechecks">
+                                                <span *ngIf="time.Active" style="color: green;" class="fa fa-golf-ball-tee"></span>
+                                            </td>
+                                          </tr>
+                                        </tbody>
+                                      </table>
+                                      <hr>
+                                      <span style="font-weight: bold;" class="text-green-500">Monitoring {{numActiveTimechecks(course.Timechecks)}} tee time slots</span>
+                                </div>
                                   
                               </div>
                             </div>
@@ -50,11 +67,11 @@
                 </div>
             </div>
         </div>
-    </div>
+    <!-- </div> -->
 </div>
 
 
-<p-dialog [(visible)]="timecheckDialog" [style]="{width: '600px', height: '600px'}" [header]="selectedCourse.CourseName + ' Timechecks'" [modal]="true" class="p-fluid">
+<p-dialog [(visible)]="timecheckDialog" [style]="{width: '600px', height: '600px', 'max-width':'98vw'}" [header]="selectedCourse.CourseName + ' Timechecks'" [modal]="true" class="p-fluid">
     <ng-template pTemplate="content">
 
         <p-table [value]="timechecks">
@@ -68,7 +85,7 @@
             </ng-template>
             <ng-template pTemplate="body" let-ttc>
                 <tr>
-                    <td><p-checkbox [(ngModel)]="ttc.Active" [binary]="true"></p-checkbox></td>
+                    <td><p-checkbox styleClass="p-checkbox-sm p-0" [(ngModel)]="ttc.Active" [binary]="true"></p-checkbox></td>
                     <td>{{layoutService.isMobile() ? utilityService.dayName(ttc.DayOfWeek, true) : ttc.DayName}}</td>
                     <td style="text-align: center;width: 200px;">
                         <span>
@@ -77,7 +94,7 @@
                         <!-- {{ttc.TimeInterval[0]}} - {{ttc.TimeInterval[1]}} -->
                         <br>
                         <p-slider [style]="{'margin-top': '5px'}" [(ngModel)]="ttc.TimeInterval" [step]="1" [min]="20" [max]="76" [range]="true"></p-slider></td>
-                    <td><p-dropdown [options]="[1, 2, 3, 4]" [(ngModel)]="ttc.NumPlayers" ></p-dropdown></td>
+                    <td><p-dropdown styleClass="p-dropdown-sm" [options]="[1, 2, 3, 4]" [(ngModel)]="ttc.NumPlayers" ></p-dropdown></td>
                     
                 </tr>
             </ng-template>
@@ -86,11 +103,48 @@
     </ng-template>
 
     <ng-template pTemplate="footer">
-        <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text" (click)="timecheckDialog = false"></button>
-        <button pButton pRipple label="Save" icon="pi pi-check" class="p-button-text" (click)="onBulkSaveTimechecks()"></button>
+        <div class="flex justify-content-between mt-2">
+            <div>
+                <p-checkbox class="mt-2" label="Use as Template" [binary]="true" [(ngModel)]="activeTemplate" *ngIf="!activeTemplate || copyTemplate?.length == 0"></p-checkbox>
+                <button pButton pRipple label="Paste Template" icon="fa fa-copy" class="p-button-text p-button-sm" (click)="pasteTemplateToCourse()" *ngIf="activeTemplate && copyTemplate?.length > 0"></button>
+            </div>
+            <div>
+                <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text p-button-sm" (click)="timecheckDialog = false"></button>
+                <button pButton pRipple label="Save" icon="pi pi-check" class="p-button-text p-button-sm" (click)="onBulkSaveTimechecks()"></button>
+            </div>
+        </div>
+        
     </ng-template>
 </p-dialog>
 
+
+<p-dialog [(visible)]="helpDialog" [style]="{width: '600px', height: '600px', 'max-width':'98vw'}" [header]="'How To Configure Crawler'" [modal]="true" class="p-fluid">
+    <ng-template pTemplate="content">
+        <div class="tee-time-guide">
+            <h4>Setting Your Preferences:</h4>
+            <ol>
+                <li><strong>Select a Course</strong>: Simply click on a course name to bring up a detailed popup for tee time configuration.</li>
+                <li><strong>Configure Your Tee Times</strong>: For each day of the week, choose your preferred tee time range and the number of players (between 1 to 4).</li>
+            </ol>
+        
+            <h4>Using a Template for Multiple Courses:</h4>
+            <ol>
+                <li>After configuring tee time preferences for a course, you have the option to use this setup as a template for other courses.</li>
+                <li>Click the "Use as Template" button within the popup.</li>
+                <li>Save your configuration.</li>
+                <li>Now, when you select another course, you'll see a "Paste Template" button. Clicking this button will apply the saved template, setting up the new course with the same preferences as the previous one.</li>
+            </ol>
+        
+            <h4>Active Tee Time Indicators:</h4>
+            <ul>
+                <li>If a course has active tee times being searched, a green tee icon will appear under the corresponding day of the week.</li>
+                <li>The total number of active tee times being searched for a course is also displayed, providing a quick overview of your setup.</li>
+            </ul>
+            
+            <p>Set your preferences seamlessly and ensure you get your desired tee times across multiple courses!</p>
+        </div>
+    </ng-template>
+</p-dialog>
 
 <!-- <p-dialog [(visible)]="emailDialog" [style]="{width: '450px'}" header="New User" [modal]="true" class="p-fluid">
     <p-messages></p-messages>
