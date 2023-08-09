@@ -8,6 +8,7 @@ import { CourseService } from '../../service/course.service';
 import { Course } from '../../models/course.model';
 import { UtilityService } from '../../service/utility.service';
 import { AuthService } from '../auth/auth.service';
+import { LayoutService } from 'src/app/layout/service/app.layout.service';
 
 @Injectable()
 @Component({
@@ -29,6 +30,9 @@ export class TimechecksComponent implements OnInit {
 
   timeRange: number[] = [20, 65];
 
+
+  userTimechecks: any[];
+
   courses: Course[] = [];
   daysOfWeek = [
     { id: 0, name: 'Sunday' },
@@ -43,24 +47,27 @@ export class TimechecksComponent implements OnInit {
   constructor(private route: ActivatedRoute,
               private router: Router,
               private authService: AuthService,
-              private utilityService: UtilityService,
+              public utilityService: UtilityService,
+              public layoutService: LayoutService,
               private messageService: MessageService,
               private userService: UserService,
               private courseService: CourseService,
               private timecheckService: TimecheckService) {}
 
   ngOnInit(): void {
-    this.USERID = this.authService.getUserId();
-    if (this.USERID == 0) {
-      //No User:
-      this.loading = false;
-      this.emailDialog = true;
-    } else {
-      this.getTimechecksByUser().finally(() => {
-        this.getCourses();
-        this.loading = false;
-      });
-    }
+    // this.USERID = this.authService.getUserId();
+    // if (this.USERID == 0) {
+    //   //No User:
+    //   this.loading = false;
+    //   this.emailDialog = true;
+    // } else {
+    //   this.getTimechecksByUser().finally(() => {
+    //     this.getCourses();
+    //     this.loading = false;
+    //   });
+    // }
+    this.getAllUsersActiveTimechecks();
+    console.log("HGel")
   }
 
   getTimechecksByUser() {
@@ -244,5 +251,16 @@ export class TimechecksComponent implements OnInit {
   }
 
   
+  getAllUsersActiveTimechecks() {
+    return new Promise((resolve, reject) => {
+      this.timecheckService.getAllUsersActiveTimechecks()
+        .subscribe(result => {
+          this.userTimechecks = result;
+          console.log(result);
+        }, error => {
+          console.log("getAllUsersActiveTimechecks", error);
+        });
+    });
+  }
 
 }

@@ -12,6 +12,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     USERID!: number;
     activeTimechecks!: number;
+    activeCourses!: number;
     items!: MenuItem[];
 
     // products!: Product[];
@@ -114,7 +115,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return new Promise((resolve, reject) => {
           this.timecheckService.getActiveTimecheckCountByUserId(this.USERID).subscribe(
             (data: any) => {
-              this.activeTimechecks = data;
+              this.activeTimechecks = data.activeTimechecksCount;
+              this.activeCourses = data.activeCourseCount;
               resolve(true);
             },
             (error) => {

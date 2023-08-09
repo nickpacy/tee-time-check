@@ -4,6 +4,7 @@ const timechecksController = require('../controllers/timechecksController');
 const router = express.Router();
 
 router.get('/', timechecksController.getTimechecks);
+router.get('/allUsersActiveTimechecks', timechecksController.getAllUsersActiveTimechecks);
 router.get('/:timecheckId', timechecksController.getTimecheckById);
 router.post('/', timechecksController.createTimecheck);
 router.post('/bulk-update', timechecksController.updateBulkTimechecks);

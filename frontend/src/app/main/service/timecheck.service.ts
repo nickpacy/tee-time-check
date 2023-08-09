@@ -73,6 +73,13 @@ export class TimecheckService {
       catchError(this.handleError)
     );
   }
+  
+  getAllUsersActiveTimechecks(): Observable<any> {
+    const url = `${this.baseUrl}/allUsersActiveTimechecks`;
+    return this.http.get<any>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
 
   getActiveTimecheckCountByUserId(userId: number): Observable<any> {
     const url = `${this.baseUrl}/activeTimecheckCount/${userId}`;
