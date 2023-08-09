@@ -13,7 +13,6 @@ import { PrimeNgModule } from './shared/primeng.module';
 import { LocalTimePipe } from './shared/localTime.pipe';
 import { BycourseComponent } from './main/components/timechecks/bycourse/bycourse.component';
 import { DashboardComponent } from './main/components/dashboard/dashboard.component';
-import { AddUserComponent } from './main/components/user/add-user/add-user.component';
 import { ProfileComponent } from './main/components/user/profile/profile.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ChangePasswordFormComponent } from './main/components/user/change-password-form/change-password-form.component';
@@ -28,7 +27,6 @@ import { SearchComponent } from './main/components/search/search.component';
         AppComponent, DashboardComponent, NotfoundComponent, UserComponent, TimechecksComponent, CoursesComponent,
         LocalTimePipe,
         BycourseComponent,
-        AddUserComponent,
         ProfileComponent,
         ChangePasswordFormComponent,
         NotificationsComponent,

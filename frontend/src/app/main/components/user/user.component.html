@@ -3,27 +3,29 @@
         <div class="card px-6 py-6">
             <p-toast></p-toast>
             <h2>
-                
                 <button pButton pRipple label="New User" style="float: right;" icon="pi pi-plus" class="p-button-success p-button-sm" (click)="onNew()"></button> 
                 <span class="pi pi-users" style="font-size: 2rem;margin-right: .5em;"></span>Users
-            </h2><hr>
+            </h2>
+            <hr>
             
             <p-table styleClass="p-datatable-sm" [value]="users" [paginator]="false" [rows]="20" responsiveLayout="scroll" [globalFilterFields]="['Name','Email']">
                 <ng-template pTemplate="header">
                     <tr>
-                        <th pSortableColumn="Name">Name <p-sortIcon field="Name"></p-sortIcon><p-columnFilter type="text" field="Name" display="menu"></p-columnFilter></th>
-                        <th pSortableColumn="Email">Email <p-sortIcon field="Email"></p-sortIcon></th>
+                        <th pSortableColumn="Name">Name</th>
+                        <th pSortableColumn="Email">Email</th>
+                        <th pSortableColumn="LastLoginDate">Login Date</th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-user>
                     <tr>
-                        <td style="width: 35%; min-width: 7rem;">
+                        <td>
                             <span *ngIf="user.Active"><i class="fa fa-user" style="color: green;"></i></span>
                             <span *ngIf="!user.Active"><i class="fa fa-user" style="color: red;"></i></span>
                             &nbsp;
                             <a [routerLink]="['/profile', user.UserId]">{{user.Name}}</a>
                         </td>
-                        <td style="width: 35%; min-width: 7rem;">{{user.Email}}</td>
+                        <td>{{user.Email}}</td>
+                        <td>{{user.LastLoginDate | date:'short'}}</td>
                         <!-- <td>
                             <div class="flex">
                                 <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" (click)="onEdit(user)"></button>

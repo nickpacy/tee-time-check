@@ -17,7 +17,7 @@ const getTimecheckById = async (req, res) => {
   try {
     const results = await pool.query('SELECT * FROM timechecks WHERE Id = ?', [timecheckId]);
     if (results.length === 0) {
-      res.status(404).json({ error: 'Timecheck not found' });
+      res.status(404).json({ error: 'Timecheck not found...' });
     } else {
       res.json(results[0]);
     }
@@ -104,7 +104,7 @@ const deleteTimecheck = async (req, res) => {
 // Get a specific timecheck by ID
 const getTimechecksByUserId = async (req, res) => {
   const userId = req.params.userId;
-  const q = `SELECT t.*, c.*, u.name, u.email FROM timechecks t
+  const q = `SELECT t.*, c.CourseName, u.name, u.email FROM timechecks t
               JOIN users u ON t.UserId = u.UserId
               JOIN courses c ON t.CourseID = c.CourseId
               WHERE u.UserId = ?
@@ -123,10 +123,66 @@ const getTimechecksByUserId = async (req, res) => {
   }
 };
 
+// Get all the timechecks from the application
+const getAllUsersActiveTimechecks = async (req, res) => {
+  // This query fetches active timechecks and their associated users
+  const q = `
+    SELECT DISTINCT  t.*, c.CourseName, c.ImageUrl, u.UserId, u.Name, u.Email 
+    FROM users u
+    LEFT JOIN timechecks t ON t.UserId = u.UserId
+    LEFT JOIN courses c ON t.CourseID = c.CourseId
+    WHERE t.Active = 1 AND c.Active = 1 AND u.Active = 1
+  `;
+  try {
+    const results = await pool.query(q);
+
+    console.log(results);
+    if (results.length === 0) {
+      res.status(404).json({ error: 'No active timechecks found' });
+      return;
+    }
+
+    // Transforming the flat SQL result set into nested objects
+    const usersMap = {};
+    results.forEach(row => {
+      if (!usersMap[row.UserId]) {
+        usersMap[row.UserId] = {
+          userId: row.UserId,
+          name: row.Name,
+          email: row.Email,
+          timechecks: []
+        };
+      }
+      usersMap[row.UserId].timechecks.push({
+        timecheckId: row.TimecheckId, // Assuming there's a TimecheckId column
+        courseId: row.CourseId,
+        courseName: row.CourseName,
+        imageUrl: row.ImageUrl,
+        dayOfWeek: row.DayOfWeek,
+        startTime: row.StartTime,
+        endTime: row.EndTime,
+        numPlayers: row.NumPlayers
+      });
+    });
+
+    // Converting the usersMap object into an array
+    const usersArray = Object.values(usersMap);
+    
+    res.json(usersArray);
+
+  } catch (err) {
+    console.error('Error getting active timechecks: ', err);
+    res.status(500).json({ error: 'Error getting active timechecks' });
+  }
+};
+
+
 // Get count of active timechecks by UserId
 const getActiveTimecheckCountByUserId = async (req, res) => {
   const userId = req.params.userId;
-  const q = `SELECT COUNT(*) as activeTimechecksCount 
+  const q = `SELECT 
+              COUNT(*) as activeTimechecksCount
+              , COUNT(DISTINCT c.CourseId) AS activeCourseCount
              FROM timechecks t
              JOIN users u ON t.UserId = u.UserId
              JOIN courses c ON t.CourseId = c.CourseId
@@ -137,7 +193,11 @@ const getActiveTimecheckCountByUserId = async (req, res) => {
     if (results.length === 0) {
       res.status(404).json({ error: 'No active timechecks for user' });
     } else {
-      res.json(results[0].activeTimechecksCount);
+      const stats = {
+        activeTimechecksCount: results[0].activeTimechecksCount,
+        activeCourseCount: results[0].activeCourseCount
+      }
+      res.json(stats);
     }
   } catch (err) {
     console.error('Error getting active timecheck count: ', err);
@@ -214,6 +274,7 @@ module.exports = {
     getTimechecksByUserId,
     getTimechecksByUserIdAndCourseId,
     getActiveTimecheckCountByUserId,
+    getAllUsersActiveTimechecks,
     getTimechecksByCourse,
     resetTimechecks
   };

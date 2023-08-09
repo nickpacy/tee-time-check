@@ -25,8 +25,6 @@ export class AppMenuComponent implements OnInit {
             {
                 label: `WELCOME ${this.user?.Name}`,
                 items: [
-                    // { label: 'Users', icon: 'pi pi-fw pi-users', routerLink: ['/user'] },
-                    // { label: 'Courses', icon: 'fa fa-map-location', routerLink: ['/courses'] },
                     { label: 'Home', icon: 'fa fa-home', routerLink: ['/'] },
                     { label: 'Setup', icon: 'fa fa-golf-ball-tee', routerLink: ['/setup'] },
                     { label: 'Notifications', icon: 'fa fa-bell', routerLink: ['/notifications'] },

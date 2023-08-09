@@ -38,22 +38,23 @@ const searchTeeTimes = async (req, res) => {
                 case 'teeitup':
                     promises.push(getTeeTimes_teeitup(date, course.BookingPrefix));
                     break;
-                    case 'coronado':
-                      const currentDate = moment(); // This will include the current time
-                      const twoDaysOut = moment().add(2, 'days').startOf('day'); // Set it to the start of the day (midnight) two days from now
-                      
-                      if (moment(date).isSameOrAfter(currentDate) && moment(date).isBefore(twoDaysOut)) {
-                          promises.push(getTeeTimes_coronado(date, course.BookingClass)
-                              .then(coronadoTimes => {
-                                  if (!coronadoTimes[1]) {
-                                      return getTeeTimes_coronado(date, '20066').then(times => times[0]);
-                                  }
-                                  return coronadoTimes[0];
-                              }));
-                      } else {
-                          promises.push(getTeeTimes_coronado(date, '20066'));
-                      }
-                      break;
+                case 'coronado':
+                  const currentDate = moment().startOf('day'); // This will include the current time
+                  const twoDaysOut = moment().add(3, 'days').startOf('day'); // Set it to the start of the day (midnight) three days from now
+                  
+                  if (moment(date).isSameOrAfter(currentDate) && moment(date).isBefore(twoDaysOut)) {
+                      promises.push(getTeeTimes_coronado(date, course.BookingClass)
+                          .then(coronadoTimes => {
+                              if (!coronadoTimes[1]) {
+                                  return getTeeTimes_coronado(date, '20066').then(times => times[0]);
+                              } else {
+                                return coronadoTimes[0];
+                              }
+                          }));
+                  } else {
+                      promises.push(getTeeTimes_coronado(date, '20066').then(times => times[0]));
+                  }
+                  break;
                 default:
                     promises.push(Promise.resolve([]));
                     break;
@@ -269,7 +270,7 @@ async function getTeeTimes_coronado(date, bookingClass) {
                 return {
                     time: moment(formattedClosestDay + ' ' + item.time).format('YYYY-MM-DD HH:mm'),
                     available_spots: item.qty,
-                    green_fee: item.Rates[0].formprice
+                    green_fee: item.Rates[0].formprice.replace("$", "")
                 };
             });
             return [teeTimes, true];

@@ -8,16 +8,16 @@ const getNotificationsByCourse = async (req, res) => {
   try {
       let query = `
           SELECT DISTINCT 
-          n.UserId, 
-          c.CourseId, 
-          c.CourseName, 
-          c.ImageUrl, 
-          DATE(ntt.TeeTime - INTERVAL 7 HOUR) as Date
-      FROM notified_tee_times ntt
-      JOIN notifications n ON ntt.NotificationId = n.NotificationId
-      JOIN courses c ON n.CourseId = c.CourseId 
-      WHERE n.UserId = ?
-      AND DATE(ntt.NotifiedDate - INTERVAL 7 HOUR) = DATE(CURDATE() - INTERVAL 7 HOUR)
+              n.UserId, 
+              c.CourseId, 
+              c.CourseName, 
+              c.ImageUrl, 
+              DATE(ntt.TeeTime - INTERVAL 7 HOUR) as Date
+          FROM notified_tee_times ntt
+          JOIN notifications n ON ntt.NotificationId = n.NotificationId
+          JOIN courses c ON n.CourseId = c.CourseId 
+          WHERE n.UserId = ?
+          AND DATE(ntt.NotifiedDate - INTERVAL 7 HOUR) = DATE(CURDATE() - INTERVAL 7 HOUR)
       `;
 
       const results = await pool.query(query, [userId]);
