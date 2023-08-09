@@ -9,12 +9,12 @@ const twilio = require('twilio');
 const sgMail = require('@sendgrid/mail');
 
 // Import custom functions
-const uti = require("./utility"); // Utility functions
-const foreupFunction = require("./tee-times-foreup"); // Custom function for getting tee times from ForeUp
-const navyFunction = require("./tee-times-navy"); // Custom function for getting tee times from Navy
-const teeitupFunction = require("./tee-times-teeitup"); // Custom function for getting tee times from TeeItUp
-const jcgolfFunction = require("./tee-times-jcgolf"); // Custom function for getting tee times from JCGolf
-const coronadoFunction = require("./tee-times-coronado"); // Custom function for getting tee times from Coronado
+const uti = require("./utility");
+const foreupFunction = require("./tee-times-foreup");
+const navyFunction = require("./tee-times-navy");
+const teeitupFunction = require("./tee-times-teeitup");
+const jcgolfFunction = require("./tee-times-jcgolf");
+const coronadoFunction = require("./tee-times-coronado");
 
 // Load environment variables from .env file
 dotenv.config();
@@ -90,7 +90,7 @@ const checkTeeTimes = async () => {
 
       // Create an object to store the tee times for each user
       const teeTimesByUser = {};
-
+      let isFirstJCGolf = true;
       for (const row of results[0]) {
         const {
           email,
@@ -196,6 +196,12 @@ const checkTeeTimes = async () => {
           }
         } else if (method === "jcgolf") {
           try {
+             // If it's not the first call to jcgolf, wait for 1 second
+            if (!isFirstJCGolf) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            } else {
+                isFirstJCGolf = false;  // Set the flag to false after the first call
+            }
             teeTimes = await jcgolfFunction.getTeeTimes(
               bookingClass,
               dayOfWeek,
@@ -214,8 +220,8 @@ const checkTeeTimes = async () => {
 
             // Check if the tee time falls within the user's specified start and end time
             if (
-              teeTimeDate.isAfter(teeTimeStartDate) &&
-              teeTimeDate.isBefore(teeTimeEndDate)
+              teeTimeDate.isSameOrAfter(teeTimeStartDate) &&
+              teeTimeDate.isSameOrBefore(teeTimeEndDate)
             ) {
               const utcTeeTimeString = moment.tz(teeTime.time, "America/Los_Angeles").utc().format('YYYY-MM-DD HH:mm:ss');
 
@@ -378,10 +384,10 @@ const sendSMS = async (teeTimesByUser) => {
       }
       
       let message = 'New Tee Times';
-      for (const { courseAbbr, teeTime, available_spots, bookingLink } of teeTimes) {
+      for (const { courseName, teeTime, available_spots, bookingLink } of teeTimes) {
         // const teeTimeDate = moment.tz(teeTime, "America/Los_Angeles").toDate();
-        const localTime = moment(teeTime).format('M/D hh:mm');
-        const newMessage = `\n${courseAbbr} ${localTime} (${available_spots})`;
+        const localTime = moment(teeTime).format('ddd M/D h:mm A');
+        const newMessage = `\n${courseName} ${localTime} (${available_spots})`;
         
         // Check if adding the new message (and potentially '...') would exceed the SMS length limit
         if ((message + newMessage + (message ? '...' : '')).length > 160) {

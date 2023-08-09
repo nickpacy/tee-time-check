@@ -17,6 +17,10 @@ async function getTeeTimes(bookingClass, dayOfWeek, numPlayers, bookingPrefix, w
     const response = await axios.get(url, { headers });
     if (response.status === 200) {
         const teeTimes = response.data;
+
+        if (teeTimes.messageKey == 'NO_TEETIMES') {
+          return [];
+        }
   
         // Extract desired fields
         const formattedData = teeTimes.map(teeTime => ({
