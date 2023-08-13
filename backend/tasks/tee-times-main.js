@@ -197,18 +197,17 @@ const checkTeeTimes = async () => {
         } else if (method === "jcgolf") {
           try {
              // If it's not the first call to jcgolf, wait for 1 second
-            if (!isFirstJCGolf) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            } else {
-                isFirstJCGolf = false;  // Set the flag to false after the first call
-            }
             teeTimes = await jcgolfFunction.getTeeTimes(
               bookingClass,
               dayOfWeek,
               numPlayers,
               bookingPrefix,
-              websiteId
+              websiteId,
+              isFirstJCGolf
             );
+            if (isFirstJCGolf) {
+              isFirstJCGolf = false;  // Set the flag to false after the first call
+            }
           } catch (error) {
             console.log("Error retrieving tee times from JCGolf:", error);
           }

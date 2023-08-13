@@ -2,7 +2,21 @@ const pool = require('../database');
 const axios = require('axios');
 const cheerio = require("cheerio");
 const moment = require('moment');
+const path = require("path"); 
+const dotenv = require("dotenv"); 
 require('moment-timezone');
+
+// Construct the path to the .env file one level up
+const dotenvPath = path.resolve(__dirname, '..', '.env');
+
+// Load the environment variables from the .env file
+const result = dotenv.config({ path: dotenvPath });
+
+if (result.error) {
+  console.error('Error loading .env file:', result.error);
+} else {
+  console.log('.env file loaded successfully');
+}
 
 // API to search for TEE TIMES
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -118,7 +132,7 @@ async function getTeeTimes_foreup(date, bookingClass, scheduleId) {
     const url = `https://foreupsoftware.com/index.php/api/booking/times?time=all&date=${formattedClosestDay}&holes=all&booking_class=${bookingClass}&schedule_id=${scheduleId}&api_key=no_limits`;
     
     const headers = {
-      'X-Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJmb3JldXBzb2Z0d2FyZS5jb20iLCJhdWQiOiJmb3JldXBzb2Z0d2FyZS5jb20iLCJpYXQiOjE2ODkwNTExNjMsImV4cCI6MTY5MTY0MzE2MywidWlkIjoiMTM3NzAyMTMiLCJsZXZlbCI6MCwiY2lkIjoiMTkzNDgiLCJlbXBsb3llZSI6ZmFsc2UsImlzX3Zpc2l0b3IiOnRydWV9.ghwkhM9u5xsUq0bVIaDpQV7Sn8apwDOOghgGL--kHz4P2h2Ul4t29IAwp_4qmuCRDO_Kg68Ml6RQLxHcNtJDRA',
+      'X-Authorization': `Bearer ${process.env.FOREUP_BEARER}`
     };
   
     try {
