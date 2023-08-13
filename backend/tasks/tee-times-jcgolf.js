@@ -2,7 +2,12 @@ const axios = require('axios');
 const moment = require("moment");
 const util = require('./utility');
 
-async function getTeeTimes(bookingClass, dayOfWeek, numPlayers, bookingPrefix, websiteId) {
+async function getTeeTimes(bookingClass, dayOfWeek, numPlayers, bookingPrefix, websiteId, isFirstJCGolf) {
+
+  // If it's not the first call to jcgolf, wait for 1.2 seconds
+  if (!isFirstJCGolf) {
+    await new Promise(resolve => setTimeout(resolve, 1200));
+  }
 
   const formattedClosestDay = util.getClosestDayOfWeek(dayOfWeek, 'ddd MMM D YYYY');
 
@@ -17,6 +22,10 @@ async function getTeeTimes(bookingClass, dayOfWeek, numPlayers, bookingPrefix, w
     const response = await axios.get(url, { headers });
     if (response.status === 200) {
         const teeTimes = response.data;
+
+        if (teeTimes.messageKey == 'NO_TEETIMES') {
+          return [];
+        }
   
         // Extract desired fields
         const formattedData = teeTimes.map(teeTime => ({

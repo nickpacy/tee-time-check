@@ -15,7 +15,7 @@ const getNotificationsByCourse = async (req, res) => {
               DATE(ntt.TeeTime - INTERVAL 7 HOUR) as Date
           FROM notified_tee_times ntt
           JOIN notifications n ON ntt.NotificationId = n.NotificationId
-          JOIN courses c ON n.CourseId = c.CourseId 
+          JOIN courses c ON ntt.CourseId = c.CourseId 
           WHERE n.UserId = ?
           AND DATE(ntt.NotifiedDate - INTERVAL 7 HOUR) = DATE(CURDATE() - INTERVAL 7 HOUR)
       `;
@@ -47,7 +47,7 @@ const getNotificationsByCourse = async (req, res) => {
                   FROM notified_tee_times ntt
                   JOIN notifications n ON ntt.NotificationId = n.NotificationId
                   WHERE n.UserId = ? 
-                  AND n.CourseId = ? 
+                  AND ntt.CourseId = ? 
                   AND DATE(ntt.TeeTime - INTERVAL 7 HOUR) = ?
                   ORDER BY (ntt.TeeTime - INTERVAL 7 HOUR)
               `, [userId, result.CourseId, result.Date]);

@@ -34,15 +34,15 @@ exports.handler = async (event, context) => {
                 
                 // testCheckTeeTimes();
     // Create a cron job to schedule tee time checks
-    // const startCronJob = () => {
-    //   const task = cron.schedule(`* 7-23,0-2 * * *`, () => {
-    //     // logger.info("Cron scheduler running at: " + new Date().toLocaleString());
-    //     main.checkTeeTimes();
-    //   });
+    const startCronJob = () => {
+      const task = cron.schedule(`* 7-23,0-2 * * *`, () => {
+        // logger.info("Cron scheduler running at: " + new Date().toLocaleString());
+        main.checkTeeTimes();
+      });
     
-    //   main.checkTeeTimes();
-    //   task.start();
-    // };
+      main.checkTeeTimes();
+      task.start();
+    };
     
-    // // Start the cron job
-    // startCronJob();
+    // Start the cron job
+    startCronJob();

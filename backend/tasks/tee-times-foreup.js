@@ -1,6 +1,8 @@
 const axios = require('axios');
-
+const dotenv = require("dotenv"); 
 const util = require('./utility');
+
+dotenv.config();
 
 async function getTeeTimes(bookingClass, dayOfWeek, numPlayers, scheduleId) {
   const formattedClosestDay = util.getClosestDayOfWeek(dayOfWeek);
@@ -19,7 +21,7 @@ async function getTeeTimes(bookingClass, dayOfWeek, numPlayers, scheduleId) {
     // 'Sec-Fetch-Mode': 'cors',
     // 'Sec-Fetch-Site': 'same-origin',
     // 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5.1 Safari/605.1.15',
-    'X-Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJmb3JldXBzb2Z0d2FyZS5jb20iLCJhdWQiOiJmb3JldXBzb2Z0d2FyZS5jb20iLCJpYXQiOjE2ODkwNTExNjMsImV4cCI6MTY5MTY0MzE2MywidWlkIjoiMTM3NzAyMTMiLCJsZXZlbCI6MCwiY2lkIjoiMTkzNDgiLCJlbXBsb3llZSI6ZmFsc2UsImlzX3Zpc2l0b3IiOnRydWV9.ghwkhM9u5xsUq0bVIaDpQV7Sn8apwDOOghgGL--kHz4P2h2Ul4t29IAwp_4qmuCRDO_Kg68Ml6RQLxHcNtJDRA',
+    'X-Authorization': `Bearer ${process.env.FOREUP_BEARER}`,
     // 'X-Fu-Golfer-Location': 'foreup',
     // 'X-Requested-With': 'XMLHttpRequest'
   };
