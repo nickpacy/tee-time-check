@@ -1,0 +1,24 @@
+{
+  "name": "tee-time-check-crawler",
+  "version": "2.0.0",
+  "description": "NodeJS script that runs user tee time preference data and searches the web for matches.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nick Pacy",
+  "license": "ISC",
+  "dependencies": {
+    "@sendgrid/mail": "^7.7.0",
+    "axios": "^1.4.0",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "moment": "^2.29.4",
+    "moment-timezone": "^0.5.43",
+    "mysql2": "^3.6.0",
+    "serverless-http": "^3.2.0",
+    "twilio": "^4.14.1"
+  }
+}
