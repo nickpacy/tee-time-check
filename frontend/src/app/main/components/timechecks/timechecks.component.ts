@@ -72,7 +72,7 @@ export class TimechecksComponent implements OnInit {
 
   getTimechecksByUser() {
     return new Promise((resolve, reject) => {
-      this.timecheckService.getTimechecksByUserId(this.USERID).subscribe(
+      this.timecheckService.getTimechecksByUserId().subscribe(
         (data: any[]) => {
           this.timechecks = data;
           // console.log(data);

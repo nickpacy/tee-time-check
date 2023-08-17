@@ -1,14 +1,14 @@
 const express = require('express');
 const notificationsController = require('../controllers/notificationsController');
+const verifyToken = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
 
 // GET a notifications by for a user
-//?showFutureDates=true
-router.get('/byCourse/:userId', notificationsController.getNotificationsByCourse);
+router.get('/byCourse', verifyToken, notificationsController.getNotificationsByCourse);
 
-// PUT (update) an existing notification
+// DELETE an existing notification
 router.delete('/removeNotification/:NotificationId', notificationsController.removeNotification);
 
 
