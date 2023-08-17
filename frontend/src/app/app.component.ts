@@ -31,7 +31,6 @@ export class AppComponent implements OnInit {
           filter(user => user !== null)  // filter out null values
         ).subscribe(user => {
             this.loadingService.hide();
-            console.log("appCom", user)
         })
     }
 }

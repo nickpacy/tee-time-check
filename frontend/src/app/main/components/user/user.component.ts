@@ -27,7 +27,7 @@ export class UserComponent implements OnInit {
       this.userService.getUsers().subscribe(
         (data: any[]) => {
           this.users = data;
-          console.log('Users:', this.users);
+          // console.log('Users:', this.users);
           resolve(true);
         },
         (error) => {
@@ -65,7 +65,7 @@ export class UserComponent implements OnInit {
 
         this.userService.updateUser(this.user.UserId, this.user)
           .subscribe(data => {
-            console.log(data);
+            // console.log(data);
             this.userDialog = false;
             this.getUsers();
           }, error => {
@@ -74,11 +74,11 @@ export class UserComponent implements OnInit {
 
       } else {
         //New User
-        console.log(this.user);
+        // console.log(this.user);
         
         this.userService.createUser(this.user)
           .subscribe(data => {
-            console.log("New User:", data);
+            // console.log("New User:", data);
             this.userDialog = false;
             
             this.getUsers();
@@ -100,7 +100,7 @@ export class UserComponent implements OnInit {
       return new Promise((resolve, reject) => {
         this.userService.deleteUser(userId).subscribe(
           (data: any[]) => {
-            console.log(data);
+            // console.log(data);
             this.deleteUserDialog = false;
             this.getUsers();
             resolve(true);

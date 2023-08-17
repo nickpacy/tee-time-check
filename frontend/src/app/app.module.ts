@@ -20,6 +20,8 @@ import { NotificationsComponent } from './main/components/notifications/notifica
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { LoadingInterceptor } from './shared/loading.interceptor';
 import { SearchComponent } from './main/components/search/search.component';
+import { CalendarComponent } from './main/components/calendar/calendar.component';
+import { FullCalendarModule } from '@fullcalendar/angular';
 
 
 @NgModule({
@@ -30,7 +32,8 @@ import { SearchComponent } from './main/components/search/search.component';
         ProfileComponent,
         ChangePasswordFormComponent,
         NotificationsComponent,
-        SearchComponent
+        SearchComponent,
+        CalendarComponent
     ],
     imports: [
         AppRoutingModule,
@@ -38,7 +41,8 @@ import { SearchComponent } from './main/components/search/search.component';
         CommonModule,
         FormsModule,
         ReactiveFormsModule,
-        PrimeNgModule
+        PrimeNgModule,
+        FullCalendarModule
     ],
     providers: [
         { provide: LocationStrategy, useClass: HashLocationStrategy },

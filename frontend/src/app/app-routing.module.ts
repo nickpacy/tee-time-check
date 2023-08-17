@@ -11,6 +11,7 @@ import { DashboardComponent } from './main/components/dashboard/dashboard.compon
 import { ProfileComponent } from './main/components/user/profile/profile.component';
 import { NotificationsComponent } from './main/components/notifications/notifications.component';
 import { SearchComponent } from './main/components/search/search.component';
+import { CalendarComponent } from './main/components/calendar/calendar.component';
 
 @NgModule({
     imports: [
@@ -23,6 +24,7 @@ import { SearchComponent } from './main/components/search/search.component';
                     { path: 'profile/:userId', component: ProfileComponent, canActivate: [AuthGuard] },
                     { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
                     { path: 'courses', component: CoursesComponent, canActivate: [AuthGuard] },
+                    { path: 'calendar', component: CalendarComponent, canActivate: [AuthGuard] },
                     { path: 'notifications', component: NotificationsComponent, canActivate: [AuthGuard] },
                     { path: 'timechecks', component: TimechecksComponent, canActivate: [AuthGuard] },
                     { path: 'setup', component: BycourseComponent, canActivate: [AuthGuard] },

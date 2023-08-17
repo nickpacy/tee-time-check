@@ -17,7 +17,7 @@ export class CoursesComponent implements OnInit {
     this.courseService.getAllCourses().subscribe(
       (data: any[]) => {
         this.courses = data;
-        console.log('Courses:', this.courses);
+        // console.log('Courses:', this.courses);
       },
       (error) => {
         console.error('Error getting courses:', error);

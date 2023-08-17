@@ -44,7 +44,7 @@ export class ChangePasswordFormComponent implements OnInit {
   }
 
   onSubmit() {
-    console.log("Submt")
+    // console.log("Submt")
     if (this.changePasswordForm.valid) {
       const currentPassword = this.f['currentPassword'].value;
       const newPassword = this.f['newPassword'].value;
@@ -55,10 +55,10 @@ export class ChangePasswordFormComponent implements OnInit {
         NewPassword: newPassword
       };
       
-      console.log(user)
+      // console.log(user)
       this.authService.changePassword(user)
         .subscribe(result => {
-            console.log("Change Password Result", result);
+            // console.log("Change Password Result", result);
             // Emit the custom event to notify the parent component
             this.formSaved.emit({severity:'success', detail: `${result.message}`, life: 3000});
 

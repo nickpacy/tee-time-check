@@ -63,19 +63,19 @@ export class AuthService {
     const token = this.getToken();
     // return !!token;
     if (!token) {
-        console.log("NO TOKEN");
+        // console.log("NO TOKEN");
         return false;
     }
     try {
         const decodedToken: any = jwt_decode(token);
         const now = Date.now().valueOf() / 1000; // Convert to seconds
         if (typeof decodedToken.exp !== 'undefined' && decodedToken.exp < now) {
-            console.log("TOKEN EXPIRED");
+            // console.log("TOKEN EXPIRED");
             return false; // Token has expired
         }
         return true;
     } catch (error) {
-        console.log("INVALID TOKEN");
+        // console.log("INVALID TOKEN");
         return false; // Token is invalid
     }
   }
@@ -85,7 +85,7 @@ export class AuthService {
   }
 
   getCurrentUser(): IUser | null {
-    console.log("getCurrentUser", this.userSubject.value);
+    // console.log("getCurrentUser", this.userSubject.value);
     return this.userSubject.value;
   }
 
@@ -100,11 +100,11 @@ export class AuthService {
         const decodedToken: any = jwt_decode(token);
         return Number(decodedToken._id);  // this assumes your userId is stored with '_id' key in the token payload
       } catch (error) {
-        console.log("INVALID TOKEN");
+        // console.log("INVALID TOKEN");
         return 0; // Token is invalid
       }
     } else {
-      console.log("NO TOKEN");
+      // console.log("NO TOKEN");
       return 0; // No token
     }
   }
@@ -117,11 +117,11 @@ export class AuthService {
         const userId = decodedToken._id;  // this assumes your userId is stored with '_id' key in the token payload
         this.userService.getUserById(userId).subscribe(user => {this.userSubject.next(user)});
       } catch (error) {
-        console.log("INVALID TOKEN");
+        // console.log("INVALID TOKEN");
         // Handle error here
       }
     } else {
-      console.log("NO TOKEN");
+      // console.log("NO TOKEN");
       // Handle no token situation here
       this.logout();
     }
