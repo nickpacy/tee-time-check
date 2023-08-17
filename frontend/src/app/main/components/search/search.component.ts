@@ -44,7 +44,7 @@ export class SearchComponent implements OnInit {
       this.courseService.getAllCourses().subscribe(
         (data: any[]) => {
           this.courses = data.filter(x => Boolean(x.Active));
-          console.log('Courses:', this.courses);
+          // console.log('Courses:', this.courses);
           resolve(true);
         },
         (error) => {
@@ -66,7 +66,7 @@ export class SearchComponent implements OnInit {
       numPlayers: this.numberOfPlayers
     }
 
-    console.log(searchData);
+    // console.log(searchData);
 
     return new Promise((resolve, reject) => {
       this.teeTimeService.globalSearch(searchData).subscribe(
@@ -75,7 +75,7 @@ export class SearchComponent implements OnInit {
             return new Date(a.time).getTime() - new Date(b.time).getTime();
           });
           this.hasSearched = true;
-          console.log('Search Data:', this.teeTimes);
+          // console.log('Search Data:', this.teeTimes);
           resolve(true);
         },
         (error) => {

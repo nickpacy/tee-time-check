@@ -52,29 +52,14 @@ const checkTeeTimes = async () => {
     const connection = await pool.getConnection();
 
     try {
-      /*
-      This SQL query retrieves distinct tee time checks for active users who have logged in within the past week and have chosen to be notified either by email or phone.
 
-      Specifically, the query performs the following:
-      1. Fetches relevant columns including user details, tee time check details, course details, and any notifications sent today.
-      2. Joins the 'timechecks' table (aliased as 't') with:
-          a. The 'users' table (aliased as 'u') based on matching user IDs.
-          b. The 'courses' table (aliased as 'c') based on matching course IDs.
-      3. Additionally, it performs a LEFT JOIN with the 'notifications' table (aliased as 'n') to fetch any notifications sent today for the specific user and course combination.
-      4. The WHERE clause filters the results to:
-          a. Only consider active users (u.active = 1).
-          b. Only consider active tee time checks (t.active = 1).
-          c. Users who have provided an email and opted for email notifications OR provided a phone number and opted for phone notifications.
-          d. Users who have logged in within the last 7 days.
-      */
       const query = `SELECT DISTINCT t.id, u.userId, u.email, u.phone, u.emailNotification, u.phoneNotification, t.dayOfWeek, 
                           t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, 
-                          c.courseName, c.courseAbbr, c.method, c.bookingUrl, GROUP_CONCAT(ntt.TeeTime) AS notifiedTeeTimes 
+                          c.courseName, c.courseAbbr, c.method, c.bookingUrl, GROUP_CONCAT(DISTINCT n.TeeTime) AS notifiedTeeTimes 
                       FROM timechecks t
                       JOIN users u ON u.userid = t.userId
                       JOIN courses c ON c.courseid = t.courseId
-                      LEFT JOIN notifications n ON n.userId = t.userId AND n.courseId = t.courseId AND DATE(n.checkdate - INTERVAL 7 HOUR) = DATE(CURDATE() - INTERVAL 7 HOUR)
-                      LEFT JOIN notified_tee_times ntt ON ntt.NotificationId = n.NotificationId
+                      LEFT JOIN notifications n ON n.userId = t.userId AND c.courseid = n.courseid AND n.NotifiedDate BETWEEN NOW() - INTERVAL 24 HOUR AND NOW()
                       WHERE u.active = 1
                           AND t.active = 1
                           AND c.active = 1
@@ -261,30 +246,21 @@ const checkTeeTimes = async () => {
           // Save the list of notified tee times for each user to the database
           const promises = []; // Array to hold all the promises
           for (const userId in teeTimesByUser) {
-              const notifiedTeeTimes = teeTimesByUser[userId].map(({ teeTime }) => teeTime);
-              
-              // First, ensure that the notification record exists
-              const notificationQuery = `INSERT INTO notifications (userId, courseId, checkdate) VALUES (?, ?, CURDATE()) ON DUPLICATE KEY UPDATE userId=VALUES(userId);`;
-              const courseId = teeTimesByUser[userId][0].courseId;
-              
-              // Add the promise to the array
-              promises.push(connection.execute(notificationQuery, [userId, courseId]));
-      
-              // Then, for each tee time, insert a new record into the notified_tee_times table
-              for (const teeTime of notifiedTeeTimes) {
-                  const insertTeeTimeQuery = `
-                      INSERT INTO notified_tee_times (NotificationId, TeeTime)
-                      SELECT NotificationId, ?
-                      FROM notifications
-                      WHERE userId = ? AND courseId = ? AND date(checkdate) = CURDATE();
-                  `;
-      
-                  // Convert to UTC Time
-                  const utcTeeTime = moment.tz(teeTime, "America/Los_Angeles").utc().format('YYYY-MM-DD HH:mm:ss');
-
-                  // Add the promise to the array
-                  promises.push(connection.execute(insertTeeTimeQuery, [utcTeeTime, userId, courseId]));
-              }
+            const notifiedTeeTimes = teeTimesByUser[userId];
+            
+            // For each tee time, insert a new record into the notifications table
+            for (const { teeTime, courseId } of notifiedTeeTimes) {
+                const insertNotificationQuery = `
+                    INSERT INTO notifications (UserId, CourseId, TeeTime)
+                    VALUES (?, ?, ?);
+                `;
+        
+                // Convert to UTC Time
+                const utcTeeTime = moment.tz(teeTime, "America/Los_Angeles").utc().format('YYYY-MM-DD HH:mm:ss');
+        
+                // Add the promise to the array
+                promises.push(connection.execute(insertNotificationQuery, [userId, courseId, utcTeeTime]));
+            }
           }
       
           // Wait for all the promises to resolve

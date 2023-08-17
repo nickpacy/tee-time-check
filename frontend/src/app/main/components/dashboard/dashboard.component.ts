@@ -131,7 +131,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       setTimechecksInactive() {
         const userConfirmed = window.confirm("You will no longer be notified for tee times until you setup new ones")
         if (!userConfirmed) return;
-        console.log(this.USERID);
+        // console.log(this.USERID);
         this.timecheckService.resetTimechecks(this.USERID).subscribe(
             (data: any) => {
               this.activeTimechecks = 0;

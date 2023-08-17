@@ -12,7 +12,7 @@ import { DatePipe } from '@angular/common';
 export class NotificationsComponent implements OnInit{
 
   USERID!: number;
-  notifications!: any;
+  notifications: any[] = [];
 
   constructor(private notificationService: NotificationsService,
               private authService: AuthService,
@@ -20,48 +20,92 @@ export class NotificationsComponent implements OnInit{
               private utilService: UtilityService){}
 
   ngOnInit(): void {
-
-    console.log("Live Date: ", new Date());
-
     this.USERID = this.authService.getUserId();
-    this.notificationService.getNotificationsByCourse(this.USERID)
-    .subscribe(res => {
-      this.notifications = res;
-      console.log("Courses", res);
-      
-    }, (error: any) => {
-      console.error(error);
+    this.getNotifications();
+  }
+
+  getNotifications() {
+    this.notifications = [];
+    return new Promise((resolve, reject) => {
+      this.notificationService.getNotificationsByCourse(this.USERID)
+        .subscribe(res => {
+          
+          this.notifications = this.groupNotificationsByCourseAndDate(res);
+          resolve(true)
+        }, (error: any) => {
+          console.error(error);
+          reject(true);
+        });
+
     });
   }
 
-  transformDate(date: string): string {
-    const dateWithZ = date;
-    const dateWithoutZ = dateWithZ.replace('Z', '');
-    return this.datePipe.transform(dateWithoutZ, 'fullDate', 'America/Los_Angeles');
-  }
-  
-  transformTime(time: string): string {
-    const dateWithZ = time;
-    const dateWithoutZ = dateWithZ.replace('Z', '');
-    return this.datePipe.transform(dateWithoutZ, 'hh:mm a', 'America/Los_Angeles');
-  }
-  
-  removeNotification(courseId, tDate, notifiedTeeTimeId) {
 
-    this.notificationService.removeNotification(notifiedTeeTimeId)
+  groupNotificationsByCourseAndDate(notifications: any[]) {
+    const grouped = [];
+
+    notifications.forEach(notification => {
+        // Convert the UTC time to local time
+        const localTeeTime = new Date(notification.TeeTime).toLocaleDateString();
+
+        let courseEntry = grouped.find(course => course.courseId === notification.CourseId);
+        if (!courseEntry) {
+            courseEntry = {
+                courseName: notification.CourseName,
+                courseId: notification.CourseId,
+                imageUrl: notification.ImageUrl,
+                dates: []
+            };
+            grouped.push(courseEntry);
+        }
+
+        let dateEntry = courseEntry.dates.find(d => d.date === localTeeTime);
+        if (!dateEntry) {
+            dateEntry = {
+                date: localTeeTime,
+                teeTimes: []
+            };
+            courseEntry.dates.push(dateEntry);
+        }
+
+        dateEntry.teeTimes.push({
+            time: notification.TeeTime,
+            notificationId: notification.NotificationId
+        });
+    });
+
+    // Sort the courses by courseId
+    grouped.sort((a, b) => a.courseId - b.courseId);
+
+    // Sort the dates within each course
+    grouped.forEach(course => {
+        course.dates.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        // Sort the tee times within each date
+        course.dates.forEach(dateEntry => {
+            dateEntry.teeTimes.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+        });
+    });
+
+
+    return grouped;
+  }
+  
+  removeNotification(courseId, tDate, notificationId) {
+
+    this.notificationService.removeNotification(notificationId)
     .subscribe(res => {
       this.notifications = this.notifications.map(course => {
-        if (course.CourseId === courseId) {
-          course.Dates = course.Dates.map(d => {
-            if (d.Date === tDate) {
-              d.TeeTimes = d.TeeTimes.filter(tt => tt.notifiedTeeTimeId !== notifiedTeeTimeId);
+        if (course.courseId === courseId) {
+          course.dates = course.dates.map(d => {
+            if (d.date === tDate) {
+              d.teeTimes = d.teeTimes.filter(tt => tt.notificationId !== notificationId);
             }
             return d;
           });
         }
         return course;
       });
-      console.log("Notify removed", res);
     }, (error: any) => {
       console.error(error);
     });

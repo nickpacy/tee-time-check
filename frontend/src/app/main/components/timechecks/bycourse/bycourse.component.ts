@@ -57,7 +57,7 @@ export class BycourseComponent {
 
   ngOnInit(): void {
     this.USERID = this.authService.getUserId();
-    console.log(this.USERID);
+    // console.log(this.USERID);
 
     if (this.USERID == 0) {
       //No User:
@@ -76,7 +76,7 @@ export class BycourseComponent {
       this.timecheckService.getTimechecksByUserId(this.USERID).subscribe(
         (data: any[]) => {
           this.timechecks = data;
-          console.log(data);
+          // console.log(data);
           this.timechecks.map((x) => {
             x.DayName = this.utilityService.dayName(x.DayOfWeek);
             x.Active = Boolean(x.Active);
@@ -99,7 +99,7 @@ export class BycourseComponent {
   //   return new Promise((resolve, reject) => {
   //     this.userService.getUserByEmail(this.userEmail).subscribe(
   //       (data: any) => {
-  //         console.log(data);
+  //         // console.log(data);
   //         this.router.navigate([`timechecks/${data.UserId}`]);
   //         resolve(true);
   //       },
@@ -133,7 +133,7 @@ export class BycourseComponent {
     let update = new Timecheck();
     if (!timecheck) {
       
-      console.log(this.timecheck);
+      // console.log(this.timecheck);
       this.submitted = true;
   
       this.timecheck.UserId = this.USERID;
@@ -141,10 +141,10 @@ export class BycourseComponent {
       this.timecheck.EndTime = this.utilityService.utcTime(this.timecheck.EndDate)
   
       update = this.timecheck;
-      console.log("NOT PASSED IN");
+      // console.log("NOT PASSED IN");
     } else {
       update = timecheck;
-      console.log("PASSED IN");
+      // console.log("PASSED IN");
     }
     
     return new Promise((resolve, reject) => {
@@ -192,7 +192,7 @@ export class BycourseComponent {
       if (id) {
         this.timecheckService.deleteTimecheck(id).subscribe(
           (data: any) => {
-            console.log(data);
+            // console.log(data);
             this.getTimechecksByUser().finally(() => {
             });
             resolve(true);
@@ -213,7 +213,7 @@ export class BycourseComponent {
     return new Promise((resolve, reject) => {
       this.timecheckService.getTimechecksByCourse(this.USERID).subscribe(
         (data: any) => {
-          console.log(data)
+          // console.log(data)
           this.courses = data;
           resolve(true);
         },
@@ -242,7 +242,7 @@ export class BycourseComponent {
       this.timecheckService.getTimechecksByUserIdAndCourseId(this.USERID, courseId).subscribe(
         (data: any[]) => {
           this.timechecks = data;
-          console.log(data);
+          // console.log(data);
           this.timechecks.map((x) => {
             x.DayName = this.utilityService.dayName(x.DayOfWeek);
             x.Active = Boolean(x.Active);
@@ -283,7 +283,7 @@ export class BycourseComponent {
           if (this.activeTemplate && this.copyTemplate?.length == 0) {
             // Setup copy template
             this.copyTemplate = JSON.parse(JSON.stringify(this.timechecks));
-            console.log(this.copyTemplate);
+            // console.log(this.copyTemplate);
           }
 
           this.timecheckDialog = false;
@@ -330,7 +330,7 @@ export class BycourseComponent {
       return a.DayOfWeek - b.DayOfWeek;
     });
 
-    console.log("New Timecheck copy", this.timechecks)
+    // console.log("New Timecheck copy", this.timechecks)
   }
 
 }

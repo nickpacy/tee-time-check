@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/byCourse/:userId', notificationsController.getNotificationsByCourse);
 
 // PUT (update) an existing notification
-router.delete('/removeNotification/:NotifiedTeeTimeId', notificationsController.removeNotification);
+router.delete('/removeNotification/:NotificationId', notificationsController.removeNotification);
 
 
 module.exports = router;

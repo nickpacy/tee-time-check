@@ -90,7 +90,7 @@ export class ProfileComponent implements OnInit {
     user.Admin = Boolean(user.Admin);
     user.Active = Boolean(user.Active);
 
-    console.log(user)
+    // console.log(user)
     this.userForm.patchValue(user);
   }
 
@@ -106,9 +106,9 @@ export class ProfileComponent implements OnInit {
         const userConfirmed = window.confirm("Both Phone and Email notifications are turned off. Your timechecks will be set to inactive. Are you sure you want to proceed?");
         if (!userConfirmed) return;
       }
-      console.log(this.userForm.value);
+      // console.log(this.userForm.value);
       this.userService.updateUser(this.currentUser.UserId, this.userForm.value).subscribe(res => {
-        console.log("res", res);
+        // console.log("res", res);
         this.messageService.add({severity:'success', detail: `${res.message}`, life: 3000});
         this.authService.loadUserFromToken();
       }, (error: any) => {
@@ -123,10 +123,10 @@ export class ProfileComponent implements OnInit {
     if (window.confirm('This will remove the user from the database.')) {
       this.userService.deleteUser(userid)
         .subscribe((res) => {
-          console.log(res);
+          // console.log(res);
           this.router.navigate(['/user'])
         }, error => {
-          console.log(error);
+          // console.log(error);
         });
     }
 

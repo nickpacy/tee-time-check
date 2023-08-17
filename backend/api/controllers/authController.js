@@ -50,8 +50,6 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   const { Remember, Password, Email } = req.body;
 
-  console.log(req.body);
-
   // Validate request body
   if (!Email || !Password) {
     return res.status(400).json({ message: 'Email and password are required.' });

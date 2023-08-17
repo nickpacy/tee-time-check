@@ -67,7 +67,7 @@ export class TimechecksComponent implements OnInit {
     //   });
     // }
     this.getAllUsersActiveTimechecks();
-    console.log("HGel")
+    // // console.log("HGel")
   }
 
   getTimechecksByUser() {
@@ -75,7 +75,7 @@ export class TimechecksComponent implements OnInit {
       this.timecheckService.getTimechecksByUserId(this.USERID).subscribe(
         (data: any[]) => {
           this.timechecks = data;
-          console.log(data);
+          // console.log(data);
           this.timechecks.map((x) => {
             x.DayName = this.utilityService.dayName(x.DayOfWeek);
             x.Active = Boolean(x.Active);
@@ -102,7 +102,7 @@ export class TimechecksComponent implements OnInit {
     return new Promise((resolve, reject) => {
       this.userService.getUserByEmail(this.userEmail).subscribe(
         (data: any) => {
-          console.log(data);
+          // console.log(data);
           this.router.navigate([`timechecks/${data.UserId}`]);
           resolve(true);
         },
@@ -136,7 +136,7 @@ export class TimechecksComponent implements OnInit {
     let update = new Timecheck();
     if (!timecheck) {
       
-      console.log(this.timecheck);
+      // console.log(this.timecheck);
       this.submitted = true;
   
       this.timecheck.UserId = this.USERID;
@@ -145,10 +145,10 @@ export class TimechecksComponent implements OnInit {
   
       update = this.timecheck;
       this.loadingDialog = true;
-      console.log("NOT PASSED IN");
+      // console.log("NOT PASSED IN");
     } else {
       update = timecheck;
-      console.log("PASSED IN");
+      // console.log("PASSED IN");
     }
     
     return new Promise((resolve, reject) => {
@@ -201,7 +201,7 @@ export class TimechecksComponent implements OnInit {
       if (id) {
         this.timecheckService.deleteTimecheck(id).subscribe(
           (data: any) => {
-            console.log(data);
+            // console.log(data);
             this.getTimechecksByUser().finally(() => {
               this.loadingDialog = false;
             });
@@ -256,9 +256,9 @@ export class TimechecksComponent implements OnInit {
       this.timecheckService.getAllUsersActiveTimechecks()
         .subscribe(result => {
           this.userTimechecks = result;
-          console.log(result);
+          // console.log(result);
         }, error => {
-          console.log("getAllUsersActiveTimechecks", error);
+          // console.log("getAllUsersActiveTimechecks", error);
         });
     });
   }

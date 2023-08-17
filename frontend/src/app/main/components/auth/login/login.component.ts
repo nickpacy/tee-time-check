@@ -40,7 +40,7 @@ export class LoginComponent {
         return new Promise((resolve, reject) => {
             this.authService.login(user)
                 .subscribe(result => {
-                    console.log("Login Result", result);
+                    // console.log("Login Result", result);
                     this.router.navigate(['/']);
                     resolve(true);
                 }, error => {
@@ -59,7 +59,7 @@ export class LoginComponent {
             let user = {Email: this.email};
             this.authService.forgotPassword(user)
                 .subscribe(result => {
-                    console.log("Login Result", result);
+                    // console.log("Login Result", result);
                     this.messageService.add({severity:'success', summary:'Email Sent', detail: `Email sent to ${this.email}`, life: 2000});
                     this.forgotDialog = false;
                 }, error => {
