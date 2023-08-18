@@ -56,24 +56,12 @@ export class BycourseComponent {
               private timecheckService: TimecheckService) {}
 
   ngOnInit(): void {
-    this.USERID = this.authService.getUserId();
-    // console.log(this.USERID);
-
-    if (this.USERID == 0) {
-      //No User:
-      this.loading = false;
-      this.emailDialog = true;
-    } else {
-      this.getTimechecksByCourse().finally(() => {
-        this.loading = false;
-      })
-    }
-
+    this.getTimechecksByCourse()
   }
 
   getTimechecksByUser() {
     return new Promise((resolve, reject) => {
-      this.timecheckService.getTimechecksByUserId(this.USERID).subscribe(
+      this.timecheckService.getTimechecksByUserId().subscribe(
         (data: any[]) => {
           this.timechecks = data;
           // console.log(data);
@@ -211,7 +199,7 @@ export class BycourseComponent {
 
   getTimechecksByCourse() {
     return new Promise((resolve, reject) => {
-      this.timecheckService.getTimechecksByCourse(this.USERID).subscribe(
+      this.timecheckService.getTimechecksByCourse().subscribe(
         (data: any) => {
           // console.log(data)
           this.courses = data;
@@ -239,7 +227,7 @@ export class BycourseComponent {
 
   getTimechecks(courseId: number) {
     return new Promise((resolve, reject) => {
-      this.timecheckService.getTimechecksByUserIdAndCourseId(this.USERID, courseId).subscribe(
+      this.timecheckService.getTimechecksByUserIdAndCourseId(courseId).subscribe(
         (data: any[]) => {
           this.timechecks = data;
           // console.log(data);

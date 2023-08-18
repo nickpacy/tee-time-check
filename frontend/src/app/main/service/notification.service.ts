@@ -13,30 +13,13 @@ export class NotificationsService {
 
   constructor(private http: HttpClient) { }
 
-  getNotifications(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl);
-  }
-
-  getNotificationById(notificationId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${notificationId}`);
-  }
-
-  getNotificationsByCourse(userId: number, futureDates = true): Observable<any> {
-    let url = `${this.apiUrl}/byCourse/${userId}`;
-    // if (futureDates) url += '?showFutureDates=true'
+  getNotificationsByCourse(): Observable<any> {
+    let url = `${this.apiUrl}/byCourse`;
     return this.http.get<any>(url);
-  }
-
-  createNotification(notification: any): Observable<any> {
-    return this.http.post<any>(this.apiUrl, notification);
   }
 
   removeNotification(notifiedTeeTimeId: any): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/removeNotification/${notifiedTeeTimeId}`);
-  }
-
-  deleteNotification(notificationId: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/${notificationId}`);
   }
 
 }

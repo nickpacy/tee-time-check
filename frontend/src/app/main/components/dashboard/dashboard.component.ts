@@ -113,7 +113,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     getActiveTimecheckCountByUserId() {
         return new Promise((resolve, reject) => {
-          this.timecheckService.getActiveTimecheckCountByUserId(this.USERID).subscribe(
+          this.timecheckService.getActiveTimecheckCountByUserId().subscribe(
             (data: any) => {
               this.activeTimechecks = data.activeTimechecksCount;
               this.activeCourses = data.activeCourseCount;
@@ -132,7 +132,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const userConfirmed = window.confirm("You will no longer be notified for tee times until you setup new ones")
         if (!userConfirmed) return;
         // console.log(this.USERID);
-        this.timecheckService.resetTimechecks(this.USERID).subscribe(
+        this.timecheckService.resetTimechecks().subscribe(
             (data: any) => {
               this.activeTimechecks = 0;
               this.messagingService.add({severity: 'success', detail: 'Tee Times Updated', life: 2000})

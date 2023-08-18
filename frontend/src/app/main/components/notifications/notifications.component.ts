@@ -27,7 +27,7 @@ export class NotificationsComponent implements OnInit{
   getNotifications() {
     this.notifications = [];
     return new Promise((resolve, reject) => {
-      this.notificationService.getNotificationsByCourse(this.USERID)
+      this.notificationService.getNotificationsByCourse()
         .subscribe(res => {
           
           this.notifications = this.groupNotificationsByCourseAndDate(res);

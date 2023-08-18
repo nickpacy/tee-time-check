@@ -11,7 +11,7 @@ dotenv.config();
 const registerUser = async (req, res) => {
   const { Name, Password, Email } = req.body;
 
-  console.log(req.body);
+  // console.log(req.body);
 
   // Validate request body
   if (!Email || !Password) {
@@ -79,7 +79,7 @@ const loginUser = async (req, res) => {
      await pool.query('UPDATE users SET LastLoginDate = ? WHERE UserId = ?', [lastLoginDate, userId]); 
 
     // Generate JWT
-    const token = jwt.sign({ _id: userId }, process.env.JWT_TOKEN, { expiresIn: Remember ? '7d' : '1h' });
+    const token = jwt.sign({ userId: userId }, process.env.JWT_TOKEN, { expiresIn: Remember ? '7d' : '1h' });
 
     // Return JWT in response header and body
     res.header('auth-token', token).send({ 

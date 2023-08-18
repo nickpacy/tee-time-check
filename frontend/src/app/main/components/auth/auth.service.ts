@@ -37,7 +37,7 @@ export class AuthService {
       tap((response: any)=> {
         const token = response.token;
         const user: IUser = response.user;
-        localStorage.setItem('authToken', token);
+        localStorage.setItem('auth-token', token);
         this.tokenSubject.next(token);
         this.userSubject.next(user);
       }),
@@ -49,11 +49,11 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('auth-token');
   }
 
   logout(): void {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('auth-token');
     this.tokenSubject.next(null);
     this.userSubject.next(null);
     this.router.navigate(['/logout']);
@@ -98,7 +98,7 @@ export class AuthService {
     if (token) {
       try {
         const decodedToken: any = jwt_decode(token);
-        return Number(decodedToken._id);  // this assumes your userId is stored with '_id' key in the token payload
+        return Number(decodedToken.userId);  // this assumes your userId is stored with '_id' key in the token payload
       } catch (error) {
         // console.log("INVALID TOKEN");
         return 0; // Token is invalid
@@ -114,7 +114,7 @@ export class AuthService {
     if (token) {
       try {
         const decodedToken: any = jwt_decode(token);
-        const userId = decodedToken._id;  // this assumes your userId is stored with '_id' key in the token payload
+        const userId = decodedToken.userId;  // this assumes your userId is stored with '_id' key in the token payload
         this.userService.getUserById(userId).subscribe(user => {this.userSubject.next(user)});
       } catch (error) {
         // console.log("INVALID TOKEN");

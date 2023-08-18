@@ -3,7 +3,7 @@ const pool = require('../database');
 
 
 const getNotificationsByCourse = async (req, res) => {
-  const userId = req.params.userId;
+  const userId = req.user.userId;
 
   try {
       // Fetch distinct courses and tee times for which user received notifications in the past 24 hours

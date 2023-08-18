@@ -53,22 +53,22 @@ export class TimecheckService {
     );
   }
 
-  getTimechecksByUserId(userId: number): Observable<any> {
-    const url = `${this.baseUrl}/timechecksByUserId/${userId}`;
+  getTimechecksByUserId(): Observable<any> {
+    const url = `${this.baseUrl}/timechecksByUserId}`;
     return this.http.get<any>(url).pipe(
       catchError(this.handleError)
     );
   }
 
-  getTimechecksByUserIdAndCourseId(userId: number, courseId: number): Observable<any> {
-    const url = `${this.baseUrl}/timechecksByUserIdAndCourseId/${userId}/${courseId}`;
+  getTimechecksByUserIdAndCourseId(courseId: number): Observable<any> {
+    const url = `${this.baseUrl}/timechecksByUserIdAndCourseId/${courseId}`;
     return this.http.get<any>(url).pipe(
       catchError(this.handleError)
     );
   }
   
-  getTimechecksByCourse(userId: number): Observable<any> {
-    const url = `${this.baseUrl}/timechecksByCourse/${userId}`;
+  getTimechecksByCourse(): Observable<any> {
+    const url = `${this.baseUrl}/timechecksByCourse`;
     return this.http.get<any>(url).pipe(
       catchError(this.handleError)
     );
@@ -81,15 +81,15 @@ export class TimecheckService {
     );
   }
 
-  getActiveTimecheckCountByUserId(userId: number): Observable<any> {
-    const url = `${this.baseUrl}/activeTimecheckCount/${userId}`;
+  getActiveTimecheckCountByUserId(): Observable<any> {
+    const url = `${this.baseUrl}/activeTimecheckCount`;
     return this.http.get<any>(url).pipe(
       catchError(this.handleError)
     );
   }
   
-  resetTimechecks(userId: number): Observable<any> {
-    const url = `${this.baseUrl}/resetTimechecks/${userId}`;
+  resetTimechecks(): Observable<any> {
+    const url = `${this.baseUrl}/resetTimechecks`;
     return this.http.get<any>(url).pipe(
       catchError(this.handleError)
     );

@@ -22,6 +22,7 @@ import { LoadingInterceptor } from './shared/loading.interceptor';
 import { SearchComponent } from './main/components/search/search.component';
 import { CalendarComponent } from './main/components/calendar/calendar.component';
 import { FullCalendarModule } from '@fullcalendar/angular';
+import { AuthInterceptor } from './shared/auth-interceptor.service';
 
 
 @NgModule({
@@ -46,6 +47,7 @@ import { FullCalendarModule } from '@fullcalendar/angular';
     ],
     providers: [
         { provide: LocationStrategy, useClass: HashLocationStrategy },
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor, multi: true },
         UserService, CourseService, DatePipe
     ],

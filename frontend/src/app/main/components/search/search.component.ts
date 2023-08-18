@@ -21,7 +21,7 @@ export class SearchComponent implements OnInit {
   endTime: string;
   numberOfPlayers: number = 1;
   courses: Course[]; // Add your course names here
-  selectedCourses: number[] = [1,2];
+  selectedCourses: number[];
   timeRange: number[] = [30, 65];
   teeTimes: any[];
   hasSearched: boolean = false;
@@ -41,9 +41,10 @@ export class SearchComponent implements OnInit {
 
   getAllCourses() {
     return new Promise((resolve, reject) => {
-      this.courseService.getAllCourses().subscribe(
+      this.courseService.getUserCourses().subscribe(
         (data: any[]) => {
           this.courses = data.filter(x => Boolean(x.Active));
+          this.selectedCourses = this.courses.map(x => x.CourseId);
           // console.log('Courses:', this.courses);
           resolve(true);
         },
