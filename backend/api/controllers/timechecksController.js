@@ -107,7 +107,8 @@ const getTimechecksByUserId = async (req, res) => {
   const q = `SELECT t.*, c.CourseName, u.name, u.email FROM timechecks t
               JOIN users u ON t.UserId = u.UserId
               JOIN courses c ON t.CourseID = c.CourseId
-              WHERE u.UserId = ?
+              JOIN user_courses uc ON u.UserId = uc.UserId AND c.CourseId = uc.CourseId
+              WHERE u.UserId = ? AND uc.Active = 1
               ORDER BY c.CourseName, CASE WHEN t.DayOfWeek = 0 THEN 7 ELSE t.DayOfWeek END, t.StartTime;
               `
   try {
@@ -127,11 +128,12 @@ const getTimechecksByUserId = async (req, res) => {
 const getAllUsersActiveTimechecks = async (req, res) => {
   // This query fetches active timechecks and their associated users
   const q = `
-    SELECT DISTINCT  t.*, c.CourseName, c.ImageUrl, u.UserId, u.Name, u.Email 
-    FROM users u
-    LEFT JOIN timechecks t ON t.UserId = u.UserId
-    LEFT JOIN courses c ON t.CourseID = c.CourseId
-    WHERE t.Active = 1 AND c.Active = 1 AND u.Active = 1
+        SELECT DISTINCT  t.*, c.CourseName, c.ImageUrl, u.UserId, u.Name, u.Email 
+        FROM users u
+        INNER JOIN user_courses uc ON u.UserId = uc.UserId
+        INNER JOIN timechecks t ON t.UserId = u.UserId
+        INNER JOIN courses c ON t.CourseID = c.CourseId AND c.CourseId = uc.CourseId
+        WHERE t.Active = 1 AND c.Active = 1 AND u.Active = 1 AND uc.Active = 1
   `;
   try {
     const results = await pool.query(q);
@@ -224,15 +226,14 @@ const getTimechecksByUserIdAndCourseId = async (req, res) => {
 
 const getTimechecksByCourse = async (req, res) => {
   const userId = req.user.userId;
-  console.log(`USER: ${req.user.userId}`);
 
   try {
     // Call getCourses to get all courses
-    const courses = await pool.query('SELECT * FROM courses');
+    const courses = await pool.query('SELECT DISTINCT * FROM courses c JOIN user_courses uc ON c.CourseId = uc.CourseId WHERE uc.UserId = ? AND uc.Active = 1 ORDER BY uc.SortOrder', [userId]);
 
     // For each course, call getTimechecksByUserIdAndCourseId to get its timechecks
     const promises = courses.map(async (course) => {
-      const timechecks = await pool.query('SELECT * FROM timechecks WHERE UserId = ? AND CourseId = ? ORDER BY DayOfWeek', [userId, course.CourseId]);
+      const timechecks = await pool.query('SELECT t.* FROM timechecks t WHERE t.UserId = ? AND t.CourseId = ? ORDER BY DayOfWeek', [userId, course.CourseId]);
       course.Timechecks = timechecks; // Add timechecks as a new property to the course object
       return course;
     });

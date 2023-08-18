@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Course } from '../../models/course.model';
+import { Course, UserCourse } from '../../models/course.model';
 import { CourseService } from '../../service/course.service';
 
 @Component({
@@ -9,14 +9,15 @@ import { CourseService } from '../../service/course.service';
 })
 export class CoursesComponent implements OnInit {
 
-  courses: Course[] = [];
+  courses: UserCourse[] = [];
 
   constructor(private courseService: CourseService) { }
 
   ngOnInit() {
-    this.courseService.getAllCourses().subscribe(
-      (data: any[]) => {
+    this.courseService.getUserCourses({all: true}).subscribe(
+      (data: UserCourse[]) => {
         this.courses = data;
+        this.courses.map(x => x.Active = Boolean(x.Active))
         // console.log('Courses:', this.courses);
       },
       (error) => {
@@ -24,4 +25,28 @@ export class CoursesComponent implements OnInit {
       }
     );
   }
+
+  onRowReorder(event: any) {
+    const { dragIndex, dropIndex } = event;
+    console.log(event);
+
+    console.log(this.courses);
+
+    // this.courses.splice(dropIndex, 0, movedItem);
+
+    
+  }
+
+  updateCourseOrder() {
+    console.log(this.courses);
+    this.courseService.updateCourseOrder(this.courses).subscribe(
+      (data: any) => {
+        
+      },
+      (error) => {
+        console.error('Error getting courses:', error);
+      }
+    );
+  }
+
 }

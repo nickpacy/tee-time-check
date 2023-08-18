@@ -9,3 +9,8 @@ export class Course {
     ImageUrl!: string;
     Timechecks!: FullTimeCheck[];
 }
+
+export class UserCourse extends Course {
+    SortOrder!: number;
+    Active!: boolean;
+}
