@@ -12,12 +12,6 @@ const dotenvPath = path.resolve(__dirname, '..', '.env');
 // Load the environment variables from the .env file
 const result = dotenv.config({ path: dotenvPath });
 
-if (result.error) {
-  console.error('Error loading .env file:', result.error);
-} else {
-  console.log('.env file loaded successfully');
-}
-
 // API to search for TEE TIMES
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 

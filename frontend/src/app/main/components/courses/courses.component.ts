@@ -26,19 +26,7 @@ export class CoursesComponent implements OnInit {
     );
   }
 
-  onRowReorder(event: any) {
-    const { dragIndex, dropIndex } = event;
-    console.log(event);
-
-    console.log(this.courses);
-
-    // this.courses.splice(dropIndex, 0, movedItem);
-
-    
-  }
-
   updateCourseOrder() {
-    console.log(this.courses);
     this.courseService.updateCourseOrder(this.courses).subscribe(
       (data: any) => {
         

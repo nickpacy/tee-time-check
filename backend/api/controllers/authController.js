@@ -50,6 +50,8 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   const { Remember, Password, Email } = req.body;
 
+  console.log("req.body", req.body);
+
   // Validate request body
   if (!Email || !Password) {
     return res.status(400).json({ message: 'Email and password are required.' });
@@ -79,10 +81,10 @@ const loginUser = async (req, res) => {
      await pool.query('UPDATE users SET LastLoginDate = ? WHERE UserId = ?', [lastLoginDate, userId]); 
 
     // Generate JWT
-    const token = jwt.sign({ userId: userId }, process.env.JWT_TOKEN, { expiresIn: Remember ? '7d' : '1h' });
+    const token = jwt.sign({ userId: userId }, process.env.JWT_TOKEN, { expiresIn: Remember ? '7d' : '7d' });
 
     // Return JWT in response header and body
-    res.header('auth-token', token).send({ 
+    const responseObject = {
       user: {
         UserId: user.UserId,
         Name: user.Name,
@@ -92,14 +94,18 @@ const loginUser = async (req, res) => {
         PhoneNotification: user.PhoneNotification,
         Active: user.Active,
         Admin: user.Admin,
-      }
-      , token 
-    });
+        LastLoginDate: user.LastLoginDate
+      },
+      token
+    };
+    
+    console.log('Sending Response:', responseObject);
+    res.header('auth-token', token).send(responseObject);
 
     // res.status(201).json({ message: { CourseId: newCourseId, CourseName, BookingClass, ScheduleId } });
   } catch (error) {
-    console.error('Error creating course: ', error);
-    res.status(500).json({ message: { error: 'Error creating course' } });
+    console.error('Error logging in: ', error);
+    res.status(500).json({ message: { error: 'Error logging in' } });
   }
 };
 

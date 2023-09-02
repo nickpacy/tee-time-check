@@ -24,7 +24,7 @@ const getNotificationsByCourse = async (req, res) => {
       const results = await pool.query(query, [userId]);
 
       if (results.length === 0) {
-          res.status(404).json({ error: 'Notification not found' });
+          res.json([]);
           return;
       }
 

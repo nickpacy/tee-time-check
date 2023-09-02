@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const serverless = require('serverless-http')
+const bodyParser = require('body-parser');
 
 const authRoutes = require('./routes/authRoutes');
 const usersRoutes = require('./routes/usersRoutes');
@@ -13,6 +14,7 @@ const teeTimeRoutes = require('./routes/teeTimeRoutes');
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use(bodyParser.json());
 
 // Stage environment for server
 const stage = process.env.STAGE;

@@ -15,6 +15,7 @@ const getUsers = async (req, res) => {
 // Get user by UserId
 const getUserById = async (req, res) => {
     const userId = req.params.userId;
+
     try {
         const rows = await pool.query('SELECT * FROM users WHERE UserId = ?', [userId]);
         if (rows.length === 0) {
@@ -54,6 +55,7 @@ const createUser = async (req, res) => {
 
       // Call the stored procedure to add inactive timechecks for the new user
       await pool.query('CALL AddTimechecksForNewUser(?)', [newUserId]);
+      await pool.query('CALL CreateUserCourses(?)', [newUserId]);
 
       const rows = await pool.query('SELECT * FROM users WHERE UserId = ?', [newUserId]);
       console.log(rows)
@@ -79,7 +81,6 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
     const userId = req.params.userId;
     let { Name, Email, Phone, EmailNotification, PhoneNotification, Admin, Active } = req.body;
-    
 
     if ('PhoneNotification' in req.body) {
       PhoneNotification = PhoneNotification !== null ? PhoneNotification : false;
@@ -143,6 +144,37 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const updateUserDeviceToken = async (req, res) => {
+  const userId = req.user.userId;  // Assuming you get userId from JWT or session
+  const newDeviceToken = req.body.deviceToken;  // Assuming you'll send `deviceToken` in request body
+  
+  try {
+    // First, fetch the current device token to check if it has changed
+    const [currentRows] = await pool.query(
+      'SELECT deviceToken FROM users WHERE userId = ?',
+      [userId]
+    );
+    
+    const currentDeviceToken = currentRows.length > 0 ? currentRows[0].deviceToken : null;
+    
+    // If the new token is different from the current one, then update
+    if (newDeviceToken !== currentDeviceToken) {
+      await pool.query(
+        'UPDATE users SET deviceToken = ? WHERE userId = ?',
+        [newDeviceToken, userId]
+      );
+
+      res.json({ success: true, message: "Device token updated successfully." });
+    } else {
+      res.json({ success: true, message: "Device token unchanged, no update needed." });
+    }
+
+  } catch (error) {
+    console.error('Error updating device token: ', error);
+    res.status(500).json({ success: false, message: "Error updating device token.", error: error.message });
+  }
+};
+
 
 module.exports = {
   getUsers,
@@ -150,5 +182,6 @@ module.exports = {
   getUserByEmail,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  updateUserDeviceToken
 };
