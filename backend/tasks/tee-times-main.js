@@ -3,10 +3,6 @@ const mysql = require("mysql2/promise"); // MySQL library
 const moment = require("moment-timezone"); // Date and time manipulation library
 const dotenv = require("dotenv"); // Environment variable management library
 const winston = require("winston"); // Logging library
-const fs = require('fs').promises; // Import the fs module
-// const AWS = require('aws-sdk');
-const twilio = require('twilio');
-const sgMail = require('@sendgrid/mail');
 
 // Import custom functions
 const uti = require("./utility");
@@ -15,6 +11,7 @@ const navyFunction = require("./tee-times-navy");
 const teeitupFunction = require("./tee-times-teeitup");
 const jcgolfFunction = require("./tee-times-jcgolf");
 const coronadoFunction = require("./tee-times-coronado");
+const notificationsFunction = require("./user-notifications");
 
 // Load environment variables from .env file
 dotenv.config();
@@ -41,8 +38,7 @@ if (!pool) {
   });
 }
 
-// Create a Twilio client
-const smsClient = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+
 
 // Check tee times and send notifications
 const checkTeeTimes = async () => {
@@ -53,7 +49,7 @@ const checkTeeTimes = async () => {
 
     try {
 
-      const query = `SELECT DISTINCT t.id, u.userId, u.email, u.phone, u.emailNotification, u.phoneNotification, t.dayOfWeek, 
+      const query = `SELECT DISTINCT t.id, u.userId, u.email, u.phone, u.emailNotification, u.phoneNotification, u.deviceToken, t.dayOfWeek, 
                           t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, 
                           c.courseName, c.courseAbbr, c.method, c.bookingUrl, GROUP_CONCAT(DISTINCT n.TeeTime) AS notifiedTeeTimes 
                       FROM timechecks t
@@ -65,7 +61,6 @@ const checkTeeTimes = async () => {
                           AND c.active = 1
                           AND ((u.email is not null AND u.emailNotification = 1 )
                             OR (u.phone is not null AND u.phoneNotification = 1))
-                          AND u.lastLoginDate BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND NOW()
                       GROUP BY t.id, u.userId, u.email, u.phone, u.emailNotification, u.phoneNotification, t.dayOfWeek, 
                           t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, 
                           c.courseName, c.courseAbbr, c.method, c.bookingUrl;  
@@ -82,6 +77,7 @@ const checkTeeTimes = async () => {
           emailNotification,
           phone,
           phoneNotification,
+          deviceToken,
           dayOfWeek,
           startTime,
           endTime,
@@ -228,6 +224,7 @@ const checkTeeTimes = async () => {
                 bookingLink,
                 email,
                 phone,
+                deviceToken,
                 emailNotification,
                 phoneNotification
               });
@@ -239,8 +236,9 @@ const checkTeeTimes = async () => {
       }
 
       // Send emails with tee time notifications
-      await sendEmails(teeTimesByUser);
-      await sendSMS(teeTimesByUser);
+      await notificationsFunction.sendEmails(teeTimesByUser);
+      await notificationsFunction.sendSMS(teeTimesByUser);
+      await notificationsFunction.sendPushNotitification(teeTimesByUser);
 
       try {
           // Save the list of notified tee times for each user to the database
@@ -284,129 +282,11 @@ const checkTeeTimes = async () => {
   }
 };
 
-// Send emails with tee time notifications
-const sendEmails = async (teeTimesByUser) => {
-  if (Object.keys(teeTimesByUser).length > 0) {
-    // Send an email to each user with their list of tee times
-    for (const [userId, teeTimes] of Object.entries(teeTimesByUser)) {
-      
-      const emailNotification = teeTimes[0].emailNotification;
-      if (!emailNotification) break;
 
-      const email = teeTimes[0].email;
 
-      const tableRows = teeTimes
-        .map(({ courseName, teeTime, available_spots, bookingLink }) => {
-          // Format the tee time in the user's local time zone
-          const options = {
-            weekday: "short",
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-            hour12: true,
-            timeZone: "America/Los_Angeles", // Specify the desired time zone
-          };
-          const teeTimeDate = moment.tz(teeTime, "America/Los_Angeles").toDate();
-          const localTime = teeTimeDate.toLocaleString("en-US", options);
-          return `
-            <tr>
-              <td><a href="${bookingLink}">${courseName}</a></td>
-              <td>${localTime}</td>
-              <td>${available_spots}</td>
-            </tr>`;
-        })
-        .join("");
 
-      // Read the HTML template from the file
-      let htmlTemplate = await fs.readFile('email-template.html', 'utf8');
-      
-      // Insert the table rows into the template
-      const htmlBody = htmlTemplate.replace('${tableRows}', tableRows);
 
-      const mailOptions = {
-        from: process.env.SMTP_FROM, // Sender's email address
-        to: email, // Recipient's email address
-        subject: "Tee Time Alert",
-        html: htmlBody,
-      };
 
-      try {
-        const info = await sendMail(mailOptions);
-        console.log(`Tee Time Found! Email sent to ${email}`);
-      } catch (error) {
-        console.log(`Error sending email to ${email}:`, error);
-      }
-    }
-  } else {
-    // No new tee times
-    console.log("No New Tee Times as of " + new Date());
-  }
-};
-
-const sendSMS = async (teeTimesByUser) => {
-  if (Object.keys(teeTimesByUser).length > 0) {
-    // Send an SMS to each user with their list of tee times
-    for (const [userId, teeTimes] of Object.entries(teeTimesByUser)) {
-      
-      const phoneNotification = teeTimes[0].phoneNotification;
-      if (!phoneNotification) break
-
-      let phoneNumber = teeTimes[0].phone;
-      if (!phoneNumber.startsWith('+1')) {
-        phoneNumber = '+1' + phoneNumber;
-      }
-      
-      let message = 'New Tee Times';
-      for (const { courseName, teeTime, available_spots, bookingLink } of teeTimes) {
-        // const teeTimeDate = moment.tz(teeTime, "America/Los_Angeles").toDate();
-        const localTime = moment(teeTime).format('ddd M/D h:mm A');
-        const newMessage = `\n${courseName} ${localTime} (${available_spots})`;
-        
-        // Check if adding the new message (and potentially '...') would exceed the SMS length limit
-        if ((message + newMessage + (message ? '...' : '')).length > 160) {
-          message += '...';
-          break;
-        }
-        message += newMessage;
-      }
-
-      try {
-        // Send the SMS
-        await smsClient.messages.create({
-          body: message,
-          to: phoneNumber, // Recipient's phone number
-          from: process.env.TWILIO_FROM // Your Twilio number
-        });
-        console.log(`Tee Time Found! SMS sent to ${phoneNumber}`);
-      } catch (error) {
-        console.log(`Error sending SMS to ${phoneNumber}:`, error);
-      }
-    }
-  } else {
-    // No new tee times
-    console.log(`No New Tee Times as of ${new Date()}`);
-  }
-};
-
-const sendMail = async (mail) => {
-  try {
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-    const result = await sgMail.send({
-      from: mail.from,
-      to: mail.to,
-      subject: mail.subject,
-      html: mail.html
-    });
-
-    return result; // Return the result object on successful email send
-  } catch (err) {
-    console.error('Error sending email:', err);
-    throw err; // Rethrow the error to be caught by the caller or handle it accordingly
-  }
-};
 
 module.exports = {
   checkTeeTimes,

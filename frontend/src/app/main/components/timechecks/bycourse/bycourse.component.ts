@@ -201,7 +201,7 @@ export class BycourseComponent {
     return new Promise((resolve, reject) => {
       this.timecheckService.getTimechecksByCourse().subscribe(
         (data: any) => {
-          // console.log(data)
+          
           this.courses = data;
           resolve(true);
         },

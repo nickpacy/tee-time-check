@@ -158,6 +158,7 @@ const getAllUsersActiveTimechecks = async (req, res) => {
         courseId: row.CourseId,
         courseName: row.CourseName,
         imageUrl: row.ImageUrl,
+        courseImage: row.CourseImage,
         dayOfWeek: row.DayOfWeek,
         startTime: row.StartTime,
         endTime: row.EndTime,
@@ -227,6 +228,8 @@ const getTimechecksByUserIdAndCourseId = async (req, res) => {
 const getTimechecksByCourse = async (req, res) => {
   const userId = req.user.userId;
 
+  updateLastLoginDate(userId);
+
   try {
     // Call getCourses to get all courses
     const courses = await pool.query('SELECT DISTINCT * FROM courses c JOIN user_courses uc ON c.CourseId = uc.CourseId WHERE uc.UserId = ? AND uc.Active = 1 ORDER BY uc.SortOrder', [userId]);
@@ -263,6 +266,21 @@ const resetTimechecks = async (req, res) => {
   } catch (err) {
     console.error('Error resetting timechecks: ', err);
     res.status(500).json({ error: 'Error resetting timechecks' });
+  }
+};
+
+const updateLastLoginDate = async (userId) => {
+  try {
+    const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' '); // Format to MySQL datetime
+    
+    await pool.query(
+      'UPDATE users SET lastLoginDate = ? WHERE userId = ?',
+      [currentDate, userId]
+    );
+
+    // console.log(`Last login date updated successfully for userId: ${userId}`);
+  } catch (error) {
+    console.error('Error updating last login date: ', error);
   }
 };
 
