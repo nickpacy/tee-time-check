@@ -95,9 +95,9 @@ const updateUser = async (req, res) => {
 
       // if EmailNotification and PhoneNotification are both false
       // update the Timechecks table and set Active = false for all the timechecks related to this user
-      if (!EmailNotification && !PhoneNotification) {
-        await pool.query('UPDATE timechecks SET Active = false WHERE UserId = ?', [userId]);
-      }
+      // if (!EmailNotification && !PhoneNotification && !) {
+      //   await pool.query('UPDATE timechecks SET Active = false WHERE UserId = ?', [userId]);
+      // }
 
 
       if (result.affectedRows === 0) {
