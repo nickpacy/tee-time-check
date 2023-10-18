@@ -23,7 +23,7 @@ let options = {
         keyId: "NPDRS4SRCS",
         teamId: "RFHPD79HMY"
     },
-    production: false
+    production: true
 };
 let apnProvider = new apn.Provider(options);
 

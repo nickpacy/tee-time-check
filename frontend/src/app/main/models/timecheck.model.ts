@@ -30,4 +30,5 @@ export class FullTimeCheck {
   StartTime: string = '';
   UserId?: number;
   TimeInterval!: number[];
+  ShowPlayers: boolean = false;
 }

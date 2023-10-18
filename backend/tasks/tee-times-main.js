@@ -60,7 +60,8 @@ const checkTeeTimes = async () => {
                           AND t.active = 1
                           AND c.active = 1
                           AND ((u.email is not null AND u.emailNotification = 1 )
-                            OR (u.phone is not null AND u.phoneNotification = 1))
+                            OR (u.phone is not null AND u.phoneNotification = 1)
+                            OR u.deviceToken is not null)
                       GROUP BY t.id, u.userId, u.email, u.phone, u.emailNotification, u.phoneNotification, t.dayOfWeek, 
                           t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, 
                           c.courseName, c.courseAbbr, c.method, c.bookingUrl;  

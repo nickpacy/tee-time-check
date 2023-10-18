@@ -87,14 +87,18 @@
                 <tr>
                     <td><p-checkbox styleClass="p-checkbox-sm p-0" [(ngModel)]="ttc.Active" [binary]="true"></p-checkbox></td>
                     <td>{{layoutService.isMobile() ? utilityService.dayName(ttc.DayOfWeek, true) : ttc.DayName}}</td>
-                    <td style="text-align: center;width: 200px;">
+                    <td style="text-align: center;width: 200px;" *ngIf="!ttc.ShowPlayers">
                         <span>
                             {{utilityService.convertIntervalToTime(ttc.TimeInterval[0])}} - {{utilityService.convertIntervalToTime(ttc.TimeInterval[1])}} 
                         </span>
                         <!-- {{ttc.TimeInterval[0]}} - {{ttc.TimeInterval[1]}} -->
                         <br>
                         <p-slider [style]="{'margin-top': '5px'}" [(ngModel)]="ttc.TimeInterval" [step]="1" [min]="20" [max]="76" [range]="true"></p-slider></td>
-                    <td><p-dropdown styleClass="p-dropdown-sm" [options]="[1, 2, 3, 4]" [(ngModel)]="ttc.NumPlayers" ></p-dropdown></td>
+                    <td [colSpan]="ttc.ShowPlayers ? 2 : 1">
+                        <p-dropdown *ngIf="!layoutService.isMobile()" styleClass="p-dropdown-sm" [options]="[1, 2, 3, 4]" [(ngModel)]="ttc.NumPlayers" ></p-dropdown>
+                        <p-button *ngIf="layoutService.isMobile() && !ttc.ShowPlayers" [label]="ttc.NumPlayers" (onClick)="ttc.ShowPlayers = true"></p-button>
+                        <p-selectButton *ngIf="layoutService.isMobile() && ttc.ShowPlayers" [options]="[1, 2, 3, 4]" [(ngModel)]="ttc.NumPlayers" (onOptionClick)="ttc.ShowPlayers = false"></p-selectButton>
+                    </td>
                     
                 </tr>
             </ng-template>
