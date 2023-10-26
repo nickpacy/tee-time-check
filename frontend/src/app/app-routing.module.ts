@@ -12,6 +12,7 @@ import { ProfileComponent } from './main/components/user/profile/profile.compone
 import { NotificationsComponent } from './main/components/notifications/notifications.component';
 import { SearchComponent } from './main/components/search/search.component';
 import { CalendarComponent } from './main/components/calendar/calendar.component';
+import { BydayComponent } from './main/components/timechecks/byday/byday.component';
 
 @NgModule({
     imports: [
@@ -28,6 +29,7 @@ import { CalendarComponent } from './main/components/calendar/calendar.component
                     { path: 'notifications', component: NotificationsComponent, canActivate: [AuthGuard] },
                     { path: 'timechecks', component: TimechecksComponent, canActivate: [AuthGuard] },
                     { path: 'setup', component: BycourseComponent, canActivate: [AuthGuard] },
+                    { path: 'setup/day', component: BydayComponent, canActivate: [AuthGuard] },
                     { path: 'search', component: SearchComponent, canActivate: [AuthGuard] },
                 ]
             },

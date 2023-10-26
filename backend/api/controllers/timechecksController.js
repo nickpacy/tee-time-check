@@ -214,6 +214,7 @@ const getTimechecksByUserIdAndCourseId = async (req, res) => {
   try {
     const results = await pool.query('SELECT * FROM timechecks WHERE UserId = ? AND CourseId = ? ORDER BY CASE WHEN DayOfWeek = 0 THEN 7 ELSE DayOfWeek END', [userId, courseId]);
     if (results.length === 0) {
+      res.json([]);
       res.status(404).json({ error: 'No timechecks for user and course' });
     } else {
       res.json(results);
@@ -246,6 +247,41 @@ const getTimechecksByCourse = async (req, res) => {
 
     // Send the result back to the client
     res.json(coursesWithTimechecks);
+  } catch (error) {
+    console.error('Error getting courses with timechecks: ', error);
+    res.status(500).json({ error: 'Error getting courses with timechecks' });
+  }
+};
+
+const getTimechecksByDayofWeek = async (req, res) => {
+  const userId = req.user.userId;
+
+  updateLastLoginDate(userId);
+
+  try {
+    // Call getCourses to get all courses
+    const daysOfWeek = [
+      { id: 0, name: 'Sunday', shortName: 'Sun' },
+      { id: 1, name: 'Monday', shortName: 'Mon' },
+      { id: 2, name: 'Tuesday', shortName: 'Tue' },
+      { id: 3, name: 'Wednesday', shortName: 'Wed' },
+      { id: 4, name: 'Thursday', shortName: 'Thu' },
+      { id: 5, name: 'Friday', shortName: 'Fri' },
+      { id: 6, name: 'Saturday', shortName: 'Sat' }
+    ];
+
+    // For each course, call getTimechecksByUserIdAndCourseId to get its timechecks
+    const promises = daysOfWeek.map(async (day) => {
+      const timechecks = await pool.query('SELECT t.* FROM timechecks t JOIN user_courses uc ON t.CourseId = uc.CourseId AND t.UserId = uc.UserId WHERE t.UserId = ? AND uc.Active = 1 AND t.DayOfWeek = ?', [userId, day.id]);
+      day.Timechecks = timechecks; // Add timechecks as a new property to the course object
+      return day;
+    });
+
+    // Wait for all promises to resolve
+    const daysWithTimechecks = await Promise.all(promises);
+
+    // Send the result back to the client
+    res.json(daysWithTimechecks);
   } catch (error) {
     console.error('Error getting courses with timechecks: ', error);
     res.status(500).json({ error: 'Error getting courses with timechecks' });
@@ -314,6 +350,7 @@ module.exports = {
     getActiveTimecheckCountByUserId,
     getAllUsersActiveTimechecks,
     getTimechecksByCourse,
+    getTimechecksByDayofWeek,
     resetTimechecks,
     setTimecheckInactive
   };

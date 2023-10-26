@@ -15,6 +15,7 @@ router.put('/inactive', timechecksController.setTimecheckInactive);
 router.get('/timechecksByUserId', verifyToken, timechecksController.getTimechecksByUserId);
 router.get('/timechecksByUserIdAndCourseId/:courseId', verifyToken, timechecksController.getTimechecksByUserIdAndCourseId);
 router.get('/timechecksByCourse', verifyToken, timechecksController.getTimechecksByCourse);
+router.get('/timechecksByDay', verifyToken, timechecksController.getTimechecksByDayofWeek);
 router.get('/activeTimecheckCount', verifyToken, timechecksController.getActiveTimecheckCountByUserId);
 router.get('/resetTimechecks', verifyToken, timechecksController.resetTimechecks);
 

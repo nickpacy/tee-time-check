@@ -24,6 +24,7 @@ import { CalendarComponent } from './main/components/calendar/calendar.component
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { AuthInterceptor } from './shared/auth-interceptor.service';
 import { UserSettingsComponent } from './main/components/user/user-settings/user-settings.component';
+import { BydayComponent } from './main/components/timechecks/byday/byday.component';
 
 
 @NgModule({
@@ -36,7 +37,8 @@ import { UserSettingsComponent } from './main/components/user/user-settings/user
         NotificationsComponent,
         SearchComponent,
         CalendarComponent,
-        UserSettingsComponent
+        UserSettingsComponent,
+        BydayComponent
     ],
     imports: [
         AppRoutingModule,

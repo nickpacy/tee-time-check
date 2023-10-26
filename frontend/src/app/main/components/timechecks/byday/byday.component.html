@@ -1,0 +1,70 @@
+<h3>
+    <span class="fa fa-question-circle" style="float: right;font-size: 2rem;margin-right: .5em;cursor: pointer;" [pTooltip]="'Configuration Guide'"></span>
+    
+    Setup Tee Time Monitoring
+</h3><hr>
+<div class="grid">
+    <div *ngIf="!layoutService.isMobile()" class="col-2">
+        <div>
+            <p-toast></p-toast>
+            <div class="grid">
+                <!-- <div class="col-12" *ngIf="copyTemplate?.length > 0">
+                    <p-messages severity="error">
+                        <ng-template pTemplate>
+                            <span>Done with the Template?</span>&nbsp;&nbsp;
+                            <button pButton pRipple label="Clear Template" icon="fa fa-trash" class="p-button-danger" [style]="{'float': 'right'}" (click)="copyTemplate = []; activeTemplate = false"></button>
+                        </ng-template>
+                    </p-messages>
+                </div> -->
+                <div *ngFor="let d of daysOfWeek" class="col-12 course-card">
+                    
+                    <div class="card" style="width: 100%; text-align: center;" (click)="setActiveDay(d.id)">
+                        {{d.name}}
+                    </div>
+                        
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 md:col-10 lg:col-10 xl:col-10">
+        <div class="p-field p-col-12">
+            <label for="">Day:</label>
+            <!-- <p-dropdown [options]="daysOfWeek"
+                styleClass="w-full mb-5" optionLabel="name" optionValue="id" 
+                [(ngModel)]="dayOfWeek" (onChange)="setActiveDay(dayOfWeek)"></p-dropdown> -->
+            <p-selectButton [options]="daysOfWeek" optionLabel="shortName" optionValue="id" styleClass="w-full mb-5" [(ngModel)]="dayOfWeek" (onOptionClick)="setActiveDay(dayOfWeek)"></p-selectButton>
+        </div>
+        <div *ngIf="activeDayTimechecks?.length > 0">
+            <div class="p-field p-col-12">
+                <label>Tee Time:</label>
+                <span>
+                    {{utilityService.convertIntervalToTime(searchTimeInterval[0])}} - {{utilityService.convertIntervalToTime(searchTimeInterval[1])}} 
+                </span>
+                <p-slider [style]="{'margin-top': '5px'}" [(ngModel)]="searchTimeInterval" [step]="1" [min]="20" [max]="76" [range]="true" styleClass="w-full mb-5"></p-slider>
+              </div>
+
+              <div class="p-field p-col-12">
+                <label>Number of Players:</label>
+                <p-dropdown [options]="playerOptions" [(ngModel)]="numberOfPlayers" styleClass="w-full mb-5"></p-dropdown>
+              </div>
+            <div class="p-field p-col-12">
+                <label for="">Courses: {{selectedCourses?.length}}/{{courses?.length}} Selected</label>
+                <!-- <p-multiSelect [options]="courses" selectedItemsLabel="Searching {0} courses..."
+                    [displaySelectedLabel]="true" [maxSelectedLabels]="1" styleClass="w-full mb-5" optionLabel="CourseName" optionValue="CourseId" 
+                    [(ngModel)]="selectedCourses" (onChange)="updateCourseActive($event)"></p-multiSelect> -->
+                    <p-listbox [options]="courses" [(ngModel)]="selectedCourses" optionValue="CourseId" optionLabel="CourseName" [metaKeySelection]="false"
+                            [listStyle]="{ 'max-height': '300px' }" styleClass="w-full mb-5" [multiple]="true" (onChange)="updateCourseActive($event)">
+                        <ng-template let-course pTemplate="item">
+                            <div class="flex align-items-center gap-2">
+                                <img [src]="'../../../../../assets/images/courses/' + course.ImageUrl" style="width: 18px"/>
+                                <div>{{ course.CourseName }}</div>
+                            </div>
+                        </ng-template>
+                    </p-listbox>
+              </div> 
+              <div class="p-field p-col-12">
+                <button pButton type="button" icon="fa fa-save" label="Save" class="w-full mb-3" style="padding:1rem" (click)="onSave()"></button>
+              </div>
+        </div>
+    </div>
+</div>
