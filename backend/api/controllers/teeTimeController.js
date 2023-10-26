@@ -46,23 +46,6 @@ const searchTeeTimes = async (req, res) => {
                 case 'teeitup':
                     promises.push(getTeeTimes_teeitup(date, course.BookingPrefix));
                     break;
-                case 'coronado':
-                  const currentDate = moment().startOf('day'); // This will include the current time
-                  const twoDaysOut = moment().add(3, 'days').startOf('day'); // Set it to the start of the day (midnight) three days from now
-                  
-                  if (moment(date).isSameOrAfter(currentDate) && moment(date).isBefore(twoDaysOut)) {
-                      promises.push(getTeeTimes_coronado(date, course.BookingClass)
-                          .then(coronadoTimes => {
-                              if (!coronadoTimes[1]) {
-                                  return getTeeTimes_coronado(date, '20066').then(times => times[0]);
-                              } else {
-                                return coronadoTimes[0];
-                              }
-                          }));
-                  } else {
-                      promises.push(getTeeTimes_coronado(date, '20066').then(times => times[0]));
-                  }
-                  break;
                 default:
                     promises.push(Promise.resolve([]));
                     break;
@@ -231,8 +214,23 @@ async function getTeeTimes_teeitup(date, bookingPrefix) {
   const formattedClosestDay = moment(date).format('YYYY-MM-DD');
   const url = `https://phx-api-be-east-1b.kenna.io/v2/tee-times?date=${formattedClosestDay}`;
   
+  const currentDate = moment().tz("America/Los_Angeles").startOf('day');
+  const twoDaysOut = moment().tz("America/Los_Angeles").add(3, 'days').startOf('day');
+  
+  // Convert both dates to 'YYYY-MM-DD' format for comparison
+  const formattedInputDate = moment.utc(date).format('YYYY-MM-DD');
+  const formattedTwoDaysOut = twoDaysOut.format('YYYY-MM-DD');
+  
+  const isSameOrAfter = formattedInputDate >= formattedTwoDaysOut;
+
+  let bp  = bookingPrefix;
+
+  if (isSameOrAfter && bp == "coronado-gc-0-1-be") {
+    bp = "coronado-gc-3-14-be"
+  }
+
   const headers = {
-    'x-be-alias': bookingPrefix
+    'x-be-alias': bp
   };
 
   try {
@@ -243,6 +241,9 @@ async function getTeeTimes_teeitup(date, bookingPrefix) {
         const formattedData = response.data[0].teetimes.map(teetime => {
             let greenFee = teetime.rates[0].greenFeeWalking ? teetime.rates[0].greenFeeWalking : teetime.rates[0].greenFeeCart;
             greenFee = Math.floor(greenFee / 100);
+            if (bp = "coronado-gc-3-14-be") {
+              greenFee += 18;
+            }
             
             return {
                 time: moment(teetime.teetime).tz('America/Los_Angeles').format('YYYY-MM-DD HH:mm'),

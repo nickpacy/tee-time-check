@@ -18,6 +18,7 @@ export class ProfileComponent implements OnInit {
   isAdmin!: boolean;
   currentUser!: IUser;
   passwordDialog: boolean = false;
+  settingsDialog: boolean = false;
   
   constructor(private authService: AuthService,
               private userService: UserService,
@@ -97,6 +98,12 @@ export class ProfileComponent implements OnInit {
   onChangePasswordFormSaved(e: any) {
     
     this.passwordDialog = false;
+    this.messageService.add(e);
+  }
+
+  onSettingsFormSaved(e: any) {
+    
+    this.settingsDialog = false;
     this.messageService.add(e);
   }
 

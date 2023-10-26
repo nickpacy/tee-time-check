@@ -1,13 +1,28 @@
 const axios = require('axios');
 const moment = require("moment");
 const util = require('./utility');
+require('moment-timezone');
 
 async function getTeeTimes(bookingAlias, dayOfWeek, numPlayers) {
   const formattedClosestDay = util.getClosestDayOfWeek(dayOfWeek, 'YYYY-MM-DD');
   const url = `https://phx-api-be-east-1b.kenna.io/v2/tee-times?date=${formattedClosestDay}`;
   
+  const twoDaysOut = moment().tz("America/Los_Angeles").add(3, 'days').startOf('day');
+  
+  // Convert both dates to 'YYYY-MM-DD' format for comparison
+  const formattedInputDate = moment.utc(formattedClosestDay).format('YYYY-MM-DD');
+  const formattedTwoDaysOut = twoDaysOut.format('YYYY-MM-DD');
+  
+  const isSameOrAfter = formattedInputDate >= formattedTwoDaysOut;
+
+  let bp  = bookingAlias;
+
+  if (isSameOrAfter && bp == "coronado-gc-0-1-be") {
+    bp = "coronado-gc-3-14-be"
+  }
+
   const headers = {
-    'x-be-alias': bookingAlias
+    'x-be-alias': bp
   };
 
   try {

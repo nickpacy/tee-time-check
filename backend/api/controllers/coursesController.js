@@ -48,30 +48,54 @@ const updateCourseOrder = async (req, res) => {
   const userId = req.user.userId;
   const reorderedCourses = req.body;
 
-  try {
-      const updatePromises = reorderedCourses.map(async (course, index) => {
-          const courseId = course.CourseId;
-          const isActive = course.Active;
+  // try {
+  //     const updatePromises = reorderedCourses.map(async (course, index) => {
+  //         const courseId = course.CourseId;
+  //         const isActive = course.Active;
           
-          // Update SortOrder and Active flag for the course
-          await pool.query(
-              'UPDATE user_courses SET SortOrder = ?, Active = ? WHERE UserId = ? AND CourseId = ?',
-              [index, isActive, userId, courseId]
-          );
+  //         // Update SortOrder and Active flag for the course
+  //         await pool.query(
+  //             'UPDATE user_courses SET SortOrder = ?, Active = ? WHERE UserId = ? AND CourseId = ?',
+  //             [index, isActive, userId, courseId]
+  //         );
 
-          // Update Active flag for corresponding timechecks if Active flag is set to false
-          if (!isActive) {
-            await pool.query(
-                'UPDATE timechecks SET Active = ? WHERE UserId = ? AND CourseId = ?',
-                [false, userId, courseId]
-            );
-        }
-      });
+  //         // Update Active flag for corresponding timechecks if Active flag is set to false
+  //         if (!isActive) {
+  //           await pool.query(
+  //               'UPDATE timechecks SET Active = ? WHERE UserId = ? AND CourseId = ?',
+  //               [false, userId, courseId]
+  //           );
+  //       }
+  //     });
 
-      // Execute all update queries in parallel
-      await Promise.all(updatePromises);
+  //     // Execute all update queries in parallel
+  //     await Promise.all(updatePromises);
 
-      res.json({ success: true, message: "Courses reordered and active flag updated successfully." });
+  //     res.json({ success: true, message: "Courses reordered and active flag updated successfully." });
+
+  // } 
+  try {
+    for (let index = 0; index < reorderedCourses.length; index++) {
+      const course = reorderedCourses[index];
+      const courseId = course.CourseId;
+      const isActive = course.Active;
+      
+      // Update SortOrder and Active flag for the course
+      await pool.query(
+          'UPDATE user_courses SET SortOrder = ?, Active = ? WHERE UserId = ? AND CourseId = ?',
+          [index, isActive, userId, courseId]
+      );
+
+      // Update Active flag for corresponding timechecks if Active flag is set to false
+      if (!isActive) {
+        await pool.query(
+            'UPDATE timechecks SET Active = ? WHERE UserId = ? AND CourseId = ?',
+            [false, userId, courseId]
+        );
+    }
+  }
+
+    res.json({ success: true, message: "Courses reordered and active flag updated successfully." });
 
   } catch (error) {
       console.error('Error updating course order: ', error);

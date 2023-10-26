@@ -5,6 +5,7 @@ const verifyToken = require('../middlewares/authMiddleware');
 const router = express.Router();
 
 router.put('/updateDeviceToken', verifyToken, usersController.updateUserDeviceToken);
+router.post('/userSetting', verifyToken, usersController.insertOrUpdateUserSetting);
 
 router.get('/', usersController.getUsers);
 router.get('/:userId', usersController.getUserById);

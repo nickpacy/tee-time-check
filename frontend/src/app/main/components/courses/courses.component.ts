@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Course, UserCourse } from '../../models/course.model';
 import { CourseService } from '../../service/course.service';
+import { LayoutService } from 'src/app/layout/service/app.layout.service';
 
 @Component({
   selector: 'app-courses',
@@ -11,7 +12,8 @@ export class CoursesComponent implements OnInit {
 
   courses: UserCourse[] = [];
 
-  constructor(private courseService: CourseService) { }
+  constructor(private courseService: CourseService,
+              public layoutService: LayoutService) { }
 
   ngOnInit() {
     this.courseService.getUserCourses({all: true}).subscribe(
@@ -35,6 +37,22 @@ export class CoursesComponent implements OnInit {
         console.error('Error getting courses:', error);
       }
     );
+  }
+
+  moveUp(index: number): void {
+    if (index === 0) return;  // If it's the first element, don't move it up
+    const temp = this.courses[index];
+    this.courses[index] = this.courses[index - 1];
+    this.courses[index - 1] = temp;
+    this.updateCourseOrder();
+  }
+  
+  moveDown(index: number): void {
+    if (index === this.courses.length - 1) return;  // If it's the last element, don't move it down
+    const temp = this.courses[index];
+    this.courses[index] = this.courses[index + 1];
+    this.courses[index + 1] = temp;
+    this.updateCourseOrder();
   }
 
 }

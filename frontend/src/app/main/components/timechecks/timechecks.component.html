@@ -15,6 +15,7 @@
                         <th>Day</th>
                         <th>Time</th>
                         <th>#</th>
+                        <th *ngIf="isAdmin">Remove</th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-tc let-rowIndex="rowIndex" let-rowgroup="rowgroup" let-rowspan="rowspan">
@@ -29,6 +30,7 @@
                            {{tc.startTime | localTime}} - {{tc.endTime | localTime}}
                         </td>
                         <td>{{tc.numPlayers}}</td>
+                        <td *ngIf="isAdmin" style="text-align: center"><em class="fa fa-minus-circle" (click)="setInactive(u, tc)"></em></td>
                     </tr>
                 </ng-template>
             </p-table>

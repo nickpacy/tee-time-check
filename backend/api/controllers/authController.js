@@ -50,7 +50,7 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   const { Remember, Password, Email } = req.body;
 
-  console.log("req.body", req.body);
+  // console.log("req.body", req.body);
 
   // Validate request body
   if (!Email || !Password) {
@@ -61,6 +61,7 @@ const loginUser = async (req, res) => {
     // Check if user already exists
     const results = await pool.query('SELECT * FROM users WHERE Email = ?',[Email]);
     if (!results.length) {
+      console.log(`${Email} tried logging in`)
       return res.status(400).json({ message: 'Invalid username or password.' });
     }
 
@@ -81,7 +82,7 @@ const loginUser = async (req, res) => {
      await pool.query('UPDATE users SET LastLoginDate = ? WHERE UserId = ?', [lastLoginDate, userId]); 
 
     // Generate JWT
-    const token = jwt.sign({ userId: userId }, process.env.JWT_TOKEN, { expiresIn: Remember ? '7d' : '7d' });
+    const token = jwt.sign({ userId: userId }, process.env.JWT_TOKEN, { expiresIn: Remember ? '365d' : '365d' });
 
     // Return JWT in response header and body
     const responseObject = {

@@ -95,6 +95,13 @@ export class TimecheckService {
     );
   }
 
+  setTimecheckInactive(timecheck: any): Observable<any> {
+    const url = `${this.baseUrl}/inactive`;
+    return this.http.put<any>(url, timecheck).pipe(
+      catchError(this.handleError)
+    );
+  }
+
 
   private handleError(error: any) {
     console.error('Error:', error);

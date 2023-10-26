@@ -20,6 +20,7 @@ export class TimechecksComponent implements OnInit {
 
   loading: boolean = true;
   USERID: number = 0;
+  isAdmin!: boolean;
   timechecks: FullTimeCheck[] = [];
   emailDialog: boolean = false;
   userEmail: string = '';
@@ -68,7 +69,16 @@ export class TimechecksComponent implements OnInit {
     // }
     this.getAllUsersActiveTimechecks();
     // // console.log("HGel")
+
+    this.authService.loadUserFromToken();
+    this.authService.getUser().subscribe(loggedInUser => {
+      if (loggedInUser) {
+        this.isAdmin = loggedInUser.Admin;
+      }
+    });
   }
+
+  
 
   getTimechecksByUser() {
     return new Promise((resolve, reject) => {
@@ -256,9 +266,37 @@ export class TimechecksComponent implements OnInit {
       this.timecheckService.getAllUsersActiveTimechecks()
         .subscribe(result => {
           this.userTimechecks = result;
-          // console.log(result);
+          console.log(result);
         }, error => {
           // console.log("getAllUsersActiveTimechecks", error);
+        });
+    });
+  }
+
+  setInactive(user, timecheck) {
+
+    return new Promise((resolve, reject) => {
+      this.timecheckService.setTimecheckInactive(timecheck)
+        .subscribe(result => {
+          const userIndex = this.userTimechecks.findIndex(u => u.userId === user.userId);
+
+        if (userIndex !== -1) {
+          const updatedTimechecks = this.userTimechecks[userIndex].timechecks.filter(tc => tc.timecheckId !== timecheck.timecheckId);
+
+          // Immutable update
+          this.userTimechecks = [
+            ...this.userTimechecks.slice(0, userIndex),
+            {
+              ...this.userTimechecks[userIndex],
+              timechecks: updatedTimechecks
+            },
+            ...this.userTimechecks.slice(userIndex + 1)
+          ];
+        }
+        resolve(true)
+        }, error => {
+          // console.log("getAllUsersActiveTimechecks", error);
+          reject(true);
         });
     });
   }

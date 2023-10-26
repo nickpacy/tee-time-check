@@ -15,7 +15,11 @@
     </ng-template>
     <ng-template pTemplate="body" let-course let-index="rowIndex">
         <tr [pReorderableRow]="index">
-            <td>
+            <td *ngIf="layoutService.isMobile()">
+                <button (click)="moveUp(index)">↑</button>
+                <button (click)="moveDown(index)">↓</button>
+            </td>
+            <td *ngIf="!layoutService.isMobile()">
                 <span class="pi pi-bars" pReorderableRowHandle></span>
             </td>
             <td>{{course.CourseName}}</td>
