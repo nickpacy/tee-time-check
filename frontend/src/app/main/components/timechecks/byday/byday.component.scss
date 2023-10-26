@@ -1,0 +1,19 @@
+.course-card > .card:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+
+/* Change the background color of the selected item */
+::ng-deep .p-listbox .p-listbox-list .p-listbox-item.p-highlight {
+    background-color: rgb(37,175,156) !important; /* Replace with your desired color */
+    color: #FFF; /* Adjust text color if needed */
+}
+
+/* Optionally, you can add hover and active styles as well */
+::ng-deep .p-listbox .p-listbox-list .p-listbox-item.p-highlight:hover {
+    background-color: rgb(26, 123, 110) !important; /* Replace with your desired hover color */
+}
+
+::ng-deep .p-listbox .p-listbox-list .p-listbox-item.p-highlight:active {
+    background-color: rgb(14, 69, 62) !important;  /* Replace with your desired active color */
+}

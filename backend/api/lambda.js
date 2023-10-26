@@ -3,7 +3,7 @@ const path = require('path');
 const archiver = require('archiver');
 
 // Destination folder - replace with your actual folder
-let destinationFolder = path.join(__dirname, '..', process.argv[2] || 'algotee-crawler-lambda');
+let destinationFolder = path.join(__dirname, '..', process.argv[2] || 'algotee-api-lambda');
 
 // Destination folder - replace with your actual folder
 let destinationFolderName = path.basename(destinationFolder);
