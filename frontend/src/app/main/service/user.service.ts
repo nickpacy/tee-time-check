@@ -37,4 +37,9 @@ export class UserService {
   deleteUser(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
+
+  updateUserSetting(userSetting: any[]): Observable<any> {
+    var settings = {settings: userSetting}
+    return this.http.post(`${this.apiUrl}/userSetting`, settings);
+  }
 }

@@ -128,7 +128,7 @@ const getTimechecksByUserId = async (req, res) => {
 const getAllUsersActiveTimechecks = async (req, res) => {
   // This query fetches active timechecks and their associated users
   const q = `
-        SELECT DISTINCT  t.*, c.CourseName, c.ImageUrl, u.UserId, u.Name, u.Email 
+        SELECT DISTINCT  t.*, c.CourseName, c.ImageUrl, c.CourseImage, u.UserId, u.Name, u.Email 
         FROM users u
         INNER JOIN user_courses uc ON u.UserId = uc.UserId
         INNER JOIN timechecks t ON t.UserId = u.UserId
@@ -154,7 +154,7 @@ const getAllUsersActiveTimechecks = async (req, res) => {
         };
       }
       usersMap[row.UserId].timechecks.push({
-        timecheckId: row.TimecheckId, // Assuming there's a TimecheckId column
+        timecheckId: row.Id,
         courseId: row.CourseId,
         courseName: row.CourseName,
         imageUrl: row.ImageUrl,
@@ -163,12 +163,12 @@ const getAllUsersActiveTimechecks = async (req, res) => {
         startTime: row.StartTime,
         endTime: row.EndTime,
         numPlayers: row.NumPlayers
-      });
+      });    
     });
 
     // Converting the usersMap object into an array
     const usersArray = Object.values(usersMap);
-    
+
     res.json(usersArray);
 
   } catch (err) {
@@ -285,6 +285,23 @@ const updateLastLoginDate = async (userId) => {
 };
 
 
+const setTimecheckInactive = async (req, res) => {
+  const timecheckId = req.body.timecheckId;
+
+  try {
+    const result = await pool.query('UPDATE timechecks SET Active = ? WHERE Id = ?', [false, timecheckId]);
+
+    if (result.affectedRows === 0) {
+      res.status(404).json({ error: 'Timecheck not found' });
+    } else {
+      res.json({ message: `Timecheck with ID: ${timecheckId} is now inactive` });
+    }
+  } catch (err) {
+    console.error('Error setting timecheck to inactive: ', err);
+    res.status(500).json({ error: 'Error setting timecheck to inactive' });
+  }
+};
+
 module.exports = {
     getTimechecks,
     getTimecheckById,
@@ -297,5 +314,6 @@ module.exports = {
     getActiveTimecheckCountByUserId,
     getAllUsersActiveTimechecks,
     getTimechecksByCourse,
-    resetTimechecks
+    resetTimechecks,
+    setTimecheckInactive
   };

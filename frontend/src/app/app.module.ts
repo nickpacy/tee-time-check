@@ -23,6 +23,7 @@ import { SearchComponent } from './main/components/search/search.component';
 import { CalendarComponent } from './main/components/calendar/calendar.component';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { AuthInterceptor } from './shared/auth-interceptor.service';
+import { UserSettingsComponent } from './main/components/user/user-settings/user-settings.component';
 
 
 @NgModule({
@@ -34,7 +35,8 @@ import { AuthInterceptor } from './shared/auth-interceptor.service';
         ChangePasswordFormComponent,
         NotificationsComponent,
         SearchComponent,
-        CalendarComponent
+        CalendarComponent,
+        UserSettingsComponent
     ],
     imports: [
         AppRoutingModule,

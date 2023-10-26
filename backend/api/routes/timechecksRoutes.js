@@ -9,6 +9,7 @@ router.get('/', timechecksController.getTimechecks);
 router.get('/allUsersActiveTimechecks', timechecksController.getAllUsersActiveTimechecks);
 router.post('/', timechecksController.createTimecheck);
 router.post('/bulk-update', timechecksController.updateBulkTimechecks);
+router.put('/inactive', timechecksController.setTimecheckInactive);
 
 // Middleware-protected routes
 router.get('/timechecksByUserId', verifyToken, timechecksController.getTimechecksByUserId);
@@ -21,8 +22,5 @@ router.get('/resetTimechecks', verifyToken, timechecksController.resetTimechecks
 router.get('/:timecheckId', timechecksController.getTimecheckById);
 router.put('/:timecheckId', timechecksController.updateTimecheck);
 router.delete('/:timecheckId', timechecksController.deleteTimecheck);
-
-module.exports = router;
-
 
 module.exports = router;

@@ -1,5 +1,31 @@
 const pool = require('../database');
 const email = require('./emailController');
+const crypto = require("crypto");
+
+const ENCRYPTION_KEY = crypto.scryptSync('AlgoteeEncyrpt', 'andthesaltis', 32); // change 'Your Super Secret Passphrase' and 'salt'
+const IV_LENGTH = 16; // For AES, this is always 16
+
+function encrypt(text) {
+    let iv = crypto.randomBytes(IV_LENGTH);
+    let cipher = crypto.createCipheriv('aes-256-gcm', ENCRYPTION_KEY, iv);
+    let encrypted = cipher.update(text);
+    let finalBuffer = Buffer.concat([encrypted, cipher.final()]);
+    let authTag = cipher.getAuthTag();
+    return Buffer.concat([iv, finalBuffer, authTag]).toString('base64'); // returns base64 string
+}
+
+function decrypt(text) {
+    let buffer = Buffer.from(text, 'base64');
+    let iv = buffer.slice(0, IV_LENGTH);
+    let encryptedText = buffer.slice(IV_LENGTH, buffer.length - 16); // excluding auth tag
+    let authTag = buffer.slice(buffer.length - 16);
+    let decipher = crypto.createDecipheriv('aes-256-gcm', ENCRYPTION_KEY, iv);
+    decipher.setAuthTag(authTag);
+    let decrypted = decipher.update(encryptedText);
+    return Buffer.concat([decrypted, decipher.final()]).toString();
+}
+
+
 
 // Get all users
 const getUsers = async (req, res) => {
@@ -175,6 +201,41 @@ const updateUserDeviceToken = async (req, res) => {
   }
 };
 
+const insertOrUpdateUserSetting = async (req, res) => {
+  const userId = req.user.userId;
+  
+  // Assuming you'll send an array named `settings` in request body
+  // Each entry should be of the form: { settingKey: 'some_key', settingValue: 'some_value', encrypt: true/false }
+  const settings = req.body.settings || []; 
+
+  let responseMessages = []; // Store feedback messages for each setting
+
+  try {
+    for (let setting of settings) {
+      let settingValue = setting.settingValue;
+
+      // Check if encryption flag is set and true for this setting
+      if (setting.encrypt) {
+        settingValue = encrypt(settingValue);
+      }
+
+      await pool.query(
+        'INSERT INTO user_settings (userId, settingKey, settingValue) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE settingValue = ?',
+        [userId, setting.settingKey, settingValue, settingValue]
+      );
+
+      responseMessages.push(`${setting.settingKey} Setting inserted or updated successfully.`);
+    }
+
+    res.json({ success: true, message: "User Settings Updated!" });
+
+  } catch (error) {
+    console.error('Error processing settings: ', error);
+    res.status(500).json({ success: false, message: "Error processing settings.", error: error.message });
+  }
+};
+
+
 
 module.exports = {
   getUsers,
@@ -183,5 +244,6 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
-  updateUserDeviceToken
+  updateUserDeviceToken,
+  insertOrUpdateUserSetting
 };

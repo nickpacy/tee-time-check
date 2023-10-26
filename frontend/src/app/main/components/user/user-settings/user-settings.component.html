@@ -1,0 +1,19 @@
+
+<form [formGroup]="torreyPinesLoginForm" (ngSubmit)="onTorreyPinesLoginFormSubmit()">
+    <h4>Torrey Pines Login Info</h4>
+    <div class="form-group mt-5 mb-5">
+        <input pInputText id="email" formControlName="email" placeholder="Email" type="text" class="w-full md:w-50rem p-inputtext" style="padding: 1rem;" required>
+        <div *ngIf="f['email'].touched && f['email'].errors" class="text-danger">
+        <span *ngIf="f['email']!.errors?.['required']">Email is required.</span>
+        </div>
+    </div>
+
+    <div class="form-group mb-5">
+        <input pInputText id="password" formControlName="password" placeholder="Password" type="password" class="w-full md:w-50rem p-inputtext" style="padding: 1rem;" required>
+        <div *ngIf="f['password'].touched && f['password'].errors" class="text-danger">
+        <span *ngIf="f['password']!.errors?.['required']">Password is required.</span>
+        </div>
+    </div>
+
+    <button pButton type="submit" label="Save Login" class="p-button-primary"  [disabled]="!torreyPinesLoginForm.valid"></button>
+</form>

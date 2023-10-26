@@ -10,7 +10,7 @@ const foreupFunction = require("./tee-times-foreup");
 const navyFunction = require("./tee-times-navy");
 const teeitupFunction = require("./tee-times-teeitup");
 const jcgolfFunction = require("./tee-times-jcgolf");
-const coronadoFunction = require("./tee-times-coronado");
+// const coronadoFunction = require("./tee-times-coronado");
 const notificationsFunction = require("./user-notifications");
 
 // Load environment variables from .env file
@@ -166,16 +166,16 @@ const checkTeeTimes = async () => {
           } catch (error) {
             console.log("Error retrieving tee times from TeeItUp:", error);
           }
-        } else if (method === "coronado") {
-          try {
-            teeTimes = await coronadoFunction.getTeeTimes(
-              bookingClass,
-              dayOfWeek,
-              numPlayers
-            );
-          } catch (error) {
-            console.log("Error retrieving tee times from Coronado:", error);
-          }
+        // } else if (method === "coronado") {
+        //   try {
+        //     teeTimes = await coronadoFunction.getTeeTimes(
+        //       bookingClass,
+        //       dayOfWeek,
+        //       numPlayers
+        //     );
+        //   } catch (error) {
+        //     console.log("Error retrieving tee times from Coronado:", error);
+        //   }
         } else if (method === "jcgolf") {
           try {
              // If it's not the first call to jcgolf, wait for 1 second
