@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "chromedriver": "^118.0.1",
+    "dotenv": "^16.3.1",
+    "mysql2": "^3.6.2",
+    "mysql2-promise": "^0.1.4",
+    "selenium-webdriver": "^4.14.0",
+    "suncalc": "^1.9.0"
+  }
+}
