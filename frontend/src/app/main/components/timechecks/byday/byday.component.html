@@ -1,38 +1,23 @@
 <h3>
-    <span class="fa fa-question-circle" style="float: right;font-size: 2rem;margin-right: .5em;cursor: pointer;" [pTooltip]="'Configuration Guide'"></span>
+    <span class="fa fa-question-circle" style="float: right;font-size: 2rem;margin-right: .5em;cursor: pointer;" [pTooltip]="'Configuration Guide'" (click)="helpDialog=true"></span>
     
     Setup Tee Time Monitoring
+    <p-button [routerLink]="['/setup']" styleClass="p-button-sm mt-2">Setup By Course</p-button>
 </h3><hr>
 <div class="grid">
-    <div *ngIf="!layoutService.isMobile()" class="col-2">
-        <div>
-            <p-toast></p-toast>
-            <div class="grid">
-                <!-- <div class="col-12" *ngIf="copyTemplate?.length > 0">
-                    <p-messages severity="error">
-                        <ng-template pTemplate>
-                            <span>Done with the Template?</span>&nbsp;&nbsp;
-                            <button pButton pRipple label="Clear Template" icon="fa fa-trash" class="p-button-danger" [style]="{'float': 'right'}" (click)="copyTemplate = []; activeTemplate = false"></button>
-                        </ng-template>
-                    </p-messages>
-                </div> -->
-                <div *ngFor="let d of daysOfWeek" class="col-12 course-card">
-                    
-                    <div class="card" style="width: 100%; text-align: center;" (click)="setActiveDay(d.id)">
-                        {{d.name}}
-                    </div>
-                        
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 md:col-10 lg:col-10 xl:col-10">
+    <div class="col-12">
         <div class="p-field p-col-12">
-            <label for="">Day:</label>
+            <!-- <label for="">Day:</label> -->
             <!-- <p-dropdown [options]="daysOfWeek"
                 styleClass="w-full mb-5" optionLabel="name" optionValue="id" 
                 [(ngModel)]="dayOfWeek" (onChange)="setActiveDay(dayOfWeek)"></p-dropdown> -->
-            <p-selectButton [options]="daysOfWeek" optionLabel="shortName" optionValue="id" styleClass="w-full mb-5" [(ngModel)]="dayOfWeek" (onOptionClick)="setActiveDay(dayOfWeek)"></p-selectButton>
+                <div style="text-align: center;">
+                    <p-selectButton [options]="daysOfWeek" optionLabel="shortName" optionValue="id" styleClass="w-full mb-5" [(ngModel)]="dayOfWeek" (onOptionClick)="setActiveDay(dayOfWeek)">
+                        <ng-template let-item pTemplate>
+                            <span style="font-weight: bold;">{{ layoutService.isDesktop() ? item.name : layoutService.isBigMobile() ? item.shortName : item.shorterName }}</span>
+                        </ng-template>
+                    </p-selectButton>
+                </div>
         </div>
         <div *ngIf="activeDayTimechecks?.length > 0">
             <div class="p-field p-col-12">
@@ -45,7 +30,16 @@
 
               <div class="p-field p-col-12">
                 <label>Number of Players:</label>
-                <p-dropdown [options]="playerOptions" [(ngModel)]="numberOfPlayers" styleClass="w-full mb-5"></p-dropdown>
+                <!-- <p-dropdown [options]="playerOptions" [(ngModel)]="numberOfPlayers" styleClass="w-full mb-5"></p-dropdown> -->
+                <!-- <div style="text-align: center;"> -->
+                    <p-selectButton [options]="playerOptions" [(ngModel)]="numberOfPlayers" styleClass="w-full mb-5">
+                        <ng-template let-item pTemplate>
+                            <div style="width: 13vw;">
+                                <span style="font-weight: bold;">{{ item }}</span>
+                            </div>
+                        </ng-template>
+                    </p-selectButton>
+                <!-- </div> -->
               </div>
             <div class="p-field p-col-12">
                 <label for="">Courses: {{selectedCourses?.length}}/{{courses?.length}} Selected</label>
@@ -68,3 +62,23 @@
         </div>
     </div>
 </div>
+
+
+<p-dialog [(visible)]="helpDialog" [style]="{width: '600px', height: '600px', 'max-width':'98vw'}" [header]="'How To Configure Crawler'" [modal]="true" class="p-fluid">
+    <ng-template pTemplate="content">
+        <div class="tee-time-guide">
+            <h4>Setting Your Preferences:</h4>
+            <ol>
+                <li><strong>Select a Day</strong>: Simply click on a day of the week and select your tee time preference and number of players for that day.</li>
+                <li><strong>Configure Your Mutiple Courses</strong>: For each day of the week, select the courses you would like to search your tee time preference for.</li>
+            </ol>
+        
+            <h4>Active Tee Time Indicators:</h4>
+            <ul>
+                <li>If a course has active tee times being searched, it will show selected under the corresponding day of the week.</li>
+            </ul>
+            
+            <p>Set your preferences seamlessly and ensure you get your desired tee times across multiple courses!</p>
+        </div>
+    </ng-template>
+</p-dialog>

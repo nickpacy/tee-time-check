@@ -19,10 +19,30 @@ export class UserSettingsComponent {
       email: ['', [Validators.required]],
       password: ['', [Validators.required]]
     });
+    this.getUserSettings();
   }
 
   get f() {
     return this.torreyPinesLoginForm.controls;
+  }
+
+  getUserSettings() {
+    this.userService.getUserSettings()
+        .subscribe(result => {
+          // Find the setting values for email and password
+          const emailSetting = result.find(s => s.settingKey === 'TorreyPinesLoginEmail');
+          const passwordSetting = result.find(s => s.settingKey === 'TorreyPinesLoginPassword');
+
+          // Decrypt the password here if you are encrypting it before storing
+
+          // Use patchValue to update the form values
+          this.torreyPinesLoginForm.patchValue({
+              email: emailSetting ? emailSetting.settingValue : '',  // Use a fallback in case the setting doesn't exist
+              password: passwordSetting ? passwordSetting.settingValue : '' // Use a fallback in case the setting doesn't exist
+          });
+        }, error => {
+            console.error("Error:", error);
+        }) 
   }
 
 

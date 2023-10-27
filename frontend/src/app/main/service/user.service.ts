@@ -42,4 +42,8 @@ export class UserService {
     var settings = {settings: userSetting}
     return this.http.post(`${this.apiUrl}/userSetting`, settings);
   }
+
+  getUserSettings(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/userSetting`);
+  }
 }

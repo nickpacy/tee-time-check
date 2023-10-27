@@ -17,13 +17,13 @@ import { LayoutService } from 'src/app/layout/service/app.layout.service';
 })
 export class BydayComponent implements OnInit {
   daysOfWeek = [
-    { id: 0, name: 'Sunday', shortName: 'Sun' },
-    { id: 1, name: 'Monday', shortName: 'Mon' },
-    { id: 2, name: 'Tuesday', shortName: 'Tue' },
-    { id: 3, name: 'Wednesday', shortName: 'Wed' },
-    { id: 4, name: 'Thursday', shortName: 'Thu' },
-    { id: 5, name: 'Friday', shortName: 'Fri' },
-    { id: 6, name: 'Saturday', shortName: 'Sat' }
+    { id: 0, name: 'Sunday', shortName: 'Sun', shorterName: 'Su' },
+    { id: 1, name: 'Monday', shortName: 'Mon', shorterName: 'Mo' },
+    { id: 2, name: 'Tuesday', shortName: 'Tue', shorterName: 'Tu' },
+    { id: 3, name: 'Wednesday', shortName: 'Wed', shorterName: 'We' },
+    { id: 4, name: 'Thursday', shortName: 'Thu', shorterName: 'Th' },
+    { id: 5, name: 'Friday', shortName: 'Fri', shorterName: 'Fr' },
+    { id: 6, name: 'Saturday', shortName: 'Sat', shorterName: 'Sa' }
   ];
   dayOfWeek: number = 0;
   timechecks: any[] = [];
@@ -38,6 +38,7 @@ export class BydayComponent implements OnInit {
   minDate: Date = new Date();
   startTime: string;
   endTime: string;
+  helpDialog: boolean = false;
 
   constructor(private route: ActivatedRoute,
               private router: Router,
@@ -50,6 +51,7 @@ export class BydayComponent implements OnInit {
               private timecheckService: TimecheckService) {}
 
   ngOnInit(): void {
+
     this.getAllCourses();
     this.getTimechecksByDay().then(() => {
       this.setActiveDay(this.dayOfWeek);
