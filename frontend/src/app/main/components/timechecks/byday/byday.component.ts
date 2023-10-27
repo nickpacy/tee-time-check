@@ -33,7 +33,7 @@ export class BydayComponent implements OnInit {
   numberOfPlayers: number = 1;
   timeRange: number[] = [30, 65];
   playerOptions: number[] = [1, 2, 3, 4];
-  searchTimeInterval: number[] = [35, 50];
+  searchTimeInterval: number[] = this.utilityService.getSunTimes();;
   maxDate: Date = new Date(new Date().setDate(new Date().getDate() + 15));
   minDate: Date = new Date();
   startTime: string;
