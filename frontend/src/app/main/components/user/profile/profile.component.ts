@@ -18,7 +18,7 @@ export class ProfileComponent implements OnInit {
   isAdmin!: boolean;
   currentUser!: IUser;
   passwordDialog: boolean = false;
-  settingsDialog: boolean = false;
+  settingsDialog: boolean = true;
   
   constructor(private authService: AuthService,
               private userService: UserService,

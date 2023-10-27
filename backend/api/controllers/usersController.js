@@ -235,6 +235,40 @@ const insertOrUpdateUserSetting = async (req, res) => {
   }
 };
 
+const getUserSettings = async (req, res) => {
+  const userId = req.user.userId;
+  
+  try {
+    // Query to fetch all settings for this user
+    const rows = await pool.query(
+      "SELECT settingKey, settingValue, IF(settingKey LIKE '%password%', true, false) as encrypt FROM user_settings WHERE userId = ?",
+      [userId]
+    );
+
+    // Transform results if necessary (e.g., decrypt values)
+    const transformedSettings = rows.map(row => {
+      let settingValue = row.settingValue;
+
+      // Decrypt settingValue if the 'encrypt' column is true
+      if (row.encrypt) {
+        settingValue = decrypt(settingValue);
+      }
+
+      return {
+        settingKey: row.settingKey,
+        settingValue: settingValue
+      };
+    });
+
+    res.json(transformedSettings);
+
+  } catch (error) {
+    console.error('Error fetching settings: ', error);
+    res.status(500).json({ success: false, message: "Error fetching settings.", error: error.message });
+  }
+};
+
+
 
 
 module.exports = {
@@ -245,5 +279,6 @@ module.exports = {
   updateUser,
   deleteUser,
   updateUserDeviceToken,
-  insertOrUpdateUserSetting
+  insertOrUpdateUserSetting,
+  getUserSettings
 };

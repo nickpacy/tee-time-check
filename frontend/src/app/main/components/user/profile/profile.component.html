@@ -59,10 +59,10 @@
 </p-card>
 
 
-<p-dialog [(visible)]="passwordDialog" [style]="{'min-width': '320px'}" [closable]="true" header="Change Password" [modal]="true" class="p-fluid">
+<p-dialog [(visible)]="passwordDialog" [style]="{width: '600px', height: '600px', 'max-width':'98vw'}" [closable]="true" header="Change Password" [modal]="true" class="p-fluid">
   <app-change-password-form (formSaved)="onChangePasswordFormSaved($event)"></app-change-password-form>
 </p-dialog>
 
-<p-dialog [(visible)]="settingsDialog" [style]="{'min-width': '320px'}" [closable]="true" header="User Settings" [modal]="true" class="p-fluid">
+<p-dialog [(visible)]="settingsDialog" [style]="{width: '600px', height: '600px', 'max-width':'98vw'}" [closable]="true" header="User Settings" [modal]="true" class="p-fluid">
   <app-user-settings (formSaved)="onSettingsFormSaved($event)"></app-user-settings>
 </p-dialog>
