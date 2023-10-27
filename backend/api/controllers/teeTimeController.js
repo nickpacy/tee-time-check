@@ -172,6 +172,14 @@ async function getTeeTimes_navy(date, bookingClass, numPlayers, startTime) {
   const formattedStartTime = moment(startTime, 'HH:mm').format('hh:mm A');
   const url = `https://myffr.navyaims.com/navywest/wbwsc/navywest.wsc/search.html?Action=Start&secondarycode=${bookingClass}&numberofplayers=${numPlayers}&begindate=${formattedClosestDay}&begintime=${formattedStartTime}&numberofholes=18&reservee=&display=Listing&sort=Time&search=yes&page=1&module=GR&multiselectlist_value=&grwebsearch_buttonsearch=yes`;
 
+  let dayOfWeek = moment(date, 'MM/DD/YYYY').day();
+  let greenFeeValue;
+  if (dayOfWeek >= 1 && dayOfWeek <= 4) {  // Monday to Thursday
+      greenFeeValue = 40;
+  } else {  // Friday to Sunday
+      greenFeeValue = 49;
+  }
+
   try {
     const response = await axios.get(url);
     if (response.status === 200) {
@@ -192,7 +200,8 @@ async function getTeeTimes_navy(date, bookingClass, numPlayers, startTime) {
         
         const mappedTeeTime = {
           time: moment(date + ' ' + time, 'MM/DD/YYYY h:mm a').format('YYYY-MM-DD HH:mm'),
-          available_spots: openSlots
+          available_spots: openSlots,
+          green_fee: greenFeeValue
         };
 
       
