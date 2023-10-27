@@ -6,6 +6,7 @@ import { Course } from '../../models/course.model';
 import { DatePipe } from '@angular/common';
 import { LayoutService } from 'src/app/layout/service/app.layout.service';
 
+
 @Component({
   selector: 'app-search',
   templateUrl: './search.component.html',
@@ -14,7 +15,7 @@ import { LayoutService } from 'src/app/layout/service/app.layout.service';
 export class SearchComponent implements OnInit {
 
   searchDate: Date = new Date();
-  searchTimeInterval: number[] = [35, 50];
+  searchTimeInterval: number[] = this.utilityService.getSunTimes();
   maxDate: Date = new Date(new Date().setDate(new Date().getDate() + 15));
   minDate: Date = new Date();
   startTime: string;
@@ -55,6 +56,8 @@ export class SearchComponent implements OnInit {
       );
     });
   }
+
+  
 
 
   search() {
