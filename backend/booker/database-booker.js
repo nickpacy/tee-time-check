@@ -2,14 +2,18 @@ const { Builder, By, Key, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const mysql = require("mysql2/promise");
 const dotenv = require("dotenv");
-const SunCalc = require('suncalc');
 const util = require('./utility');
 
 // Load environment variables from .env file
 dotenv.config();
 
 async function initializeDriver() {
-    let driver = await new Builder().forBrowser('chrome').build();
+    // let driver = await new Builder().forBrowser('chrome').build();
+    let chromeOptions = new chrome.Options();
+    chromeOptions.addArguments('--headless', '--disable-gpu', '--window-size=1280x1024', '--no-sandbox');
+    chromeOptions.addArguments('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+    let driver = await new Builder().forBrowser('chrome').setChromeOptions(chromeOptions).build();
     return driver;
 }
 
@@ -25,24 +29,10 @@ async function initializeDatabase() {
             database: process.env.DB_NAME, // MySQL database name
         });
     }
-    console.log("pool", pool)
     return pool
 }
 
-async function getUserPreferences() {
-    let pool = await initializeDatabase();
-    const connection = await pool.getConnection();
-
-    try {
-        query = "SELECT '5:00am' AS StartTime, '2023-10-20' AS StartDate LIMIT 1;";
-        const [results] = await connection.execute(query);
-        console.log(results);
-    } catch (error) {
-        console.log("An error occurred", error)
-    }
-}
-
-async function getUserLogin() {
+async function getUserLogin(userId) {
     let pool = await initializeDatabase();
     const connection = await pool.getConnection();
 
@@ -50,8 +40,8 @@ async function getUserLogin() {
     let password = "";
 
     try {
-        query = "SELECT SettingKey, SettingValue FROM user_settings WHERE UserId = 1 AND SettingKey LIKE '%TorreyPinesLogin%';";
-        const [results] = await connection.execute(query);
+        query = "SELECT SettingKey, SettingValue FROM user_settings WHERE UserId = ? AND SettingKey LIKE '%TorreyPinesLogin%';";
+        const [results] = await connection.execute(query, [userId]);
         
         // Map the results
         for (const entry of results) {
@@ -71,39 +61,21 @@ async function getUserLogin() {
     }
 }
 
-async function loginUser(driver, email, password) {
-    await driver.get('https://foreupsoftware.com/index.php/booking/19347/1467#/login');
+async function loginUser(driver, email, password, link) {
+    await driver.get(link);
     await driver.findElement(By.id('login_email')).sendKeys(email);
     await driver.findElement(By.id('login_password')).sendKeys(password, Key.RETURN);
     await driver.wait(until.elementLocated(By.id('reservations-tab')), 10000);
 }
 
-async function navigateToBookingPage(driver) {
-    await driver.get('https://foreupsoftware.com/index.php/booking/19347/1467#/teetimes');
+async function navigateToBookingPage(driver, link, date) {
+    await driver.get(link);
     await driver.findElement(By.xpath("//button[contains(text(), 'Resident (0 - 7 Days)')]")).click();
     await driver.wait(until.elementLocated(By.id('date-field')), 10000);
-
-    const delay = getMillisecondsUntil7PM();
-    await new Promise(resolve => setTimeout(resolve, delay));
-
-    // await driver.findElement(By.xpath("(//td[contains(@class, 'day') and not(contains(@class, 'disabled'))])[last()-1]")).click();
-
-    await inputOneWeekFromNowInPDT(driver);
+    await setDateForTeeTime(driver, date);
 }
 
-async function inputOneWeekFromNowInPDT(driver) {
-    // Get the current date
-    const currentDate = new Date();
-    
-    // Add one week (7 days * 24 hours * 60 minutes * 60 seconds * 1000 milliseconds)
-    currentDate.setTime(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-    
-    // Format the date in PDT
-    const dateInPDT = currentDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' });
-    const [month, day, year] = dateInPDT.split('/');
-
-    const formattedDate = `${month.padStart(2, '0')}-${day.padStart(2, '0')}-${year}`;
-    console.log("formatted date", formattedDate);
+async function setDateForTeeTime(driver, date) {
 
     // Find the input element and input the formatted date
     let dateField = await driver.findElement(By.xpath("//input[@id='date-field']"));
@@ -118,7 +90,7 @@ async function inputOneWeekFromNowInPDT(driver) {
     }
 
     // Now send the new date
-    await dateField.sendKeys(formattedDate, Key.ENTER);
+    await dateField.sendKeys(date, Key.ENTER);
 }
 
 async function isTeeTimeUnavailable(driver) {
@@ -165,7 +137,7 @@ async function clickHighestButtonValue(driver) {
     await buttonValues[0].element.click();
 }
 
-async function selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes) {
+async function selectTimeSlot(driver, startTimeVariable) {
     await driver.wait(until.elementLocated(By.id('times-empty')), 10000);
     let timesEmptyElement = await driver.findElement(By.id('times-empty'));
     await driver.wait(until.stalenessOf(timesEmptyElement), 10000);
@@ -183,7 +155,7 @@ async function selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes) {
                 let displayedTime = await time.getText();
                 let displayedTimeInMinutes = timeToMinutes(displayedTime);
                 
-                if (displayedTimeInMinutes >= timeToMinutes(startTimeVariable) && displayedTimeInMinutes <= lastTimeInMinutes) {
+                if (displayedTimeInMinutes == timeToMinutes(startTimeVariable)) {
                     await time.click();
 
                     if(await isTeeTimeUnavailable(driver)) {
@@ -196,7 +168,7 @@ async function selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes) {
                     }
                 }
         
-                if (displayedTimeInMinutes > timeToMinutes(startTimeVariable) && displayedTimeInMinutes <= lastTimeInMinutes) {
+                if (displayedTimeInMinutes == timeToMinutes(startTimeVariable)) {
                     anyTimeAfterStartTime = true;
                 }
             }
@@ -205,14 +177,20 @@ async function selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes) {
                 // BOOK THE TEE TIME
                 console.log("Found");
                 await clickHighestButtonValue(driver);
-                // let bookTimeButton = await driver.findElement(By.css('button.btn.btn-success.js-book-button.pull-left'));
+
+                // Click the book time button
+                let bookTimeButton = await driver.findElement(By.css('button.btn.btn-success.js-book-button.pull-left'));
                 // await bookTimeButton.click();
-                break;
+
+                // Check if the recaptcha-token appears
+                await checkRecaptcha(driver);
+
+                return;
             }
 
             if (!anyTimeAfterStartTime) {
-                console.log("No Times");
-                break;
+                console.log("No Times Found");
+                return;
             }
 
             let isTimesEmptyPresent = await driver.findElements(By.id('times-empty')).then(elements => elements.length > 0);
@@ -230,6 +208,44 @@ async function selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes) {
 }
 
 
+async function checkRecaptcha(driver) {
+    // Locate the iframe whose title contains the word "recaptcha"
+    try {
+        let iframeElement = await driver.wait(until.elementLocated(By.css('iframe[title*="recaptcha challenge expires"]')), 10000);
+        await driver.wait(until.elementIsVisible(iframeElement), 10000);
+
+        console.log(iframesWithRecaptchaTitle);
+
+        if (iframesWithRecaptchaTitle.length === 0) {
+            console.log("No iframe with recaptcha title detected. Tee Time SHould be booked");
+            return;
+        } else {
+            // Switch to the first iframe with a title containing "recaptcha"
+            await driver.switchTo().frame(iframesWithRecaptchaTitle[0]);
+
+            // Now check for the recaptcha-token inside the iframe
+            let isRecaptchaPresent = false;
+            try {
+                await driver.wait(until.elementLocated(By.id('recaptcha-token')), 5000);
+                isRecaptchaPresent = true;
+            } catch (error) {
+                console.log("Recaptcha token not found.");
+            }
+
+            // Switch back to main content
+            await driver.switchTo().defaultContent();
+
+            if (isRecaptchaPresent) {
+                console.log("Recaptcha token detected. Exiting. Should notify user to go book manually");
+                return;
+            }
+        }
+    } catch (error) {
+        console.log("Waiting for iframe timed out. No iframe with recaptcha title detected.");
+        return;
+    }
+}
+
 function timeToMinutes(time) {
     let [hours, minutes] = time.split(':');
     let period = time.includes('pm') && hours !== '12' ? 'pm' : 'am';
@@ -238,55 +254,34 @@ function timeToMinutes(time) {
     return parseInt(hours) * 60 + parseInt(cleanMinutes);
 }
 
-function getMillisecondsUntil7PM() {
-    const now = new Date();
-    const targetTime = new Date(now);
+const loginToBooker = async (teeTimeData) => {
 
-    // Set to 3am UTC which is 7pm PST
-    targetTime.setUTCHours(2, 0, 0, 0); 
-    
-    // If it's already past 3am UTC (i.e., past 7pm PST), target the next day's 3am UTC.
-    if (now > targetTime) {
-        targetTime.setUTCDate(targetTime.getUTCDate() + 1);
+    console.log("FROM LOGIN BOOKER", teeTimeData);
+
+    let userlogin = await getUserLogin(teeTimeData.userId);
+    // Check if username or password is blank or undefined
+    if (!userlogin[0] || !userlogin[1]) {
+        console.error("No credentials available.");
+        driver.quit();
+        process.exit(0);
     }
 
-    console.log(now);
-    console.log(targetTime);
-
-    const delay = targetTime - now;
-    console.log(`Waiting until 7 PM. The delay is ${delay} milliseconds.`);
-    // If the delay is more than 3 minutes (180,000 milliseconds), return 0
-    if (delay > 180000) {
-        return 0;
-    }
-    return delay;
-}
-
-
-(async function loginExample() {
     let driver = await initializeDriver();
-    let userSettings = await getUserPreferences();
-    let userlogin = await getUserLogin();
     
     try {
-        await loginUser(driver, userlogin[0], userlogin[1]);
-        await navigateToBookingPage(driver);
-
-        // Get sunset time for San Diego
-        const sanDiegoCoords = { lat: 32.7157, lng: -117.1611 };
-        const sunsetTime = SunCalc.getTimes(new Date(), sanDiegoCoords.lat, sanDiegoCoords.lng).sunset;
-        const sunsetTimeLocal = new Date(sunsetTime.getTime() - 7 * 60 * 60 * 1000); // Subtract 7 hours for PDT
-        console.log(sunsetTimeLocal);
-
-        const lastTimeInMinutes = timeToMinutes(sunsetTimeLocal.getHours() + ':' + sunsetTimeLocal.getMinutes()) + 250;
-        let defaultStartTime = "5:00am";
-        let startTimeVariable = defaultStartTime;
-
-        await selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes);
-
+        await loginUser(driver, userlogin[0], userlogin[1], teeTimeData.bookingLink);
+        await navigateToBookingPage(driver, teeTimeData.bookingLink, teeTimeData.date);
+        await selectTimeSlot(driver, teeTimeData.time);
     } catch (error) {
         console.error("An error occurred:", error);
     } finally {
-        setTimeout(() => driver.quit(), 300000); //Quit after 5 minutes
+        console.log("Function Completed");
+        // setTimeout(() => driver.quit(), 300000); //Quit after 5 minutes
+        await driver.quit()
+        process.exit(0);
     }
-})();
+};
+
+module.exports = {
+    loginToBooker
+};

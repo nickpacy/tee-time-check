@@ -212,6 +212,8 @@ const insertOrUpdateUserSetting = async (req, res) => {
 
   try {
     for (let setting of settings) {
+
+      console.log(setting);
       let settingValue = setting.settingValue;
 
       // Check if encryption flag is set and true for this setting

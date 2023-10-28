@@ -15,3 +15,9 @@ export interface IUser {
     Active: boolean;
     Admin: boolean;
 }
+
+export interface UserSetting {
+    settingKey: string;
+    settingValue: string | boolean | number;
+    encrypt: boolean;
+  }
