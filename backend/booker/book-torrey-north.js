@@ -6,7 +6,7 @@ const util = require('./utility');
 
 async function initializeDriver() {
     // let chromeOptions = new chrome.Options();
-    // chromeOptions.addArguments('--headless', '--disable-gpu', '--window-size=1280x1024', '--no-sandbox');
+    // chromeOptions.addArguments('--window-size=1440x506', '--no-sandbox');
     // chromeOptions.addArguments('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
 
     // let driver = await new Builder().forBrowser('chrome').setChromeOptions(chromeOptions).build();
@@ -216,7 +216,7 @@ function getMillisecondsUntil7PM() {
         console.log(sunsetTimeLocal);
 
         const lastTimeInMinutes = timeToMinutes(sunsetTimeLocal.getHours() + ':' + sunsetTimeLocal.getMinutes()) + 250;
-        let defaultStartTime = "2:00pm";
+        let defaultStartTime = "6:00am";
         let startTimeVariable = defaultStartTime;
 
         await selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes);

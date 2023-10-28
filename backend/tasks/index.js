@@ -13,6 +13,7 @@ exports.handler = async (event, context) => {
     }
 };
 
+main.checkTeeTimes();
 
 // // Load environment variables from .env file
 // dotenv.config();

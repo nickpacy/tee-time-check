@@ -1,81 +1,101 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { UserSetting } from 'src/app/main/models/user.model';
 import { UserService } from 'src/app/main/service/user.service';
 
 @Component({
-  selector: 'app-user-settings',
-  templateUrl: './user-settings.component.html',
-  styleUrls: ['./user-settings.component.scss']
+  selector: "app-user-settings",
+  templateUrl: "./user-settings.component.html",
+  styleUrls: ["./user-settings.component.scss"],
 })
 export class UserSettingsComponent {
   @Output() formSaved: EventEmitter<any> = new EventEmitter<any>();
-  torreyPinesLoginForm!: FormGroup;
+  settingsForm!: FormGroup;
+  isLoading: boolean = true;
 
-  constructor(private fb: FormBuilder,
-              private userService: UserService) { }
+  userSettings = {
+    TorreyPinesLoginEmail: {
+      value: "",
+      encrypt: false,
+    },
+    TorreyPinesLoginPassword: {
+      value: "",
+      encrypt: true,
+    },
+    TorreyPinesLoginActive: {
+      value: false,
+      encrypt: false,
+    },
+  };
+
+  constructor(private fb: FormBuilder, private userService: UserService) {}
 
   ngOnInit() {
-    this.torreyPinesLoginForm = this.fb.group({
-      email: ['', [Validators.required]],
-      password: ['', [Validators.required]]
-    });
+    this.isLoading = true;
     this.getUserSettings();
   }
 
-  get f() {
-    return this.torreyPinesLoginForm.controls;
-  }
-
   getUserSettings() {
-    this.userService.getUserSettings()
-        .subscribe(result => {
-          // Find the setting values for email and password
-          const emailSetting = result.find(s => s.settingKey === 'TorreyPinesLoginEmail');
-          const passwordSetting = result.find(s => s.settingKey === 'TorreyPinesLoginPassword');
-
-          // Decrypt the password here if you are encrypting it before storing
-
-          // Use patchValue to update the form values
-          this.torreyPinesLoginForm.patchValue({
-              email: emailSetting ? emailSetting.settingValue : '',  // Use a fallback in case the setting doesn't exist
-              password: passwordSetting ? passwordSetting.settingValue : '' // Use a fallback in case the setting doesn't exist
-          });
-        }, error => {
-            console.error("Error:", error);
-        }) 
+    this.userService.getUserSettings().subscribe(
+      (result) => {
+        console.log(result);
+        for (const setting of result) {
+          if (this.userSettings[setting.settingKey]) {
+            if (setting.settingValue === 1 || setting.settingValue === '1') {
+                this.userSettings[setting.settingKey].value = true;
+            } else if (setting.settingValue === 0 || setting.settingValue === '0') {
+                this.userSettings[setting.settingKey].value = false;
+            } else {
+                this.userSettings[setting.settingKey].value = setting.settingValue;
+            }
+          }
+        }
+        this.createForm(this.userSettings);
+      },
+      (error) => {
+        console.error("Error:", error);
+      }
+    );
   }
 
+  createForm(settings: any) {
+    this.settingsForm = this.fb.group({
+      TorreyPinesLoginEmail: [settings.TorreyPinesLoginEmail.value],
+      TorreyPinesLoginPassword: [settings.TorreyPinesLoginPassword.value],
+      TorreyPinesLoginActive: [settings.TorreyPinesLoginActive.value],
+    });
+    this.isLoading = false;
+  }
 
-  onTorreyPinesLoginFormSubmit() {
-    // console.log("Submt")
-    if (this.torreyPinesLoginForm.valid) {
-      const email = this.f['email'].value;
-      const password = this.f['password'].value;
-
-      let userSetting = [{
+  onFormSubmit() {
+    const formValues = this.settingsForm.value;
+    const settingsArray = [
+      {
         settingKey: "TorreyPinesLoginEmail",
-        settingValue: email,
-        encrypt: false
-      }, {
+        settingValue: formValues.TorreyPinesLoginEmail,
+        encrypt: this.userSettings.TorreyPinesLoginEmail.encrypt,
+      },
+      {
         settingKey: "TorreyPinesLoginPassword",
-        settingValue: password,
-        encrypt: true
-      }];
-      
-      // console.log(user)
-      this.userService.updateUserSetting(userSetting)
-        .subscribe(result => {
-            // console.log("Change Password Result", result);
-            // Emit the custom event to notify the parent component
-            this.formSaved.emit({severity:'success', detail: `${result.message}`, life: 3000});
+        settingValue: formValues.TorreyPinesLoginPassword,
+        encrypt: this.userSettings.TorreyPinesLoginPassword.encrypt,
+      },
+      {
+        settingKey: "TorreyPinesLoginActive",
+        settingValue: formValues.TorreyPinesLoginActive,
+        encrypt: this.userSettings.TorreyPinesLoginActive.encrypt,
+      },
+    ];
 
-            // Optionally, you can also reset the form after saving
-            this.torreyPinesLoginForm.reset();
-        }, error => {
-            console.error("Login Error", error);
-            this.formSaved.emit({severity:'error', summary:'Login Error', detail: error.error.message, life: 3000});
-        })
-
-    }
+    this.userService.updateUserSetting(settingsArray).subscribe(
+      (result) => {
+        // Emit the custom event to notify the parent component
+        this.formSaved.emit({severity: "success", detail: `${result.message}`, life: 3000});
+      },
+      (error) => {
+        console.error("Login Error", error);
+        this.formSaved.emit({severity: "error", summary: "Login Error", detail: error.error.message, life: 3000});
+      }
+    );
   }
 }

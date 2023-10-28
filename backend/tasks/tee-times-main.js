@@ -12,6 +12,7 @@ const teeitupFunction = require("./tee-times-teeitup");
 const jcgolfFunction = require("./tee-times-jcgolf");
 // const coronadoFunction = require("./tee-times-coronado");
 const notificationsFunction = require("./user-notifications");
+const lambdaFunction = require("./tee-times-autobooker");
 
 // Load environment variables from .env file
 dotenv.config();
@@ -237,33 +238,51 @@ const checkTeeTimes = async () => {
       }
 
       // Send emails with tee time notifications
-      await notificationsFunction.sendEmails(teeTimesByUser);
-      await notificationsFunction.sendSMS(teeTimesByUser);
-      await notificationsFunction.sendPushNotitification(teeTimesByUser);
+      // await notificationsFunction.sendEmails(teeTimesByUser);
+      // await notificationsFunction.sendSMS(teeTimesByUser);
+      // await notificationsFunction.sendPushNotitification(teeTimesByUser);
+
+      if (Boolean(process.env.BOOKER_ENABLED)) {
+        
+        if (teeTimesByUser[1]) { // Check if userId 1 has any tee times
+          const validTeeTimes = teeTimesByUser[1].filter(teeTime => teeTime.courseId === 1 || teeTime.courseId === 2);
+          
+          if (validTeeTimes.length > 0) { // Check if there's any valid tee time
+              const firstValidTeeTime = validTeeTimes[0];
+              console.log(firstValidTeeTime);
+              if (await checkUserSettingsForBooker(1)) { 
+  
+                  console.log("Booker Called")
+                  // Call the lambda function with the first valid tee time
+                  await lambdaFunction.invokeBooker(firstValidTeeTime);
+              }
+          }
+        }
+      }
 
       try {
           // Save the list of notified tee times for each user to the database
-          const promises = []; // Array to hold all the promises
-          for (const userId in teeTimesByUser) {
-            const notifiedTeeTimes = teeTimesByUser[userId];
+          // const promises = []; // Array to hold all the promises
+          // for (const userId in teeTimesByUser) {
+          //   const notifiedTeeTimes = teeTimesByUser[userId];
             
-            // For each tee time, insert a new record into the notifications table
-            for (const { teeTime, courseId } of notifiedTeeTimes) {
-                const insertNotificationQuery = `
-                    INSERT INTO notifications (UserId, CourseId, TeeTime)
-                    VALUES (?, ?, ?);
-                `;
+          //   // For each tee time, insert a new record into the notifications table
+          //   for (const { teeTime, courseId } of notifiedTeeTimes) {
+          //       const insertNotificationQuery = `
+          //           INSERT INTO notifications (UserId, CourseId, TeeTime)
+          //           VALUES (?, ?, ?);
+          //       `;
         
-                // Convert to UTC Time
-                const utcTeeTime = moment.tz(teeTime, "America/Los_Angeles").utc().format('YYYY-MM-DD HH:mm:ss');
+          //       // Convert to UTC Time
+          //       const utcTeeTime = moment.tz(teeTime, "America/Los_Angeles").utc().format('YYYY-MM-DD HH:mm:ss');
         
-                // Add the promise to the array
-                promises.push(connection.execute(insertNotificationQuery, [userId, courseId, utcTeeTime]));
-            }
-          }
+          //       // Add the promise to the array
+          //       promises.push(connection.execute(insertNotificationQuery, [userId, courseId, utcTeeTime]));
+          //   }
+          // }
       
-          // Wait for all the promises to resolve
-          await Promise.all(promises).catch((error) => console.log("Error in Promise.all: ", error));
+          // // Wait for all the promises to resolve
+          // await Promise.all(promises).catch((error) => console.log("Error in Promise.all: ", error));
       
       } catch (err) {
           console.log("Error saving notified tee times:", err);
@@ -285,7 +304,30 @@ const checkTeeTimes = async () => {
 
 
 
+async function checkUserSettingsForBooker(userId) {
+  try {
+      const connection = await pool.getConnection();
+      const query = `
+          SELECT settingKey, settingValue 
+          FROM user_settings
+          WHERE userId = ? AND (
+              (settingKey = 'TorreyPinesLoginActive' AND settingValue = 1) OR
+              (settingKey IN ('TorreyPinesLoginEmail', 'TorreyPinesLoginPassword') AND settingValue != '')
+          );
+      `;
+      const [rows] = await connection.execute(query, [userId]);
+      connection.release();
 
+      if (rows.length < 3) {
+        console.log("Dont call booker")
+        return false; // Ensure all three settings exist and are correct
+      }
+      return true;
+  } catch (error) {
+      console.log("Error checking user settings for Lambda:", error);
+      return false;
+  }
+}
 
 
 

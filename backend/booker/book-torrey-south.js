@@ -213,7 +213,7 @@ function getMillisecondsUntil7PM() {
         console.log(sunsetTimeLocal);
 
         const lastTimeInMinutes = timeToMinutes(sunsetTimeLocal.getHours() + ':' + sunsetTimeLocal.getMinutes()) + 250;
-        let defaultStartTime = "2:00pm";
+        let defaultStartTime = "6:00am";
         let startTimeVariable = defaultStartTime;
 
         await selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes);
@@ -224,3 +224,6 @@ function getMillisecondsUntil7PM() {
         setTimeout(() => driver.quit(), 600000); //Quit after 5 minutes
     }
 })();
+
+
+// id="recaptcha-token"
