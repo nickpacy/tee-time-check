@@ -13,7 +13,7 @@ import { NotificationsComponent } from './main/components/notifications/notifica
 import { SearchComponent } from './main/components/search/search.component';
 import { CalendarComponent } from './main/components/calendar/calendar.component';
 import { BydayComponent } from './main/components/timechecks/byday/byday.component';
-import { UserByWeekComponent } from './main/components/metrics/notifications/user-by-week/user-by-week.component';
+import { MetricsComponent } from './main/components/metrics/metrics.component';
 
 @NgModule({
     imports: [
@@ -32,11 +32,10 @@ import { UserByWeekComponent } from './main/components/metrics/notifications/use
                     { path: 'setup', component: BycourseComponent, canActivate: [AuthGuard] },
                     { path: 'setup/day', component: BydayComponent, canActivate: [AuthGuard] },
                     { path: 'search', component: SearchComponent, canActivate: [AuthGuard] },
-                    { path: 'metric', component: UserByWeekComponent, canActivate: [AuthGuard] },
+                    { path: 'metrics', component: MetricsComponent, canActivate: [AuthGuard] },
                 ]
             },
             { path: 'auth', loadChildren: () => import('./main/components/auth/auth.module').then(m => m.AuthModule) },
-            { path: 'landing', loadChildren: () => import('./main/components/landing/landing.module').then(m => m.LandingModule) },
             
             { path: 'notfound', component: NotfoundComponent, canActivate: [AuthGuard] },
             { path: '**', redirectTo: '/notfound' },

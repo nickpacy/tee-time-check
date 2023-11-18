@@ -1,6 +1,7 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
+import { firstValueFrom } from 'rxjs';
 // import { ToastItem } from 'primeng/toast';
 
 @Component({
@@ -43,8 +44,7 @@ export class ChangePasswordFormComponent implements OnInit {
     return null;
   }
 
-  onSubmit() {
-    // console.log("Submt")
+  async onSubmit() {
     if (this.changePasswordForm.valid) {
       const currentPassword = this.f['currentPassword'].value;
       const newPassword = this.f['newPassword'].value;
@@ -54,20 +54,12 @@ export class ChangePasswordFormComponent implements OnInit {
         OldPassword: currentPassword,
         NewPassword: newPassword
       };
-      
-      // console.log(user)
-      this.authService.changePassword(user)
-        .subscribe(result => {
-            // console.log("Change Password Result", result);
-            // Emit the custom event to notify the parent component
-            this.formSaved.emit({severity:'success', detail: `${result.message}`, life: 3000});
+      const data = await firstValueFrom(this.authService.changePassword(user));
+      // Emit the custom event to notify the parent component
+      this.formSaved.emit({severity:'success', detail: `${data.message}`, life: 3000});
 
-            // Optionally, you can also reset the form after saving
-            this.changePasswordForm.reset();
-        }, error => {
-            console.error("Login Error", error);
-            this.formSaved.emit({severity:'error', summary:'Login Error', detail: error.error.message, life: 3000});
-        })
+      // Optionally, you can also reset the form after saving
+      this.changePasswordForm.reset();
 
     }
   }

@@ -17,9 +17,9 @@ export class CourseService {
     return this.http.get<Course[]>(this.apiUrl);
   }
 
-  getUserCourses(data?: any): Observable<Course[]> {
+  getUserCourses(data?: any): Observable<UserCourse[]> {
     const url = `${this.apiUrl}/userOrder`;
-    return this.http.post<Course[]>(url, data);
+    return this.http.post<UserCourse[]>(url, data);
   }
 
   getCourseById(courseId: number): Observable<Course> {

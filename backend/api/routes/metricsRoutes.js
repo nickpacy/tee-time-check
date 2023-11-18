@@ -4,7 +4,8 @@ const verifyToken = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-router.post('/notificationsByCourse', verifyToken, metricsController.getNotificationsByCourse);
+router.get('/notificationsByCourse', verifyToken, metricsController.getNotificationsByCourse);
+router.get('/notificationsByCourseAndUser', metricsController.getTotalTeeTimesByCourseAndUser);
 
 
 module.exports = router;

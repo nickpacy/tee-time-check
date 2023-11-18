@@ -1,5 +1,6 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { UserSetting } from 'src/app/main/models/user.model';
 import { UserService } from 'src/app/main/service/user.service';
 
@@ -35,27 +36,20 @@ export class UserSettingsComponent {
     this.getUserSettings();
   }
 
-  getUserSettings() {
-    this.userService.getUserSettings().subscribe(
-      (result) => {
-        console.log(result);
-        for (const setting of result) {
-          if (this.userSettings[setting.settingKey]) {
-            if (setting.settingValue === 1 || setting.settingValue === '1') {
-                this.userSettings[setting.settingKey].value = true;
-            } else if (setting.settingValue === 0 || setting.settingValue === '0') {
-                this.userSettings[setting.settingKey].value = false;
-            } else {
-                this.userSettings[setting.settingKey].value = setting.settingValue;
-            }
-          }
+  async getUserSettings() {
+    const data = await firstValueFrom(this.userService.getUserSettings());
+    for (const setting of data) {
+      if (this.userSettings[setting.settingKey]) {
+        if (setting.settingValue === 1 || setting.settingValue === "1") {
+          this.userSettings[setting.settingKey].value = true;
+        } else if (setting.settingValue === 0 || setting.settingValue === "0") {
+          this.userSettings[setting.settingKey].value = false;
+        } else {
+          this.userSettings[setting.settingKey].value = setting.settingValue;
         }
-        this.createForm(this.userSettings);
-      },
-      (error) => {
-        console.error("Error:", error);
       }
-    );
+    }
+    this.createForm(this.userSettings);
   }
 
   createForm(settings: any) {
@@ -67,7 +61,7 @@ export class UserSettingsComponent {
     this.isLoading = false;
   }
 
-  onFormSubmit() {
+  async onFormSubmit() {
     const formValues = this.settingsForm.value;
     const settingsArray = [
       {
@@ -86,16 +80,23 @@ export class UserSettingsComponent {
         encrypt: this.userSettings.TorreyPinesLoginActive.encrypt,
       },
     ];
-
-    this.userService.updateUserSetting(settingsArray).subscribe(
-      (result) => {
-        // Emit the custom event to notify the parent component
-        this.formSaved.emit({severity: "success", detail: `${result.message}`, life: 3000});
-      },
-      (error) => {
-        console.error("Login Error", error);
-        this.formSaved.emit({severity: "error", summary: "Login Error", detail: error.error.message, life: 3000});
-      }
-    );
+    const data = await firstValueFrom(
+      this.userService.updateUserSetting(settingsArray)
+    )
+      .then((data) => {
+        this.formSaved.emit({
+          severity: "success",
+          detail: `${data.message}`,
+          life: 3000,
+        });
+      })
+      .catch((error) => {
+        this.formSaved.emit({
+          severity: "error",
+          summary: "Login Error",
+          detail: error.error.message,
+          life: 3000,
+        });
+      });
   }
 }

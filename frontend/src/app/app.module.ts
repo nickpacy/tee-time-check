@@ -26,6 +26,8 @@ import { AuthInterceptor } from './shared/auth-interceptor.service';
 import { UserSettingsComponent } from './main/components/user/user-settings/user-settings.component';
 import { BydayComponent } from './main/components/timechecks/byday/byday.component';
 import { UserByWeekComponent } from './main/components/metrics/notifications/user-by-week/user-by-week.component';
+import { UserByCourseComponent } from './main/components/metrics/notifications/user-by-course/user-by-course.component';
+import { MetricsComponent } from './main/components/metrics/metrics.component';
 
 
 @NgModule({
@@ -40,7 +42,9 @@ import { UserByWeekComponent } from './main/components/metrics/notifications/use
         CalendarComponent,
         UserSettingsComponent,
         BydayComponent,
-        UserByWeekComponent
+        UserByWeekComponent,
+        UserByCourseComponent,
+        MetricsComponent
     ],
     imports: [
         AppRoutingModule,

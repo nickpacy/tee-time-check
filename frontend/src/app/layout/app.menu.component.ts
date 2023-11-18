@@ -42,6 +42,7 @@ export class AppMenuComponent implements OnInit {
                 items: [
                     { label: 'Users', icon: 'fa fa-users', routerLink: ['/user'] },
                     { label: 'Timechecks', icon: 'fa fa-golf-ball-tee', routerLink: ['/timechecks'] },
+                    { label: 'Metrics', icon: 'fa fa-chart-bar', routerLink: ['/metrics'] },
                 ]
             },)
         }
