@@ -133,7 +133,7 @@ export class ProfileComponent implements OnInit {
           // console.log(res);
           this.router.navigate(['/user'])
         }, error => {
-          // console.log(error);
+          console.log(error);
         });
     }
 

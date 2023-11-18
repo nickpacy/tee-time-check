@@ -78,6 +78,7 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
 import { TreeTableModule } from 'primeng/treetable';
+import { HighchartsChartModule } from 'highcharts-angular';
 
 
 @NgModule({
@@ -159,6 +160,7 @@ import { TreeTableModule } from 'primeng/treetable';
         TooltipModule,
         TreeModule,
         TreeTableModule,
+        HighchartsChartModule
     ],
     exports: [
         CommonModule,
@@ -238,6 +240,7 @@ import { TreeTableModule } from 'primeng/treetable';
         TooltipModule,
         TreeModule,
         TreeTableModule,
+        HighchartsChartModule
     ],
     providers: [
         ConfirmationService,

@@ -187,7 +187,7 @@ function getMillisecondsUntil7PM() {
     const targetTime = new Date(now);
 
     // Set to 3am UTC which is 7pm PST
-    targetTime.setUTCHours(2, 0, 0, 0); 
+    targetTime.setUTCHours(3, 0, 0, 0); 
     
     // If it's already past 3am UTC (i.e., past 7pm PST), target the next day's 3am UTC.
     if (now > targetTime) {
@@ -216,7 +216,7 @@ function getMillisecondsUntil7PM() {
         console.log(sunsetTimeLocal);
 
         const lastTimeInMinutes = timeToMinutes(sunsetTimeLocal.getHours() + ':' + sunsetTimeLocal.getMinutes()) + 250;
-        let defaultStartTime = "6:00am";
+        let defaultStartTime = "9:30am";
         let startTimeVariable = defaultStartTime;
 
         await selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes);

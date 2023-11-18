@@ -170,9 +170,7 @@ export class UtilityService {
       // Round to nearest 15th minute
       const roundedSunrise = this.roundToNearest15Minutes(sunriseTime);
       const roundedSunset = this.roundToNearest15Minutes(sunsetTime);
-  
-      console.log(this.convertTimeToInterval(this.formatToHHMM(roundedSunrise), this.formatToHHMM(roundedSunset)), false)
-
+      
       return this.convertTimeToInterval(this.formatToHHMM(roundedSunrise), this.formatToHHMM(roundedSunset), false);
   
     }

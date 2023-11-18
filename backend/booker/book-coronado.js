@@ -1,39 +1,38 @@
 const { Builder, By, Key, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const SunCalc = require('suncalc');
+const util = require('./utility');
 
 
 async function initializeDriver() {
+    // let chromeOptions = new chrome.Options();
+    // chromeOptions.addArguments('--window-size=1440x506', '--no-sandbox');
+    // chromeOptions.addArguments('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+    // let driver = await new Builder().forBrowser('chrome').setChromeOptions(chromeOptions).build();
+
     let driver = await new Builder().forBrowser('chrome').build();
     return driver;
 }
 
 async function loginUser(driver, email, password) {
-    await driver.get('https://foreupsoftware.com/index.php/booking/19347/1468#/login');
-    await driver.findElement(By.id('login_email')).sendKeys(email);
-    await driver.findElement(By.id('login_password')).sendKeys(password, Key.RETURN);
-    await driver.wait(until.elementLocated(By.id('reservations-tab')), 10000);
-}
+    await driver.get('https://coronado-gc-3-14-be.book.teeitup.com/login');
+    await driver.findElement(By.css('[data-testid="login-email-component"]')).sendKeys(email);
+    await driver.findElement(By.css('[data-testid="login-password-component"]')).sendKeys(password, Key.RETURN);
+    await driver.wait(until.elementLocated(By.css('[data-testid="core-course-name"]')), 10000);
 
-async function navigateToBookingPage(driver) {
-    await driver.get('https://foreupsoftware.com/index.php/booking/19347/1468#/teetimes');
-    await driver.findElement(By.xpath("//button[contains(text(), 'Resident (0 - 7 Days)')]")).click();
-    await driver.wait(until.elementLocated(By.id('date-field')), 10000);
-
-    const delay = getMillisecondsUntil7PM();
+    const delay = getMillisecondsUntilMidnight();
     await new Promise(resolve => setTimeout(resolve, delay));
 
-    // await driver.findElement(By.xpath("(//td[contains(@class, 'day') and not(contains(@class, 'disabled'))])[last()-1]")).click();
-
-    await inputOneWeekFromNowInPDT(driver);
+    await inputTwoWeeksFromNowInPDT(driver);
 }
 
-async function inputOneWeekFromNowInPDT(driver) {
+async function inputTwoWeeksFromNowInPDT(driver) {
     // Get the current date
     const currentDate = new Date();
     
     // Add one week (7 days * 24 hours * 60 minutes * 60 seconds * 1000 milliseconds)
-    currentDate.setTime(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+    currentDate.setTime(currentDate.getTime() + 14 * 24 * 60 * 60 * 1000);
     
     // Format the date in PDT
     const dateInPDT = currentDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' });
@@ -42,20 +41,7 @@ async function inputOneWeekFromNowInPDT(driver) {
     const formattedDate = `${month.padStart(2, '0')}-${day.padStart(2, '0')}-${year}`;
     console.log("formatted date", formattedDate);
 
-    // Find the input element and input the formatted date
-    let dateField = await driver.findElement(By.xpath("//input[@id='date-field']"));
-    await dateField.click();
 
-    // Move cursor to the end of the input field
-    await dateField.sendKeys(Key.END);
-
-    // Send several backspaces to clear the field (assuming the maximum length is 10 characters)
-    for (let i = 0; i < 10; i++) {
-        await dateField.sendKeys(Key.BACK_SPACE);
-    }
-
-    // Now send the new date
-    await dateField.sendKeys(formattedDate, Key.ENTER);
 }
 
 async function isTeeTimeUnavailable(driver) {
@@ -175,7 +161,7 @@ function timeToMinutes(time) {
     return parseInt(hours) * 60 + parseInt(cleanMinutes);
 }
 
-function getMillisecondsUntil7PM() {
+function getMillisecondsUntilMidnight() {
     const now = new Date();
     const targetTime = new Date(now);
 
@@ -187,11 +173,7 @@ function getMillisecondsUntil7PM() {
         targetTime.setUTCDate(targetTime.getUTCDate() + 1);
     }
 
-    console.log(now);
-    console.log(targetTime);
-
     const delay = targetTime - now;
-    console.log(`Waiting until 7 PM. The delay is ${delay} milliseconds.`);
     // If the delay is more than 3 minutes (180,000 milliseconds), return 0
     // if (delay > 180000) {
     //     return 0;
@@ -203,8 +185,7 @@ function getMillisecondsUntil7PM() {
 (async function loginExample() {
     let driver = await initializeDriver();
     try {
-        await loginUser(driver, 'nickpacy@gmail.com', 'Nichola$9');
-        await navigateToBookingPage(driver);
+        await loginUser(driver, 'nickpacy@gmail.com', 'Burlington12!');
 
         // Get sunset time for San Diego
         const sanDiegoCoords = { lat: 32.7157, lng: -117.1611 };
@@ -213,10 +194,10 @@ function getMillisecondsUntil7PM() {
         console.log(sunsetTimeLocal);
 
         const lastTimeInMinutes = timeToMinutes(sunsetTimeLocal.getHours() + ':' + sunsetTimeLocal.getMinutes()) + 250;
-        let defaultStartTime = "9:30am";
+        let defaultStartTime = "12:30pm";
         let startTimeVariable = defaultStartTime;
 
-        await selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes);
+        // await selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes);
 
     } catch (error) {
         console.error("An error occurred:", error);
@@ -224,6 +205,3 @@ function getMillisecondsUntil7PM() {
         setTimeout(() => driver.quit(), 600000); //Quit after 5 minutes
     }
 })();
-
-
-// id="recaptcha-token"
