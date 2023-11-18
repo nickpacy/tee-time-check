@@ -1,0 +1,47 @@
+This is the database schema for my app Algoteé:
+
+# TABLE_NAME, COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE, COLUMN_TYPE, COLUMN_KEY, IS_NULLABLE, COLUMN_DEFAULT, EXTRA
+courses, CourseId, int, , 10, 0, int, PRI, NO, , auto_increment
+courses, CourseName, varchar, 50, , , varchar(50), , NO, , 
+courses, CourseAbbr, varchar, 5, , , varchar(5), UNI, YES, , 
+courses, BookingClass, int, , 10, 0, int, , NO, , 
+courses, ScheduleId, int, , 10, 0, int, , NO, , 
+courses, BookingPrefix, varchar, 50, , , varchar(50), , YES, , 
+courses, WebsiteId, varchar, 255, , , varchar(255), , YES, , 
+courses, Method, varchar, 50, , , varchar(50), , YES, , 
+courses, CourseImage, varchar, 255, , , varchar(255), , YES, , 
+courses, ImageUrl, varchar, 255, , , varchar(255), , YES, , 
+courses, BookingUrl, varchar, 255, , , varchar(255), , YES, , 
+courses, Active, tinyint, , 3, 0, tinyint, , NO, 1, 
+notifications, NotificationId, int, , 10, 0, int, PRI, NO, , auto_increment
+notifications, UserId, int, , 10, 0, int, MUL, NO, , 
+notifications, CourseId, int, , 10, 0, int, MUL, NO, , 
+notifications, TeeTime, datetime, , , , datetime, , YES, , 
+notifications, NotifiedDate, timestamp, , , , timestamp, , YES, CURRENT_TIMESTAMP, DEFAULT_GENERATED
+timechecks, Id, int, , 10, 0, int, PRI, NO, , auto_increment
+timechecks, UserId, int, , 10, 0, int, MUL, NO, , 
+timechecks, DayOfWeek, int, , 10, 0, int, , NO, , 
+timechecks, StartTime, time, , , , time, , NO, , 
+timechecks, EndTime, time, , , , time, , NO, , 
+timechecks, CourseId, int, , 10, 0, int, MUL, NO, , 
+timechecks, NumPlayers, int, , 10, 0, int, , NO, , 
+timechecks, Active, tinyint, , 3, 0, tinyint(1), , NO, 1, 
+user_courses, UserId, int, , 10, 0, int, PRI, NO, , 
+user_courses, CourseId, int, , 10, 0, int, PRI, NO, , 
+user_courses, SortOrder, int, , 10, 0, int, , NO, , 
+user_courses, Active, tinyint, , 3, 0, tinyint, , NO, 1, 
+user_settings, ID, int, , 10, 0, int, PRI, NO, , auto_increment
+user_settings, UserId, int, , 10, 0, int, MUL, NO, , 
+user_settings, SettingKey, varchar, 255, , , varchar(255), MUL, NO, , 
+user_settings, SettingValue, text, 65535, , , text, , YES, , 
+users, UserId, int, , 10, 0, int, PRI, NO, , auto_increment
+users, Name, varchar, 50, , , varchar(50), , NO, , 
+users, Password, varchar, 250, , , varchar(250), , NO, , 
+users, Email, varchar, 50, , , varchar(50), UNI, NO, , 
+users, Phone, varchar, 50, , , varchar(50), UNI, YES, , 
+users, EmailNotification, tinyint, , 3, 0, tinyint(1), , NO, 1, 
+users, PhoneNotification, tinyint, , 3, 0, tinyint(1), , NO, 0, 
+users, Active, tinyint, , 3, 0, tinyint(1), , NO, 1, 
+users, Admin, tinyint, , 3, 0, tinyint(1), , NO, 0, 
+users, LastLoginDate, datetime, , , , datetime, , YES, , 
+users, DeviceToken, varchar, 255, , , varchar(255), , YES, , 

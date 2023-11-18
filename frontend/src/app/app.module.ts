@@ -25,6 +25,7 @@ import { FullCalendarModule } from '@fullcalendar/angular';
 import { AuthInterceptor } from './shared/auth-interceptor.service';
 import { UserSettingsComponent } from './main/components/user/user-settings/user-settings.component';
 import { BydayComponent } from './main/components/timechecks/byday/byday.component';
+import { UserByWeekComponent } from './main/components/metrics/notifications/user-by-week/user-by-week.component';
 
 
 @NgModule({
@@ -38,7 +39,8 @@ import { BydayComponent } from './main/components/timechecks/byday/byday.compone
         SearchComponent,
         CalendarComponent,
         UserSettingsComponent,
-        BydayComponent
+        BydayComponent,
+        UserByWeekComponent
     ],
     imports: [
         AppRoutingModule,

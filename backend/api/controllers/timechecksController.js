@@ -1,64 +1,64 @@
 const pool = require('../database');
+const {
+  NotFoundError,
+  InternalError,
+} = require("../middlewares/errorTypes");
 
 // Get all timechecks
-const getTimechecks = async (req, res) => {
+const getTimechecks = async (req, res, next) => {
   try {
     const results = await pool.query('SELECT * FROM timechecks');
     res.json(results);
   } catch (err) {
-    console.error('Error getting timechecks: ', err);
-    res.status(500).json({ error: 'Error getting timechecks' });
+    next(new InternalError("Error getting users", err));
   }
 };
 
 // Get a specific timecheck by ID
-const getTimecheckById = async (req, res) => {
+const getTimecheckById = async (req, res, next) => {
   const timecheckId = req.params.timecheckId;
   try {
     const results = await pool.query('SELECT * FROM timechecks WHERE Id = ?', [timecheckId]);
     if (results.length === 0) {
-      res.status(404).json({ error: 'Timecheck not found...' });
+      next(new NotFoundError("Timecheck not found"));
     } else {
       res.json(results[0]);
     }
   } catch (err) {
-    console.error('Error getting timecheck: ', err);
-    res.status(500).json({ error: 'Error getting timecheck' });
+    next(new InternalError("Error getting timechecks", err));
   }
 };
 
 // Create a new timecheck
-const createTimecheck = async (req, res) => {
+const createTimecheck = async (req, res, next) => {
   const { UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers } = req.body;
   try {
     const result = await pool.query('INSERT INTO timechecks (UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers) VALUES (?, ?, ?, ?, ?, ?)', [UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers]);
     const newTimecheckId = result.insertId;
     res.status(201).json({ Id: newTimecheckId, UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers });
   } catch (err) {
-    console.error('Error creating timecheck: ', err);
-    res.status(500).json({ error: 'Error creating timecheck' });
+    next(new InternalError("Error creating timechecks", err));
   }
 };
 
 // Update an existing timecheck
-const updateTimecheck = async (req, res) => {
+const updateTimecheck = async (req, res, next) => {
   const timecheckId = req.params.timecheckId;
   const { UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers, Active } = req.body;
   try {
     const result = await pool.query('UPDATE timechecks SET UserId = ?, DayOfWeek = ?, StartTime = ?, EndTime = ?, CourseId = ?, NumPlayers = ?, Active = ? WHERE Id = ?', [UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers, Active, timecheckId]);
     if (result.affectedRows === 0) {
-      res.status(404).json({ error: 'Timecheck not found' });
+      next(new NotFoundError("Timecheck not found"));
     } else {
       res.json({ Id: timecheckId, UserId, DayOfWeek, StartTime, EndTime, CourseId, NumPlayers, Active });
     }
   } catch (err) {
-    console.error('Error updating timecheck: ', err);
-    res.status(500).json({ error: 'Error updating timecheck' });
+    next(new InternalError("Error updating timechecks", err));
   }
 };
 
 // Update existing timechecks in bulk
-const updateBulkTimechecks = async (req, res) => {
+const updateBulkTimechecks = async (req, res, next) => {
   const timechecks = req.body; // Assuming the request body contains an array of timechecks to update
 
   try {
@@ -80,29 +80,27 @@ const updateBulkTimechecks = async (req, res) => {
     const updatedTimechecks = await Promise.all(promises);
     res.json(updatedTimechecks);
   } catch (err) {
-    console.error('Error updating timechecks: ', err);
-    res.status(500).json({ error: 'Error updating timechecks' });
+    next(new InternalError("Error updating timechecks", err));
   }
 };
 
 // Delete a timecheck
-const deleteTimecheck = async (req, res) => {
+const deleteTimecheck = async (req, res, next) => {
   const timecheckId = req.params.timecheckId;
   try {
     const result = await pool.query('DELETE FROM timechecks WHERE Id = ?', [timecheckId]);
     if (result.affectedRows === 0) {
-      res.status(404).json({ error: 'Timecheck not found' });
+      next(new NotFoundError("Timecheck not found"));
     } else {
       res.sendStatus(204);
     }
   } catch (err) {
-    console.error('Error deleting timecheck: ', err);
-    res.status(500).json({ error: 'Error deleting timecheck' });
+    next(new InternalError("Error updating timechecks", err));
   }
 }
 
 // Get a specific timecheck by ID
-const getTimechecksByUserId = async (req, res) => {
+const getTimechecksByUserId = async (req, res, next) => {
   const userId = req.user.userId;
   const q = `SELECT t.*, c.CourseName, u.name, u.email FROM timechecks t
               JOIN users u ON t.UserId = u.UserId
@@ -114,18 +112,17 @@ const getTimechecksByUserId = async (req, res) => {
   try {
     const results = await pool.query(q, [userId]);
     if (results.length === 0) {
-      res.status(404).json({ error: 'No timechecks for user' });
+      res.json([]);
     } else {
       res.json(results);
     }
   } catch (err) {
-    console.error('Error getting timechecks: ', err);
-    res.status(500).json({ error: 'Error getting timechecks' });
+    next(new InternalError("Error getting timechecks", err));
   }
 };
 
 // Get all the timechecks from the application
-const getAllUsersActiveTimechecks = async (req, res) => {
+const getAllUsersActiveTimechecks = async (req, res, next) => {
   // This query fetches active timechecks and their associated users
   const q = `
         SELECT DISTINCT  t.*, c.CourseName, c.ImageUrl, c.CourseImage, u.UserId, u.Name, u.Email 
@@ -138,7 +135,7 @@ const getAllUsersActiveTimechecks = async (req, res) => {
   try {
     const results = await pool.query(q);
     if (results.length === 0) {
-      res.status(404).json({ error: 'No active timechecks found' });
+      res.json([]);
       return;
     }
 
@@ -172,14 +169,13 @@ const getAllUsersActiveTimechecks = async (req, res) => {
     res.json(usersArray);
 
   } catch (err) {
-    console.error('Error getting active timechecks: ', err);
-    res.status(500).json({ error: 'Error getting active timechecks' });
+    next(new InternalError("Error getting active timechecks", err));
   }
 };
 
 
 // Get count of active timechecks by UserId
-const getActiveTimecheckCountByUserId = async (req, res) => {
+const getActiveTimecheckCountByUserId = async (req, res, next) => {
   const userId = req.user.userId;
 
   const q = `SELECT 
@@ -193,7 +189,7 @@ const getActiveTimecheckCountByUserId = async (req, res) => {
   try {
     const results = await pool.query(q, [userId]);
     if (results.length === 0) {
-      res.status(404).json({ error: 'No active timechecks for user' });
+      res.json([]);
     } else {
       const stats = {
         activeTimechecksCount: results[0].activeTimechecksCount,
@@ -202,31 +198,28 @@ const getActiveTimecheckCountByUserId = async (req, res) => {
       res.json(stats);
     }
   } catch (err) {
-    console.error('Error getting active timecheck count: ', err);
-    res.status(500).json({ error: 'Error getting active timecheck count' });
+    next(new InternalError("Error getting active timecheck counts.", err));
   }
 };
 
 // Get timechecks by UserId and CourseId
-const getTimechecksByUserIdAndCourseId = async (req, res) => {
+const getTimechecksByUserIdAndCourseId = async (req, res, next) => {
   const userId = req.user.userId;
   const courseId = req.params.courseId;
   try {
     const results = await pool.query('SELECT * FROM timechecks WHERE UserId = ? AND CourseId = ? ORDER BY CASE WHEN DayOfWeek = 0 THEN 7 ELSE DayOfWeek END', [userId, courseId]);
     if (results.length === 0) {
       res.json([]);
-      res.status(404).json({ error: 'No timechecks for user and course' });
     } else {
       res.json(results);
     }
   } catch (err) {
-    console.error('Error getting timechecks: ', err);
-    res.status(500).json({ error: 'Error getting timechecks' });
+    next(new InternalError("Error getting timechecks.", err));
   }
 };
 
 
-const getTimechecksByCourse = async (req, res) => {
+const getTimechecksByCourse = async (req, res, next) => {
   const userId = req.user.userId;
 
   updateLastLoginDate(userId);
@@ -248,12 +241,11 @@ const getTimechecksByCourse = async (req, res) => {
     // Send the result back to the client
     res.json(coursesWithTimechecks);
   } catch (error) {
-    console.error('Error getting courses with timechecks: ', error);
-    res.status(500).json({ error: 'Error getting courses with timechecks' });
+    next(new InternalError("Error getting courses with timechecks", err));
   }
 };
 
-const getTimechecksByDayofWeek = async (req, res) => {
+const getTimechecksByDayofWeek = async (req, res, next) => {
   const userId = req.user.userId;
 
   updateLastLoginDate(userId);
@@ -283,25 +275,23 @@ const getTimechecksByDayofWeek = async (req, res) => {
     // Send the result back to the client
     res.json(daysWithTimechecks);
   } catch (error) {
-    console.error('Error getting courses with timechecks: ', error);
-    res.status(500).json({ error: 'Error getting courses with timechecks' });
+    next(new InternalError("Error getting courses with timechecks.", err));
   }
 };
 
 
 // Reset all timechecks for a specific user
-const resetTimechecks = async (req, res) => {
+const resetTimechecks = async (req, res, next) => {
   const userId = req.user.userId;
   try {
     const result = await pool.query('UPDATE timechecks SET Active = false WHERE UserId = ?', [userId]);
     if (result.affectedRows === 0) {
-      res.status(404).json({ error: 'No timechecks found for user to reset' });
+      res.json([]);
     } else {
       res.json({ success: 'Successfully reset all timechecks for user' });
     }
   } catch (err) {
-    console.error('Error resetting timechecks: ', err);
-    res.status(500).json({ error: 'Error resetting timechecks' });
+    next(new InternalError("Error resetting timechecks", err));
   }
 };
 
@@ -316,25 +306,24 @@ const updateLastLoginDate = async (userId) => {
 
     // console.log(`Last login date updated successfully for userId: ${userId}`);
   } catch (error) {
-    console.error('Error updating last login date: ', error);
+    next(new InternalError("Error updating last login", err));
   }
 };
 
 
-const setTimecheckInactive = async (req, res) => {
+const setTimecheckInactive = async (req, res, next) => {
   const timecheckId = req.body.timecheckId;
 
   try {
     const result = await pool.query('UPDATE timechecks SET Active = ? WHERE Id = ?', [false, timecheckId]);
 
     if (result.affectedRows === 0) {
-      res.status(404).json({ error: 'Timecheck not found' });
+      throw new NotFoundError("Timecheck not found");
     } else {
       res.json({ message: `Timecheck with ID: ${timecheckId} is now inactive` });
     }
   } catch (err) {
-    console.error('Error setting timecheck to inactive: ', err);
-    res.status(500).json({ error: 'Error setting timecheck to inactive' });
+    next(new InternalError("Error setting timecheck to active", err));
   }
 };
 
