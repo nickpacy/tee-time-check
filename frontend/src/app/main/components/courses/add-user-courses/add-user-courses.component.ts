@@ -68,7 +68,6 @@ export class AddUserCoursesComponent implements OnChanges {
 
   checkUserLocation() {
     this.authService.getUser().pipe(filter(user => user !== null), distinctUntilChanged(), debounceTime(100)).subscribe(loggedInUser => {
-      console.log(loggedInUser);
       if (!loggedInUser.Latitude || !loggedInUser.Longitude) {
         alert("No location found. Please fill in the location on the Profile screen.")
         this.router.navigate(['/profile']);
