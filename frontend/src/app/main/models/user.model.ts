@@ -10,6 +10,9 @@ export interface IUser {
     Name: string;
     Email: string;
     Phone: string;
+    Latitude: number;
+    Longitude: number;
+    Zip: string;
     EmailNotification: boolean;
     PhoneNotification: boolean;
     Active: boolean;

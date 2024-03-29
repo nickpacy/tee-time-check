@@ -76,6 +76,23 @@ const getUserByEmail = async (req, res, next) => {
   }
 };
 
+
+// Search for users by name
+const searchUsers = async (req, res, next) => {
+  const queryString = req.query.q;
+
+  try {
+    const rows = await pool.query(
+      "SELECT * FROM users WHERE active = 1 AND name LIKE CONCAT(?, '%') ",
+      [queryString]
+    );
+    res.json(rows);
+  } catch (error) {
+    next(new InternalError("Error getting user", error));
+  }
+};
+
+
 // Create a new user
 const createUser = async (req, res, next) => {
   const { Name, Email, Active } = req.body;
@@ -88,8 +105,8 @@ const createUser = async (req, res, next) => {
     const newUserId = result.insertId;
 
     // Call the stored procedure to add inactive timechecks for the new user
-    await pool.query("CALL AddTimechecksForNewUser(?)", [newUserId]);
-    await pool.query("CALL CreateUserCourses(?)", [newUserId]);
+    // await pool.query("CALL AddTimechecksForNewUser(?)", [newUserId]);
+    // await pool.query("CALL CreateUserCourses(?)", [newUserId]);
 
     const rows = await pool.query("SELECT * FROM users WHERE UserId = ?", [
       newUserId,
@@ -121,6 +138,8 @@ const updateUser = async (req, res, next) => {
     Phone,
     EmailNotification,
     PhoneNotification,
+    Latitude,
+    Longitude,
     Admin,
     Active,
   } = req.body;
@@ -134,13 +153,15 @@ const updateUser = async (req, res, next) => {
   try {
     Phone = Phone === "" ? null : Phone;
     const result = await pool.query(
-      "UPDATE users SET Name = ?, Email = ?, Phone = ?, EmailNotification = ?, PhoneNotification = ?, Admin = ?, Active = ? WHERE UserId = ?",
+      "UPDATE users SET Name = ?, Email = ?, Phone = ?, EmailNotification = ?, PhoneNotification = ?, Latitude = ?, Longitude = ?, Admin = ?, Active = ? WHERE UserId = ?",
       [
         Name,
         Email,
         Phone,
         EmailNotification,
         PhoneNotification,
+        Latitude,
+        Longitude,
         Admin,
         Active,
         userId,
@@ -157,6 +178,8 @@ const updateUser = async (req, res, next) => {
         Phone,
         EmailNotification,
         PhoneNotification,
+        Latitude,
+        Longitude,
         Admin,
         Active,
         message: "Profile updated successfully!",
@@ -319,4 +342,5 @@ module.exports = {
   updateUserDeviceToken,
   insertOrUpdateUserSetting,
   getUserSettings,
+  searchUsers
 };

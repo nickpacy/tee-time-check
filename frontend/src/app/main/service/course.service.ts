@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Course, UserCourse } from '../models/course.model';
 import { environment } from 'src/environments/environment';
+import { Course, UserCourse } from '../models/course.model';
 
 
 @Injectable({
@@ -25,6 +25,21 @@ export class CourseService {
   getCourseById(courseId: number): Observable<Course> {
     const url = `${this.apiUrl}/${courseId}`;
     return this.http.get<Course>(url);
+  }
+  
+  getCoursesByDistance(radius: number): Observable<UserCourse[]> {
+    const url = `${this.apiUrl}/distance?radius=${radius}`;
+    return this.http.get<UserCourse[]>(url);
+  }
+
+  addUserCourse(courseId: number): Observable<UserCourse> {
+    const body = {courseId: courseId}
+    const url = `${this.apiUrl}/addUserCourse`;
+    return this.http.post<UserCourse>(url, body);
+  }
+
+  removeUserCourse(courseId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/removeUserCourse/${courseId}`);
   }
 
   updateCourseOrder(courses: UserCourse[]): Observable<Course> {

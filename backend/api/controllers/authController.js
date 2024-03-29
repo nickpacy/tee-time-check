@@ -87,6 +87,8 @@ const loginUser = async (req, res, next) => {
         PhoneNotification: user.PhoneNotification,
         Active: user.Active,
         Admin: user.Admin,
+        Latitude: user.Latitude,
+        Longitude: user.Longitude,
         LastLoginDate: user.LastLoginDate
       },
       token,

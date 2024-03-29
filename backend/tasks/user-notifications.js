@@ -38,7 +38,7 @@ const sendEmails = async (teeTimesByUser) => {
       const email = teeTimes[0].email;
 
       const tableRows = teeTimes
-        .map(({ courseName, teeTime, available_spots, bookingLink }) => {
+        .map(({ courseName, teeTime, available_spots, bookingLink, timeZone }) => {
           // Format the tee time in the user's local time zone
           const options = {
             weekday: "short",
@@ -48,10 +48,10 @@ const sendEmails = async (teeTimesByUser) => {
             hour: "numeric",
             minute: "numeric",
             hour12: true,
-            timeZone: "America/Los_Angeles", // Specify the desired time zone
+            timeZone: timeZone, // Specify the desired time zone
           };
           const teeTimeDate = moment
-            .tz(teeTime, "America/Los_Angeles")
+            .tz(teeTime, timeZone)
             .toDate();
           const localTime = teeTimeDate.toLocaleString("en-US", options);
           return `

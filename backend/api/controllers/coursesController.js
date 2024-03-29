@@ -19,7 +19,7 @@ const getCoursesByUserOrder = async (req, res, next) => {
     let query = `
       SELECT c.*, IFNULL(uc.Active, 1) AS Active
       FROM courses c
-      LEFT JOIN user_courses uc ON c.CourseId = uc.CourseId AND uc.UserId = ?
+      INNER JOIN user_courses uc ON c.CourseId = uc.CourseId AND uc.UserId = ?
       WHERE (uc.UserId IS NOT NULL OR (uc.UserId IS NULL AND NOT EXISTS (SELECT 1 FROM user_courses WHERE UserId = ?)))
     `;
 
@@ -144,6 +144,132 @@ const deleteCourse = async (req, res, next) => {
   }
 };
 
+const getCoursesByDistance = async (req, res, next) => {
+  const userId = req.user.userId;
+  const radius = parseFloat(req.query.radius); // Radius in meters
+
+  if (isNaN(radius)) {
+    return res.status(400).json({ error: 'Invalid radius' });
+  }
+
+  try {
+    // First, get user's latitude and longitude
+    const userLocation = await pool.query(
+      "SELECT Latitude, Longitude FROM users WHERE UserId = ?", [userId]
+    );
+
+    if (userLocation.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { Latitude: userLatitude, Longitude: userLongitude } = userLocation[0];
+
+    // Next, get courses within the radius of the user's location
+    const query = `
+      SELECT 
+        c.*,
+        CASE WHEN uc.CourseId IS NOT NULL THEN 1 ELSE 0 END AS UserCourseEnabled,
+        uc.Active AS UserCourseActive,
+        uc.SortOrder,
+        ST_Distance_Sphere(
+          point(c.Longitude, c.Latitude),
+          point(?, ?)
+        ) AS Distance
+      FROM courses c
+      LEFT JOIN user_courses uc ON c.CourseId = uc.CourseId AND uc.UserId = ?
+      HAVING distance < ?
+      ORDER BY distance, uc.SortOrder;
+    `;
+
+    const rows = await pool.query(query, [userLongitude, userLatitude, userId, radius]);
+    res.json(rows);
+  } catch (error) {
+    next(new DatabaseError("Error getting courses by distance", error));
+  }
+};
+
+const addUserCourse = async (req, res, next) => {
+  const userId = req.user.userId;
+  const courseId = req.body.courseId;
+
+  if (!courseId) {
+    return res.status(400).json({ error: 'Course ID is required' });
+  }
+
+  try {
+    // Find the highest current sort order for this user
+    const maxSortOrderResult = await pool.query(
+      "SELECT MAX(SortOrder) as MaxSortOrder FROM user_courses WHERE UserId = ?", 
+      [userId]
+    );
+
+    const maxSortOrder = maxSortOrderResult[0].MaxSortOrder;
+    const nextSortOrder = maxSortOrder !== null ? maxSortOrder + 1 : 0;
+
+    // Insert the new user_course with the next sort order
+    await pool.query(
+      "INSERT INTO user_courses (UserId, CourseId, SortOrder, Active) VALUES (?, ?, ?, 1)",
+      [userId, courseId, nextSortOrder]
+    );
+
+    await pool.query("CALL AddTimechecksForNewUser(?)", [userId]);
+
+    // Fetch the newly created user_course details
+    const newCourseDetails = await pool.query(
+      "SELECT c.*, uc.SortOrder, uc.Active FROM courses c JOIN user_courses uc ON c.CourseId = uc.CourseId WHERE uc.UserId = ? AND uc.CourseId = ?",
+      [userId, courseId]
+    );
+
+    if (newCourseDetails.length === 0) {
+      throw new NotFoundError("Newly added course not found");
+    }
+
+    res.status(201).json(newCourseDetails[0]);
+  } catch (error) {
+    next(new DatabaseError("Error adding user course", error));
+  }
+};
+
+const removeUserCourse = async (req, res, next) => {
+  const userId = req.user.userId;
+  const courseId = req.params.courseId;
+
+  if (!courseId) {
+    return res.status(400).json({ error: 'Course ID is required' });
+  }
+
+  try {
+    // Start a transaction
+    await pool.query("START TRANSACTION");
+
+    // Delete the course from user_courses
+    await pool.query(
+      "DELETE FROM user_courses WHERE UserId = ? AND CourseId = ?",
+      [userId, courseId]
+    );
+
+    // Delete corresponding timechecks
+    await pool.query(
+      "DELETE FROM timechecks WHERE UserId = ? AND CourseId = ?",
+      [userId, courseId]
+    );
+
+    // Commit the transaction
+    await pool.query("COMMIT");
+
+    res.status(200).json({ success: true, message: "Course and associated timechecks removed successfully." });
+  } catch (error) {
+    // Rollback the transaction in case of error
+    await pool.query("ROLLBACK");
+    next(new DatabaseError("Error removing user course and associated timechecks", error));
+  }
+};
+
+
+
+
+
+
 module.exports = {
   getCourses,
   getCoursesByUserOrder,
@@ -152,4 +278,7 @@ module.exports = {
   createCourse,
   updateCourse,
   deleteCourse,
+  getCoursesByDistance,
+  addUserCourse,
+  removeUserCourse
 };

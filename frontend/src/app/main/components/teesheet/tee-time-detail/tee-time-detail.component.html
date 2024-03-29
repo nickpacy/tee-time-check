@@ -1,0 +1,303 @@
+<ng-template #formContent>
+  <h5 *ngIf="teeTimeDetail?.Status == 'reserved'" style="margin-bottom: 15px">
+    Tee Time Details are locked after invites are sent out.
+  </h5>
+  <form [formGroup]="teeSheetForm" (ngSubmit)="onSubmit()">
+    <p-dropdown
+      [options]="courses"
+      formControlName="courseId"
+      optionLabel="CourseName"
+      optionValue="CourseId"
+      placeholder="Select a Course"
+      styleClass="mb-2"
+      [style]="{ width: '100%' }"
+    ></p-dropdown>
+    <br />
+    <p-calendar
+      formControlName="teeTime"
+      [showTime]="true"
+      [minDate]="today"
+      hourFormat="12"
+      [inline]="true"
+      placeholder="Select Tee Time"
+      styleClass="mb-2"
+      [style]="{ width: '100%' }"
+    ></p-calendar>
+    <br />
+    <p-selectButton
+      formControlName="totalSpots"
+      [options]="[1, 2, 3, 4]"
+      styleClass="mb-2"
+      [style]="{ width: '100%', height: '33px' }"
+    ></p-selectButton>
+    <br />
+    <button
+      pButton
+      type="submit"
+      [label]="teeSheetId > 0 ? 'Update Tee Time' : 'Create Tee Time'"
+      [style]="{ width: '100%' }"
+      [disabled]="teeSheetForm.invalid || teeTimeDetail.Status == 'reserved'"
+    ></button>
+  </form>
+</ng-template>
+
+<ng-template #playersContent>
+  <div *ngIf="teeSheetId > 0">
+    <h4>Players</h4>
+
+    <div class="grid">
+      <div [class]="layoutService.isMobile() ? 'col-12' : 'col-6'">
+        <p-table class="p-datatable-sm" [value]="players">
+          <ng-template pTemplate="body" let-player>
+            <tr>
+              <td
+                [ngStyle]="{
+                  'font-style': player.TeeSheetPlayerId ? 'normal' : 'italic',
+                  'font-weight': player.TeeSheetPlayerId ? 'bold' : 'normal'
+                }"
+              >
+                <em
+                  *ngIf="player.Status == 'confirmed'"
+                  class="fa fa-check-circle"
+                  style="color: green"
+                  pTooltip="{{ player.UpdatedAt | date : 'short' }}"
+                ></em>
+                <em
+                  *ngIf="player.Status == 'notified'"
+                  class="fa fa-mobile-screen"
+                  style="color: rgb(59, 118, 238)"
+                  pTooltip="{{ player.UpdatedAt | date : 'short' }}"
+                ></em>
+                <span class="ml-2">{{ player.PlayerName }}</span>
+                
+              </td>
+              <td>
+                <em
+                  *ngIf="player.TeeSheetPlayerId"
+                  class="fa fa-times-circle"
+                  style="color: rgb(232, 60, 64); cursor: pointer"
+                  (click)="removePlayer(player.TeeSheetPlayerId)"
+                ></em>
+
+                <em
+                  *ngIf="player.TeeSheetPlayerId == 0"
+                  class="fa fa-check-circle"
+                  style="color: green; cursor: pointer"
+                  (click)="updateInviteStatus(player.UserId, 'accepted')"
+                ></em>
+                <em
+                  *ngIf="player.TeeSheetPlayerId == 0"
+                  class="fa fa-times-circle ml-2"
+                  style="color: rgb(232, 60, 64); cursor: pointer"
+                  (click)="updateInviteStatus(player.UserId, 'declined')"
+                ></em>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div [class]="layoutService.isMobile() ? 'col-12' : 'col-6'">
+        <div style="float: right" *ngIf="!showGuest">
+          <button
+            *ngIf="!showAddFriend && teeTimeDetail?.AvailableSpots > 0"
+            pButton
+            class="p-button-primary"
+            icon="fa fa-user-plus"
+            label="Add Friend"
+            [style]="{ width: layoutService.isMobile() ? '80vw' : '210px' }"
+            (click)="showAddFriend = true"
+          ></button>
+          <p-dropdown
+            *ngIf="showAddFriend"
+            [(ngModel)]="addFriendUserId"
+            [options]="friends"
+            optionLabel="Name"
+            optionValue="FriendUserId"
+            placeholder="Select a Friend"
+            styleClass="mb-2"
+            [style]="{
+              width: layoutService.isMobile() ? '80vw' : '180px',
+              float: layoutService.isMobile() ? 'none' : 'left'
+            }"
+          ></p-dropdown>
+          <button
+            *ngIf="showAddFriend"
+            pButton
+            [label]="layoutService.isMobile() ? 'Confirm Friend' : ''"
+            icon="fa fa-user-plus"
+            [class]="layoutService.isMobile() ? 'my-2' : 'mx-1'"
+            (click)="addFriendToTeeSheet()"
+          ></button>
+          <button
+            *ngIf="showAddFriend"
+            pButton
+            [label]="layoutService.isMobile() ? 'Cancel' : ''"
+            icon="fa fa-times"
+            class="p-button-danger"
+            (click)="guest = ''; showAddFriend = false"
+          ></button>
+        </div>
+        <div *ngIf="!showAddFriend && !showGuest" style="clear: both" class="my-3"></div>
+        <div style="float: right" *ngIf="!showAddFriend">
+          <button
+            *ngIf="!showGuest && teeTimeDetail?.AvailableSpots > 0"
+            pButton
+            class="p-button-secondary"
+            icon="fa fa-user-plus"
+            label="Add Guest"
+            [style]="{ width: layoutService.isMobile() ? '80vw' : '210px' }"
+            (click)="showGuest = true"
+          ></button>
+          <input
+            *ngIf="showGuest"
+            pInputText
+            placeholder="Type guest name"
+            [(ngModel)]="guest"
+            [style]="{ width: layoutService.isMobile() ? '80vw' : '140px',
+            float: layoutService.isMobile() ? 'none' : 'left' }"
+            [class]="layoutService.isMobile() ? '' : 'mb-2'"
+          />
+          <button
+            *ngIf="showGuest"
+            pButton
+            [label]="layoutService.isMobile() ? 'Add Guest' : ''"
+            icon="fa fa-user-plus"
+            [class]="layoutService.isMobile() ? 'my-2' : 'mx-1'"
+            (click)="addGuest()"
+          ></button>
+          <button
+            *ngIf="showGuest"
+            pButton
+            [label]="layoutService.isMobile() ? 'Cancel' : ''"
+            icon="fa fa-times"
+            class="p-button-danger"
+            (click)="guest = ''; showGuest = false"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="my-5">
+      <p-pickList
+        [source]="friends"
+        [target]="inviteList"
+        sourceHeader="Friends"
+        targetHeader="Invite Queue"
+        appendTo="body"
+        [dragdrop]="true"
+        [responsive]="true"
+        [sourceStyle]="{ height: '250px' }"
+        [targetStyle]="{ height: '250px' }"
+        [showSourceControls]="false"
+      >
+        <ng-template let-friend pTemplate="item">
+          <div class="flex flex-wrap p-2 align-items-center gap-3">
+            <div class="flex-1 flex flex-column gap-2">
+              <span class="font-bold">{{ friend.Name }}</span>
+            </div>
+          </div>
+        </ng-template>
+      </p-pickList>
+    </div>
+
+    <button pButton label="Invite Players" icon="fa fa-bell" (click)="invitePlayers()" [disabled]="inviteList.length == 0"></button>
+  </div>
+</ng-template>
+
+<div *ngIf="!layoutService.isMobile()">
+  <!-- Desktop layout -->
+  <div class="grid">
+    <div
+      [class]="col"
+      style="border-right: rgba(128, 128, 128, 0.361) 1px solid"
+    >
+      <ng-container *ngTemplateOutlet="formContent"></ng-container>
+    </div>
+    <div class="col-7">
+      <ng-container *ngTemplateOutlet="playersContent"></ng-container>
+    </div>
+  </div>
+</div>
+
+<p-tabView *ngIf="layoutService.isMobile()" [(activeIndex)]="activeTab">
+  <!-- Mobile layout with tabs -->
+  <p-tabPanel header="Details" [tabIndex]="0">
+    <ng-container *ngTemplateOutlet="formContent"></ng-container>
+</p-tabPanel>
+<p-tabPanel header="Players" *ngIf="teeSheetId > 0" [tabIndex]="1">
+  <ng-container *ngTemplateOutlet="playersContent"></ng-container>
+</p-tabPanel>
+</p-tabView>
+
+<!-- 
+<div class="grid">
+    <div [class]="col" style="border-right: rgba(128, 128, 128, 0.361) 1px solid;">
+        <h5 *ngIf="teeTimeDetail?.Status == 'reserved'" style="margin-bottom: 15px;">Tee Time Details are locked after invites are sent out.</h5>
+        <form [formGroup]="teeSheetForm" (ngSubmit)="onSubmit()">
+            <p-dropdown [options]="courses" formControlName="courseId" optionLabel="CourseName" optionValue="CourseId" placeholder="Select a Course" styleClass="mb-2" [style]="{'width': '100%'}"></p-dropdown>
+            <br>
+            <p-calendar formControlName="teeTime" [showTime]="true" [minDate]="today" hourFormat="12" [inline]="true" placeholder="Select Tee Time" styleClass="mb-2" [style]="{'width': '100%'}"></p-calendar>
+            <br>
+            <p-selectButton formControlName="totalSpots" [options]="[1, 2, 3, 4]" styleClass="mb-2" [style]="{'width': '100%', 'height': '33px'}"></p-selectButton>
+            <br>
+            <button pButton type="submit" [label]="teeSheetId > 0 ? 'Update Tee Time' : 'Create Tee Time'" [style]="{'width': '100%'}" [disabled]="teeSheetForm.invalid || teeTimeDetail.Status == 'reserved'"></button>
+        </form>
+    </div>
+    <div *ngIf="teeSheetId > 0" class="col-7">
+        <h4>Players</h4>
+
+        <div class="grid">
+            <div class="col-6">
+                <p-table class="p-datatable-sm" [value]="players">
+                    <ng-template pTemplate="body" let-player>
+                        <tr>
+                            <td [ngStyle]="{'font-style': player.TeeSheetPlayerId ? 'normal' : 'italic', 'font-weight': player.TeeSheetPlayerId ? 'bold' : 'normal'}">
+                                <em *ngIf="player.Status == 'confirmed'" class="fa fa-check-circle" style="color: green;" pTooltip="{{player.UpdatedAt | date: 'short'}}"></em>
+                                <em *ngIf="player.Status == 'pending'" class="fa fa-clock" style="color: rgb(59, 118, 238);" pTooltip="{{player.UpdatedAt | date: 'short'}}"></em>
+                                {{ player.PlayerName }}
+                            </td>
+                            <td>
+                                <em *ngIf="player.TeeSheetPlayerId" class="fa fa-times-circle" style="color: rgb(232, 60, 64);cursor: pointer;" (click)="removePlayer(player.TeeSheetPlayerId)"></em>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+
+            <div class="col-6">
+                <div style="float: right;">
+                    <button *ngIf="!showAddFriend" pButton class="p-button-primary" icon="fa fa-user-plus" label="Add Friend" style="width: 210px;" (click)="showAddFriend = true"></button>
+                    <p-dropdown *ngIf="showAddFriend" [(ngModel)]="addFriendUserId" [options]="friends" optionLabel="Name" optionValue="FriendUserId" placeholder="Select a Friend" styleClass="mb-2" [style]="{'width': '180px', 'float':'left'}"></p-dropdown>
+                    <button *ngIf="showAddFriend" pButton icon="fa fa-user-plus" class="ml-1" (click)="addFriendToTeeSheet()"></button>
+                    <button *ngIf="showAddFriend" pButton icon="fa fa-times" class="ml-1 p-button-danger" (click)="guest = ''; showAddFriend = false;"></button>
+                </div>
+                <div style="clear: both;" class="my-3"></div>
+                <div style="float: right;">
+                    <button *ngIf="!showGuest" pButton class="p-button-secondary" icon="fa fa-user-plus" label="Add Guest" style="width: 210px;" (click)="showGuest = true"></button>
+                    <input *ngIf="showGuest" pInputText [(ngModel)]="guest" style="width: 140px;"/>
+                    <button *ngIf="showGuest" pButton icon="fa fa-user-plus" class="ml-1" (click)="addGuest()"></button>
+                    <button *ngIf="showGuest" pButton icon="fa fa-times" class="ml-1 p-button-danger" (click)="guest = ''; showGuest = false;"></button>
+                </div>
+                
+            </div>
+        </div>
+        
+
+        <div class="my-5">
+            <p-pickList [source]="friends" [target]="playerList" sourceHeader="Friends" targetHeader="Invite List" [dragdrop]="true" [responsive]="true"
+                        [sourceStyle]="{ height: '250px' }" [targetStyle]="{ height: '250px' }" [showSourceControls]="false">
+                <ng-template let-friend pTemplate="item">
+                    <div class="flex flex-wrap p-2 align-items-center gap-3">
+                        <div class="flex-1 flex flex-column gap-2">
+                            <span class="font-bold">{{ friend.Name }}</span>
+                        </div>
+                    </div>
+                </ng-template>
+            </p-pickList>
+        </div>
+
+        <button pButton label="Invite Players" icon="fa fa-bell"></button>
+
+    </div>
+</div> -->

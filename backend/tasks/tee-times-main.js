@@ -10,9 +10,11 @@ const foreupFunction = require("./tee-times-foreup");
 const navyFunction = require("./tee-times-navy");
 const teeitupFunction = require("./tee-times-teeitup");
 const jcgolfFunction = require("./tee-times-jcgolf");
+const chronoFunction = require("./tee-times-chrono");
+const golfnowFunction = require("./tee-times-golfnow");
 // const coronadoFunction = require("./tee-times-coronado");
 const notificationsFunction = require("./user-notifications");
-const lambdaFunction = require("./tee-times-autobooker");
+// const lambdaFunction = require("./tee-times-autobooker");
 
 // Load environment variables from .env file
 dotenv.config();
@@ -52,7 +54,7 @@ const checkTeeTimes = async () => {
 
       const query = `SELECT DISTINCT t.id, u.userId, u.email, u.phone, u.emailNotification, u.phoneNotification, u.deviceToken, t.dayOfWeek, 
                           t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, 
-                          c.courseName, c.courseAbbr, c.method, c.bookingUrl, GROUP_CONCAT(DISTINCT n.TeeTime) AS notifiedTeeTimes 
+                          c.courseName, c.courseAbbr, c.method, c.bookingUrl, c.timeZone, GROUP_CONCAT(DISTINCT n.TeeTime) AS notifiedTeeTimes 
                       FROM timechecks t
                       JOIN users u ON u.userid = t.userId
                       JOIN courses c ON c.courseid = t.courseId
@@ -65,7 +67,7 @@ const checkTeeTimes = async () => {
                             OR u.deviceToken is not null)
                       GROUP BY t.id, u.userId, u.email, u.phone, u.emailNotification, u.phoneNotification, t.dayOfWeek, 
                           t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, 
-                          c.courseName, c.courseAbbr, c.method, c.bookingUrl;  
+                          c.courseName, c.courseAbbr, c.method, c.bookingUrl, c.TimeZone;  
       `;
 
       const results = await connection.execute(query);
@@ -94,6 +96,7 @@ const checkTeeTimes = async () => {
           courseAbbr,
           method,
           bookingUrl,
+          timeZone,
           notifiedTeeTimes,
         } = row;
 
@@ -107,12 +110,12 @@ const checkTeeTimes = async () => {
         const formattedStartTime = moment
           .utc(startTime, "HH:mm:ss")
           .clone()
-          .tz("America/Los_Angeles")
+          .tz(timeZone)
           .format("HH:mm:ss");
         const formattedEndTime = moment
           .utc(endTime, "HH:mm:ss")
           .clone()
-          .tz("America/Los_Angeles")
+          .tz(timeZone)
           .format("HH:mm:ss");
 
         // Format the tee time start and end dates
@@ -139,7 +142,8 @@ const checkTeeTimes = async () => {
               bookingClass,
               dayOfWeek,
               numPlayers,
-              scheduleId
+              scheduleId,
+              pool
             );
           } catch (error) {
             console.log("Error retrieving tee times from ForeUp:", error);
@@ -161,6 +165,29 @@ const checkTeeTimes = async () => {
           try {
             teeTimes = await teeitupFunction.getTeeTimes(
               bookingPrefix,
+              dayOfWeek,
+              numPlayers,
+              timeZone
+            );
+          } catch (error) {
+            console.log("Error retrieving tee times from TeeItUp:", error);
+          }
+        } else if (method === "chrono") {
+          try {
+            teeTimes = await chronoFunction.getTeeTimes(
+              websiteId,
+              bookingClass,
+              scheduleId,
+              dayOfWeek,
+              numPlayers
+            );
+          } catch (error) {
+            console.log("Error retrieving tee times from TeeItUp:", error);
+          }
+        } else if (method === "golfnow") {
+          try {
+            teeTimes = await golfnowFunction.getTeeTimes(
+              bookingClass,
               dayOfWeek,
               numPlayers
             );
@@ -205,7 +232,7 @@ const checkTeeTimes = async () => {
               teeTimeDate.isSameOrAfter(teeTimeStartDate) &&
               teeTimeDate.isSameOrBefore(teeTimeEndDate)
             ) {
-              const utcTeeTimeString = moment.tz(teeTime.time, "America/Los_Angeles").utc().format('YYYY-MM-DD HH:mm:ss');
+              const utcTeeTimeString = moment.tz(teeTime.time, timeZone).utc().format('YYYY-MM-DD HH:mm:ss');
 
               if (notifiedTeeTimes && notifiedTeeTimes.includes(utcTeeTimeString)) {
                 // This tee time has already been notified, skip it
@@ -227,6 +254,7 @@ const checkTeeTimes = async () => {
                 email,
                 phone,
                 deviceToken,
+                timeZone,
                 emailNotification,
                 phoneNotification
               });
@@ -238,51 +266,52 @@ const checkTeeTimes = async () => {
       }
 
       // Send emails with tee time notifications
-      // await notificationsFunction.sendEmails(teeTimesByUser);
-      // await notificationsFunction.sendSMS(teeTimesByUser);
       // await notificationsFunction.sendPushNotitification(teeTimesByUser);
+      // await notificationsFunction.sendSMS(teeTimesByUser);
+      // await notificationsFunction.sendEmails(teeTimesByUser);
+      await sendNotifications(teeTimesByUser);
 
-      if (Boolean(process.env.BOOKER_ENABLED)) {
+      // if (Boolean(process.env.BOOKER_ENABLED)) {
         
-        if (teeTimesByUser[1]) { // Check if userId 1 has any tee times
-          const validTeeTimes = teeTimesByUser[1].filter(teeTime => teeTime.courseId === 1 || teeTime.courseId === 2);
+      //   if (teeTimesByUser[1]) { // Check if userId 1 has any tee times
+      //     const validTeeTimes = teeTimesByUser[1].filter(teeTime => teeTime.courseId === 1 || teeTime.courseId === 2);
           
-          if (validTeeTimes.length > 0) { // Check if there's any valid tee time
-              const firstValidTeeTime = validTeeTimes[0];
-              console.log(firstValidTeeTime);
-              if (await checkUserSettingsForBooker(1)) { 
+      //     if (validTeeTimes.length > 0) { // Check if there's any valid tee time
+      //         const firstValidTeeTime = validTeeTimes[0];
+      //         console.log(firstValidTeeTime);
+      //         if (await checkUserSettingsForBooker(1)) { 
   
-                  console.log("Booker Called")
-                  // Call the lambda function with the first valid tee time
-                  await lambdaFunction.invokeBooker(firstValidTeeTime);
-              }
-          }
-        }
-      }
+      //             console.log("Booker Called")
+      //             // Call the lambda function with the first valid tee time
+      //             await lambdaFunction.invokeBooker(firstValidTeeTime);
+      //         }
+      //     }
+      //   }
+      // }
 
       try {
           // Save the list of notified tee times for each user to the database
-          // const promises = []; // Array to hold all the promises
-          // for (const userId in teeTimesByUser) {
-          //   const notifiedTeeTimes = teeTimesByUser[userId];
+          const promises = []; // Array to hold all the promises
+          for (const userId in teeTimesByUser) {
+            const notifiedTeeTimes = teeTimesByUser[userId];
             
-          //   // For each tee time, insert a new record into the notifications table
-          //   for (const { teeTime, courseId } of notifiedTeeTimes) {
-          //       const insertNotificationQuery = `
-          //           INSERT INTO notifications (UserId, CourseId, TeeTime)
-          //           VALUES (?, ?, ?);
-          //       `;
+            // For each tee time, insert a new record into the notifications table
+            for (const { teeTime, courseId, timeZone } of notifiedTeeTimes) {
+                const insertNotificationQuery = `
+                    INSERT INTO notifications (UserId, CourseId, TeeTime)
+                    VALUES (?, ?, ?);
+                `;
         
-          //       // Convert to UTC Time
-          //       const utcTeeTime = moment.tz(teeTime, "America/Los_Angeles").utc().format('YYYY-MM-DD HH:mm:ss');
+                // Convert to UTC Time
+                const utcTeeTime = moment.tz(teeTime, timeZone).utc().format('YYYY-MM-DD HH:mm:ss');
         
-          //       // Add the promise to the array
-          //       promises.push(connection.execute(insertNotificationQuery, [userId, courseId, utcTeeTime]));
-          //   }
-          // }
+                // Add the promise to the array
+                promises.push(connection.execute(insertNotificationQuery, [userId, courseId, utcTeeTime]));
+            }
+          }
       
-          // // Wait for all the promises to resolve
-          // await Promise.all(promises).catch((error) => console.log("Error in Promise.all: ", error));
+          // Wait for all the promises to resolve
+          await Promise.all(promises).catch((error) => console.log("Error in Promise.all: ", error));
       
       } catch (err) {
           console.log("Error saving notified tee times:", err);
@@ -304,30 +333,45 @@ const checkTeeTimes = async () => {
 
 
 
-async function checkUserSettingsForBooker(userId) {
+async function sendNotifications(teeTimesByUser) {
   try {
-      const connection = await pool.getConnection();
-      const query = `
-          SELECT settingKey, settingValue 
-          FROM user_settings
-          WHERE userId = ? AND (
-              (settingKey = 'TorreyPinesLoginActive' AND settingValue = 1) OR
-              (settingKey IN ('TorreyPinesLoginEmail', 'TorreyPinesLoginPassword') AND settingValue != '')
-          );
-      `;
-      const [rows] = await connection.execute(query, [userId]);
-      connection.release();
-
-      if (rows.length < 3) {
-        console.log("Dont call booker")
-        return false; // Ensure all three settings exist and are correct
-      }
-      return true;
+    await Promise.all([
+      notificationsFunction.sendPushNotitification(teeTimesByUser),
+      notificationsFunction.sendSMS(teeTimesByUser),
+      notificationsFunction.sendEmails(teeTimesByUser)
+    ]);
+    console.log('All notifications sent successfully');
+    // Continue with additional logic if needed
   } catch (error) {
-      console.log("Error checking user settings for Lambda:", error);
-      return false;
+    console.error('An error occurred while sending notifications:', error);
+    // Handle the error appropriately
   }
 }
+
+// async function checkUserSettingsForBooker(userId) {
+//   try {
+//       const connection = await pool.getConnection();
+//       const query = `
+//           SELECT settingKey, settingValue 
+//           FROM user_settings
+//           WHERE userId = ? AND (
+//               (settingKey = 'TorreyPinesLoginActive' AND settingValue = 1) OR
+//               (settingKey IN ('TorreyPinesLoginEmail', 'TorreyPinesLoginPassword') AND settingValue != '')
+//           );
+//       `;
+//       const [rows] = await connection.execute(query, [userId]);
+//       connection.release();
+
+//       if (rows.length < 3) {
+//         console.log("Dont call booker")
+//         return false; // Ensure all three settings exist and are correct
+//       }
+//       return true;
+//   } catch (error) {
+//       console.log("Error checking user settings for Lambda:", error);
+//       return false;
+//   }
+// }
 
 
 

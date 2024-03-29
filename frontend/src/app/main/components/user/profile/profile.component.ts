@@ -5,7 +5,9 @@ import { MessageService } from 'primeng/api';
 import { UserService } from 'src/app/main/service/user.service';
 import { IUser } from 'src/app/main/models/user.model';
 import { ActivatedRoute, Router } from '@angular/router';
-import { error } from 'console';
+import { error, log } from 'console';
+import { GeolocationService } from 'src/app/main/service/geolocation.service';
+import { debounceTime, distinctUntilChanged, filter, firstValueFrom, take } from 'rxjs';
 
 
 @Component({
@@ -19,12 +21,14 @@ export class ProfileComponent implements OnInit {
   currentUser!: IUser;
   passwordDialog: boolean = false;
   settingsDialog: boolean = false;
+  newLocationData: boolean = false;
   
   constructor(private authService: AuthService,
               private userService: UserService,
               private route: ActivatedRoute,
               private router: Router,
               private messageService: MessageService,
+              private geolocationService: GeolocationService,
               private formBuilder: FormBuilder) {}
 
   ngOnInit() {
@@ -32,6 +36,7 @@ export class ProfileComponent implements OnInit {
       Name: ['', Validators.required],
       Email: ['', [Validators.required, Validators.email]],
       Phone: ['', [Validators.pattern('^[0-9]{10}$')]],
+      Zip: ['', Validators.required],
       EmailNotification: [false],
       PhoneNotification: [false],
       Admin: [false],
@@ -40,9 +45,11 @@ export class ProfileComponent implements OnInit {
 
     
 
-    this.authService.loadUserFromToken();
-    this.authService.getUser().subscribe(loggedInUser => {
+    
+    this.authService.getUser().pipe(filter(user => user !== null), distinctUntilChanged(), debounceTime(100)).subscribe(loggedInUser => {
+
       if (loggedInUser) {
+
         this.isAdmin = loggedInUser.Admin;
 
         if (this.isAdmin) {
@@ -50,7 +57,7 @@ export class ProfileComponent implements OnInit {
             const userId = params['userId'];
       
             // Check if the logged-in user is an Admin
-            if (this.isAdmin && userId > 0) {
+            if (this.isAdmin && userId > 0 && loggedInUser.UserId != userId) {
               this.userService.getUserById(userId).subscribe(user => {
                 if (user) {
                   this.currentUser = user;
@@ -83,13 +90,25 @@ export class ProfileComponent implements OnInit {
 
   get name() { return this.userForm?.get('Name') ?? null; }
   get email() { return this.userForm?.get('Email') ?? null; }
+  get zip() { return this.userForm?.get('Zip') ?? null; }
 
-  setUserForm(user: IUser) {
+  async setUserForm(user: IUser) {
     // Transform 0/1 values to false/true
     user.EmailNotification = Boolean(user.EmailNotification);
     user.PhoneNotification = Boolean(user.PhoneNotification);
     user.Admin = Boolean(user.Admin);
     user.Active = Boolean(user.Active);
+
+    if (user.Latitude && user.Latitude) {
+      const locData = await firstValueFrom(this.geolocationService.getReverseGeocodingData(user.Latitude, user.Longitude));
+      user.Zip = locData.address.postcode;
+    } else {
+      const locData: any = await this.getLocation();
+      this.newLocationData = true;
+      user.Zip = locData.Zip;
+      this.currentUser.Latitude = locData.Latitude;
+      this.currentUser.Longitude = locData.Longitude;
+    }
 
     // console.log(user)
     this.userForm.patchValue(user);
@@ -107,14 +126,25 @@ export class ProfileComponent implements OnInit {
     this.messageService.add(e);
   }
 
-  onSubmit() {
+  async onSubmit() {
     if (this.userForm.valid) {
       if (!this.userForm.value.PhoneNotification && !this.userForm.value.EmailNotification) {
         const userConfirmed = window.confirm("Both Phone and Email notifications are turned off. Your timechecks will be set to inactive. Are you sure you want to proceed?");
         if (!userConfirmed) return;
       }
-      // console.log(this.userForm.value);
-      this.userService.updateUser(this.currentUser.UserId, this.userForm.value).subscribe(res => {
+      console.log(this.userForm.value);
+      var constData = this.userForm.value;
+      if (this.newLocationData) {
+        if (this.currentUser.Latitude && this.currentUser.Longitude) {
+          constData.Latitude = this.currentUser.Latitude;
+          constData.Longitude = this.currentUser.Longitude;
+        } else {
+          const latLong = await firstValueFrom(this.geolocationService.getCoordinatesFromZip(constData.Zip));
+          constData.Latitude = latLong[0].lat;
+          constData.Longitude = latLong[0].lon;
+        }
+      }
+      this.userService.updateUser(this.currentUser.UserId, constData).subscribe(res => {
         // console.log("res", res);
         this.messageService.add({severity:'success', detail: `${res.message}`, life: 3000});
         this.authService.loadUserFromToken();
@@ -137,6 +167,45 @@ export class ProfileComponent implements OnInit {
         });
     }
 
+  }
+
+  getLocation() {
+    return new Promise((resolve, reject) => {
+      this.geolocationService.getCurrentLocation()
+        .then(data => {
+          console.log('address: ' , data.address);
+          const locationData = {
+            Zip: data.address.address.postcode,
+            Latitude: data.address.lat,
+            Longitude: data.address.lon,
+          }
+          resolve(locationData);
+        })
+        .catch(error => {
+          const locationData = {
+            Zip: null,
+            Latitude: null,
+            Longitude: null,
+          }
+          resolve(locationData);
+          console.error('Geolocation error: ', error);
+        });
+    });
+  }
+
+  getCoordinates(zipCode: string = "92104") {
+    this.geolocationService.getCoordinatesFromZip(zipCode)
+      .subscribe(
+        data => {
+          if (data && data.length) {
+            console.log('Latitude:', data[0].lat);
+            console.log('Longitude:', data[0].lon);
+          } else {
+            console.log('No coordinates found for this zip code.');
+          }
+        },
+        error => console.error('Geocoding error: ', error)
+      );
   }
 
 }

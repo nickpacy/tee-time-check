@@ -33,7 +33,7 @@ export class SearchComponent implements OnInit {
     public utilityService: UtilityService,
     private courseService: CourseService,
     private teeTimeService: TeeTimeService,
-    private layoutService: LayoutService,
+    public layoutService: LayoutService,
     private datePipe: DatePipe
   ) {}
 

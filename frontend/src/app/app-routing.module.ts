@@ -14,6 +14,8 @@ import { SearchComponent } from './main/components/search/search.component';
 import { CalendarComponent } from './main/components/calendar/calendar.component';
 import { BydayComponent } from './main/components/timechecks/byday/byday.component';
 import { MetricsComponent } from './main/components/metrics/metrics.component';
+import { FriendsComponent } from './main/components/friends/friends.component';
+import { TeesheetComponent } from './main/components/teesheet/teesheet.component';
 
 @NgModule({
     imports: [
@@ -33,6 +35,9 @@ import { MetricsComponent } from './main/components/metrics/metrics.component';
                     { path: 'setup/day', component: BydayComponent, canActivate: [AuthGuard] },
                     { path: 'search', component: SearchComponent, canActivate: [AuthGuard] },
                     { path: 'metrics', component: MetricsComponent, canActivate: [AuthGuard] },
+                    // { path: 'friends', component: FriendsComponent, canActivate: [AuthGuard] },
+                    // { path: 'teesheet', component: TeesheetComponent, canActivate: [AuthGuard] },
+
                 ]
             },
             { path: 'auth', loadChildren: () => import('./main/components/auth/auth.module').then(m => m.AuthModule) },
