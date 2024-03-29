@@ -19,6 +19,11 @@
         <input id="Phone" type="text" formControlName="Phone" placeholder="Phone number" pInputText class="w-full md:w-30rem mb-5" style="padding:1rem"/>
       </div>
 
+      <div class="p-field p-col-12">
+        <label for="Zip" class="block text-900 text-xl font-medium mb-2">Zip Code</label>
+        <input id="Zip" type="text" formControlName="Zip" placeholder="Zip Code" pInputText class="w-full md:w-30rem mb-5" style="padding:1rem"/>
+      </div>
+
       <div class="p-field-checkbox p-col-12">
         <p-checkbox name="EmailNotification" [binary]="true" formControlName="EmailNotification" label="Email Notification" class="w-full md:w-30rem mb-5"></p-checkbox>
       </div>
@@ -32,27 +37,28 @@
       </div>
       
       <div class="p-field-checkbox p-col-12" *ngIf="isAdmin">
-        <p-checkbox name="Admin" [binary]="true" formControlName="Admin" label="Admin" class="w-full md:w-30rem mb-5"[readonly]="currentUser.UserId == 1"></p-checkbox>
+        <p-checkbox name="Admin" [binary]="true" formControlName="Admin" label="Admin" class="w-full md:w-30rem mb-5"[readonly]="currentUser?.UserId == 1"></p-checkbox>
       </div>
       
       <!-- <div class="p-field p-col-12 mb-5">
         <a (click)="passwordDialog= true" class="font-medium no-underline ml-2 text-right cursor-pointer" style="color: var(--primary-color)">Change password?</a>
       </div> -->
 
+
       <div class="p-field p-col-12">
         <button pButton type="button" icon="fa fa-key" (click)="passwordDialog= true" label="Change Password" class="p-button-secondary w-full md:w-30rem mb-3" style="padding:1rem"></button>
       </div>
       
-      <div class="p-field p-col-12">
+      <!-- <div class="p-field p-col-12">
         <button pButton type="button" icon="fa fa-cog" (click)="settingsDialog= true" label="User Settings" class="p-button-secondary w-full md:w-30rem mb-3" style="padding:1rem"></button>
-      </div>
+      </div> -->
 
       <div class="p-field p-col-12">
         <button pButton type="submit" icon="fa fa-save" label="Save Changes" [disabled]="!userForm.valid" class="w-full md:w-30rem mb-3" style="padding:1rem"></button>
       </div>
       
-      <div class="p-field p-col-12" *ngIf="isAdmin && currentUser.UserId != 1">
-        <button pButton type="button" icon="fa fa-trash" label="Delete User" class="p-button-danger w-full md:w-30rem mb-3" style="padding:1rem" (click)="deleteUser(currentUser.UserId)"></button>
+      <div class="p-field p-col-12" *ngIf="isAdmin && currentUser?.UserId != 1">
+        <button pButton type="button" icon="fa fa-trash" label="Delete User" class="p-button-danger w-full md:w-30rem mb-3" style="padding:1rem" (click)="deleteUser(currentUser?.UserId)"></button>
       </div>
     </form>
   </div>

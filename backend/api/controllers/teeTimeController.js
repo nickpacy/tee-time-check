@@ -65,10 +65,16 @@ const searchTeeTimes = async (req, res, next) => {
             })
           );
           break;
-        case "teeitup":
-          promises.push(getTeeTimes_teeitup(date, course.BookingPrefix));
-          break;
-        default:
+          case "teeitup":
+            promises.push(getTeeTimes_teeitup(date, course.BookingPrefix));
+            break;
+          case "chrono":
+            promises.push(getTeeTimes_chrono(date, course.WebsiteId, course.BookingClass, course.ScheduleId, numPlayers, course.TimeZone));
+            break;
+          case "golfnow":
+            promises.push(getTeeTimes_golfnow(date, course.BookingClass, numPlayers));
+            break;
+          default:
           promises.push(Promise.resolve([]));
           break;
       }
@@ -98,6 +104,16 @@ const searchTeeTimes = async (req, res, next) => {
       );
     });
 
+    filteredTeeTimes.sort((a, b) => {
+      // Assuming the time format is always 'YYYY-MM-DD HH:mm'
+      if (a.time < b.time) {
+          return -1;
+      }
+      if (a.time > b.time) {
+          return 1;
+      }
+      return 0;
+  });
     res.json(filteredTeeTimes);
   } catch (error) {
     next(new InternalError("Error getting Tee TImes", error));
@@ -186,7 +202,7 @@ async function getTeeTimes_jcgolf(
 
       return formattedData;
     } else {
-      console.error(`Error retrieving tee times. Status code: ${response}`);
+      // console.error(`Error retrieving tee times. Status code: ${response}`);
       return []; // Return an empty array in case of an error
     }
   } catch (error) {
@@ -244,7 +260,7 @@ async function getTeeTimes_navy(date, bookingClass, numPlayers, startTime) {
 
       return [teeTimes, url];
     } else {
-      console.error(response.status);
+      // console.error(response.status);
       return []; // Return an empty array in case of an error
     }
   } catch (error) {
@@ -303,7 +319,7 @@ async function getTeeTimes_teeitup(date, bookingPrefix) {
 
       return formattedData;
     } else {
-      console.error(`Error retrieving tee times. Status code: ${response}`);
+      // console.error(`Error retrieving tee times. Status code: ${response}`);
       return []; // Return an empty array in case of an error
     }
   } catch (error) {
@@ -335,12 +351,110 @@ async function getTeeTimes_coronado(date, bookingClass) {
         return [teeTimes, true];
       }
     } else {
-      console.error("Error from Coronado", error);
+      // console.error("Error from Coronado", error);
       return [[], true];
     }
   } catch (error) {
     console.error(error);
     return [[], true];
+  }
+}
+
+async function getTeeTimes_chrono(date, websiteId, bookingClass, courseId, numPlayers, timezone) {
+  const formattedClosestDay = moment(date).format("YYYY-MM-DD");
+  var url = `https://www.chronogolf.com/marketplace/clubs/${websiteId}/teetimes?date=${formattedClosestDay}&course_id=${courseId}&nb_holes=18`;
+  for (let index = 0; index < numPlayers; index++) {
+    url += `&affiliation_type_ids%5B%5D=${bookingClass}`;
+  }
+
+  const headers = {};
+
+  try {
+    const response = await axios.get(url, { headers });
+
+    if (response.status === 200) {
+      const formattedData = response.data.map((teetime) => {
+        let green_fee = 0;
+        let available_spots = 0
+        if (teetime.green_fees) {
+          greenFee = teetime.green_fees[0].green_fee;
+          available_spots = teetime.green_fees?.length;
+        }
+
+        return {
+          time: moment(teetime.date + ' ' + teetime.start_time)
+            .format("YYYY-MM-DD HH:mm"),
+          available_spots: available_spots,
+          green_fee: greenFee,
+        };
+      });
+      return formattedData;
+    } else {
+      // console.error(`Error retrieving tee times. Status code: ${response}`);
+      return []; // Return an empty array in case of an error
+    }
+  } catch (error) {
+    // console.error(error);
+    return []; // Return an empty array in case of an error
+  }
+}
+
+async function getTeeTimes_golfnow(date, bookingClass, numPlayers) {
+  const formattedClosestDay = moment(date).format('MMM D YYYY');
+  const url = `https://www.golfnow.com/api/tee-times/tee-time-results`;
+  
+  const headers = {};
+
+  const data = {
+    "SearchType": 1,
+    "Date": formattedClosestDay,
+    "FacilityId": bookingClass,
+    "View": "Grouping"
+  };
+
+  try {
+    const response = await axios.post(url, data, { headers });
+
+    if (response.status === 200) {
+        const formattedData = response.data.ttResults.teeTimes.map(teetime => {
+
+          var availableSpots;
+
+          switch (teetime.playerRule) {
+              case 1:
+                  availableSpots = 1;
+                  break;
+              case 3:
+                  availableSpots = 2;
+                  break;
+              case 7:
+                  availableSpots = 3;
+                  break;
+              case 14:
+              case 15:
+                  availableSpots = 4;
+                  break;
+              default:
+                  availableSpots = 5; // Or handle the default case as needed
+                  break;
+          }
+
+          return {
+            time: moment(teetime.time).format('YYYY-MM-DD HH:mm'),
+            available_spots: availableSpots,
+            green_fee: teetime.minTeeTimeRate
+          }
+        });
+
+        return formattedData;
+    } else {
+        // console.error(`Error retrieving tee times. Status code: ${response}`);
+        return []; // Return an empty array in case of an error
+    }
+
+  } catch (error) {
+    console.error(error);
+    return []; // Return an empty array in case of an error
   }
 }
 

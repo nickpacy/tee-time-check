@@ -28,12 +28,18 @@ import { BydayComponent } from './main/components/timechecks/byday/byday.compone
 import { UserByWeekComponent } from './main/components/metrics/notifications/user-by-week/user-by-week.component';
 import { UserByCourseComponent } from './main/components/metrics/notifications/user-by-course/user-by-course.component';
 import { MetricsComponent } from './main/components/metrics/metrics.component';
+import { FriendsComponent } from './main/components/friends/friends.component';
+import { ProperCasePipe } from './shared/proper-case.pipe';
+import { TeesheetComponent } from './main/components/teesheet/teesheet.component';
+import { TeeTimeDetailComponent } from './main/components/teesheet/tee-time-detail/tee-time-detail.component';
+import { AddUserCoursesComponent } from './main/components/courses/add-user-courses/add-user-courses.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 
 @NgModule({
     declarations: [
         AppComponent, DashboardComponent, NotfoundComponent, UserComponent, TimechecksComponent, CoursesComponent,
-        LocalTimePipe,
+        LocalTimePipe, ProperCasePipe,
         BycourseComponent,
         ProfileComponent,
         ChangePasswordFormComponent,
@@ -44,7 +50,11 @@ import { MetricsComponent } from './main/components/metrics/metrics.component';
         BydayComponent,
         UserByWeekComponent,
         UserByCourseComponent,
-        MetricsComponent
+        MetricsComponent,
+        FriendsComponent,
+        TeesheetComponent,
+        TeeTimeDetailComponent,
+        AddUserCoursesComponent
     ],
     imports: [
         AppRoutingModule,
@@ -52,6 +62,7 @@ import { MetricsComponent } from './main/components/metrics/metrics.component';
         CommonModule,
         FormsModule,
         ReactiveFormsModule,
+        BrowserAnimationsModule,
         PrimeNgModule,
         FullCalendarModule
     ],

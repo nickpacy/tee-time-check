@@ -1,0 +1,22 @@
+<label>Distance:</label>
+<p-dropdown [options]="milesList" optionValue="meters" optionLabel="miles" [(ngModel)]="selectedMiles" (onChange)="getCoursesNearby()"></p-dropdown>
+<hr>
+<p-table [value]="courses" styleClass="p-datatable-small" [rows]="20" responsiveLayout="scroll" [reorderableColumns]="false">
+    <ng-template pTemplate="header">
+        <tr>
+            <th>Course</th>
+            <th>Distance</th>
+            <th>Add</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-course let-index="rowIndex">
+        <tr>
+            <td>{{course.CourseName}}</td>
+            <td>{{course.Miles | number: '1.0-1'}}mi</td>
+            <td>
+                <i [@shrinkOut]="course.Animating ? 'out' : 'in'" (click)="toggleIcon(course)" *ngIf="!course.UserCourseEnabled" class="fa fa-plus-square fa-cursor" style="color: green;"></i>
+                <i *ngIf="course.UserCourseEnabled" class="fa fa-check" style="color: green;"></i>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>

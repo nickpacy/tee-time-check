@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { Course, UserCourse } from '../../models/course.model';
 import { CourseService } from '../../service/course.service';
 import { LayoutService } from 'src/app/layout/service/app.layout.service';
@@ -10,15 +10,21 @@ import { firstValueFrom } from 'rxjs';
   styleUrls: ["./courses.component.scss"],
 })
 export class CoursesComponent implements OnInit {
+  @Output() refreshModal = new EventEmitter<void>();
+
   courses: UserCourse[] = [];
+  addCourseDialog: boolean = false;
 
   constructor(
     private courseService: CourseService,
     public layoutService: LayoutService
   ) {}
 
-  ngOnInit() {
-    this.getUserCourses();
+  async ngOnInit() {
+    await this.getUserCourses();
+    if (this.courses.length == 0) {
+      this.addCourseDialog = true;
+    }
   }
 
   async getUserCourses() {
@@ -30,6 +36,19 @@ export class CoursesComponent implements OnInit {
 
   async updateCourseOrder() {
     await firstValueFrom(this.courseService.updateCourseOrder(this.courses));
+  }
+
+  async deleteUserCourse(courseId: number) {
+    await firstValueFrom(this.courseService.removeUserCourse(courseId));
+    this.refreshModal.emit();
+    const i  = this.courses.findIndex(x => x.CourseId == courseId);
+    this.courses.splice(i, 1);
+    await this.updateCourseOrder();
+  }
+
+  addCourseToList(newCourse: UserCourse) {
+    newCourse.Active = Boolean(newCourse.Active)
+    this.courses.push(newCourse);
   }
 
   moveUp(index: number): void {

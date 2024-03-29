@@ -8,7 +8,11 @@ const router = express.Router();
 router.get('/', coursesController.getCourses);
 router.post('/userOrder', verifyToken, coursesController.getCoursesByUserOrder);
 router.post('/updateCourseOrder', verifyToken, coursesController.updateCourseOrder);
+router.get('/distance', verifyToken, coursesController.getCoursesByDistance);
 router.get('/:courseId', coursesController.getCourseById);
+router.post('/addUserCourse', verifyToken, coursesController.addUserCourse);
+router.delete('/removeUserCourse/:courseId', verifyToken, coursesController.removeUserCourse);
+
 
 // CRUD operations
 router.post('/', coursesController.createCourse);

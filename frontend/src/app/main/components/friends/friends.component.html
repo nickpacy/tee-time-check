@@ -1,0 +1,36 @@
+<div class="card">
+    <p-autoComplete [(ngModel)]="searchQuery" [suggestions]="users" (completeMethod)="searchUser($event)" field="Name" [dropdown]="false" [minLength]="1" [placeholder]="'Search for Friends'" (onSelect)="selectUser($event)"></p-autoComplete>
+    <button 
+        pButton
+        *ngIf="selectedUser"
+        class="p-button-secondary ml-2" 
+        [label]="buttonInfo.label"
+        [icon]="layoutService.isMobile() ? '' : buttonInfo.icon" 
+        [disabled]="buttonInfo.disabled"
+        (onClick)="addFriend()"></button>
+
+    <hr>
+    <p-table [value]="friends" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Name</th>
+                <th>As Of</th>
+                <th>Status</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-friendship>
+            <tr>
+                <td>{{ friendship.Name }}</td>
+                <td>{{ friendship.UpdatedAt | date: 'short' }}</td>
+                <td>
+                    <p-tag [style]="{'width': '70px'}" *ngIf="currentUser.UserId == friendship.UserId1 && friendship.Status == 'pending'" [rounded]="true" severity="warning" icon="fa fa-clock" [value]="friendship.Status | properCase"></p-tag>
+                    <p-tag [style]="{'width': '70px', 'cursor': 'pointer'}" *ngIf="currentUser.UserId == friendship.UserId2 && friendship.Status == 'pending'" [rounded]="true" severity="success" icon="fa fa-user-plus" [value]="'Accept'" (click)="updateFriendship(friendship.FriendshipId, 'accepted')"></p-tag>
+                    <p-tag [style]="{'width': '70px'}" *ngIf="friendship.Status == 'accepted'" [rounded]="true" severity="info" icon="fa fa-face-smile" [value]="'Friends'"></p-tag>
+
+                </td>
+
+            </tr>
+        </ng-template>
+    </p-table>
+    
+</div>

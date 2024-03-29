@@ -8,9 +8,12 @@ const authRoutes = require('./routes/authRoutes');
 const usersRoutes = require('./routes/usersRoutes');
 const coursesRoutes = require('./routes/coursesRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
+const friendsRoutes = require('./routes/friendsRoutes');
 const timechecksRoutes = require('./routes/timechecksRoutes');
 const notificationsRoutes = require('./routes/notificationsRoutes');
 const teeTimeRoutes = require('./routes/teeTimeRoutes');
+const appSettingsRoutes = require('./routes/appSettingsRoutes');
+const teeSheetRoutes = require('./routes/teeSheetRoutes');
 
 const app = express();
 app.use(express.json());
@@ -24,9 +27,12 @@ app.use(`${stage}/auth`, authRoutes);
 app.use(`${stage}/users`, usersRoutes);
 app.use(`${stage}/courses`, coursesRoutes);
 app.use(`${stage}/metrics`, metricsRoutes);
+app.use(`${stage}/friends`, friendsRoutes);
 app.use(`${stage}/timechecks`, timechecksRoutes);
 app.use(`${stage}/notifications`, notificationsRoutes);
 app.use(`${stage}/teetimes`, teeTimeRoutes);
+app.use(`${stage}/appsettings`, appSettingsRoutes);
+app.use(`${stage}/teesheet`, teeSheetRoutes);
 app.use(errorHandler);
 
 if (process.env.STATIC == 'true') {

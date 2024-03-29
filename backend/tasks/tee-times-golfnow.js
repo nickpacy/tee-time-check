@@ -9,7 +9,7 @@ async function getTeeTimes(bookingClass, dayOfWeek, numPlayers) {
   const headers = {};
 
   const data = {
-    "SearchType": "Facility",
+    "SearchType": 1,
     "Date": formattedClosestDay,
     "FacilityId": bookingClass,
     "View": "Grouping"
@@ -18,19 +18,38 @@ async function getTeeTimes(bookingClass, dayOfWeek, numPlayers) {
   try {
     const response = await axios.post(url, data, { headers });
 
-    // console.log(response.data.ttResults.teeTimes);
-    // return false;
-
     if (response.status === 200) {
-        const formattedData = response.data.ttResults.teeTimes.map(teetime => ({
-            time: moment(teetime.time).format('YYYY-MM-DD HH:mm'),
-            available_spots: teetime.maxPlayers,
-            green_fee: teetime.minTeeTimeRate
-        }));
+      const formattedData = response.data.ttResults.teeTimes.map(teetime => {
 
-        // const filteredTimes = formattedData.filter(({ available_spots }) => available_spots >= numPlayers);
-        console.log(formattedData)
-        return formattedData;
+        var availableSpots;
+
+        switch (teetime.playerRule) {
+            case 1:
+                availableSpots = 1;
+                break;
+            case 3:
+                availableSpots = 2;
+                break;
+            case 7:
+                availableSpots = 3;
+                break;
+            case 14:
+            case 15:
+                availableSpots = 4;
+                break;
+            default:
+                availableSpots = 5; // Or handle the default case as needed
+                break;
+        }
+
+        return {
+          time: moment(teetime.time).format('YYYY-MM-DD HH:mm'),
+          available_spots: availableSpots
+        }
+      });
+
+      const filteredTimes = formattedData.filter(({ available_spots }) => available_spots >= numPlayers);
+      return filteredTimes;
     } else {
         console.error(`Error retrieving tee times. Status code: ${response}`);
         return []; // Return an empty array in case of an error
@@ -42,9 +61,6 @@ async function getTeeTimes(bookingClass, dayOfWeek, numPlayers) {
   }
 }
 
-// module.exports = {
-//   getTeeTimes
-// };
-
-let i = getTeeTimes(3069, 6, 0);
-console.log(i);
+module.exports = {
+  getTeeTimes
+};

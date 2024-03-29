@@ -1,0 +1,38 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card">
+      <h3 class="mt-2" style="float: left;">Tee Sheet</h3>
+      <button pButton icon="fa fa-plus" label="New Tee Time" (click)="selectedTeeSheetId = 0;teeTimeDialog = true" style="float: right;"></button>
+      <div style="clear: both;"></div>
+
+      <hr>
+
+      <p-table [value]="teeSheet" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Tee Time</th>
+                <th>Course</th>
+                <th>Filled Spots</th>
+                <th>Update</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-ts>
+            <tr>
+                <td>{{ ts.TeeTime | date: 'short' }}</td>
+                <td>{{ ts.CourseName }}</td>
+                <td>{{ ts.TotalSpots - ts.AvailableSpots }}/{{ ts.TotalSpots }}</td>
+                <td><p-tag [style]="{'width': '50px', 'cursor': 'pointer'}" [rounded]="true" severity="info" [value]="'Update'" (click)="selectedTeeSheetId = ts.TeeSheetId; teeTimeDialog = true;"></p-tag></td>
+            </tr>
+        </ng-template>
+    </p-table>
+      <hr>
+
+    </div>
+</div>
+</div>
+
+<p-dialog [(visible)]="teeTimeDialog" [style]="{width: '1000px', height: '700px', 'max-width':'98vw', 'z-index': '800'}" [header]="'Tee Time Information'" [modal]="true" class="p-fluid" (onHide)="getTeeSheet()">
+    <ng-template pTemplate="content">
+        <app-tee-time-detail [teeSheetId]="selectedTeeSheetId"></app-tee-time-detail>
+    </ng-template>
+</p-dialog>

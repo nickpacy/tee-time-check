@@ -3,11 +3,11 @@ const moment = require("moment");
 const util = require('./utility');
 require('moment-timezone');
 
-async function getTeeTimes(bookingAlias, dayOfWeek, numPlayers) {
+async function getTeeTimes(bookingAlias, dayOfWeek, numPlayers, timeZone) {
   const formattedClosestDay = util.getClosestDayOfWeek(dayOfWeek, 'YYYY-MM-DD');
   const url = `https://phx-api-be-east-1b.kenna.io/v2/tee-times?date=${formattedClosestDay}`;
   
-  const twoDaysOut = moment().tz("America/Los_Angeles").add(3, 'days').startOf('day');
+  const twoDaysOut = moment().tz(timeZone).add(3, 'days').startOf('day');
   
   // Convert both dates to 'YYYY-MM-DD' format for comparison
   const formattedInputDate = moment.utc(formattedClosestDay).format('YYYY-MM-DD');
@@ -30,7 +30,7 @@ async function getTeeTimes(bookingAlias, dayOfWeek, numPlayers) {
 
     if (response.status === 200) {
         const formattedData = response.data[0].teetimes.map(teetime => ({
-            time: moment(teetime.teetime).tz('America/Los_Angeles').format('YYYY-MM-DD HH:mm'),
+            time: moment(teetime.teetime).tz(timeZone).format('YYYY-MM-DD HH:mm'),
             available_spots: teetime.maxPlayers
         }));
 

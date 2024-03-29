@@ -9,6 +9,7 @@ router.post('/userSetting', verifyToken, usersController.insertOrUpdateUserSetti
 router.get('/userSetting', verifyToken, usersController.getUserSettings);
 
 router.get('/', usersController.getUsers);
+router.get('/search', usersController.searchUsers);
 router.get('/:userId', usersController.getUserById);
 router.post('/', usersController.createUser);
 router.put('/:userId', usersController.updateUser);

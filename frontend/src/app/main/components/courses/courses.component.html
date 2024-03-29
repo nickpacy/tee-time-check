@@ -1,6 +1,9 @@
 <h2>
-    <span class="fa fa-map-location-dot" style="float: right;font-size: 2rem;margin-right: .5em;"></span>Courses
-</h2><hr>
+    <span class="fa fa-map-location-dot" style="float: right;font-size: 2rem;margin-right: .5em;margin-left: 20px;"></span>
+    <p-button (onClick)="addCourseDialog = true" icon="fa fa-plus" label="Add Courses" styleClass="p-button-sm" [style]="{'float': 'right'}"></p-button>
+    Courses
+</h2>
+<hr>
 
 <p-table [value]="courses" styleClass="p-datatable-small" [rows]="20" responsiveLayout="scroll" [reorderableColumns]="true" (onRowReorder)="updateCourseOrder()">
     <ng-template pTemplate="header">
@@ -8,7 +11,8 @@
             <th style="width:3rem"></th>
             <th>Course</th>
             <th>SMS Abbr</th>
-            <th>Active</th>
+            <th>Show</th>
+            <th></th>
             <!-- <th>Booking Class</th>
             <th>Schedule ID</th> -->
         </tr>
@@ -25,6 +29,12 @@
             <td>{{course.CourseName}}</td>
             <td>{{course.CourseAbbr}}</td>
             <td><p-checkbox styleClass="p-checkbox-sm p-0" [(ngModel)]="course.Active" [binary]="true" (onChange)="updateCourseOrder()"></p-checkbox></td>
+            <td><i class="fa fa-trash fa-cursor" style="color: red;" (click)="deleteUserCourse(course.CourseId)"></i></td>
         </tr>
     </ng-template>
 </p-table>
+
+
+<p-dialog [(visible)]="addCourseDialog" [style]="{width: '600px', height: '600px', 'max-width':'98vw'}" [closable]="true" header="Find Courses" [modal]="true" class="p-fluid">
+    <app-add-user-courses (onCourseAdded)="addCourseToList($event)" [refreshTrigger]="refreshModal"></app-add-user-courses>
+</p-dialog>
