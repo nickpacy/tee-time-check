@@ -148,12 +148,16 @@ async function getTeeTimes_foreup(date, bookingClass, scheduleId) {
   const formattedClosestDay = moment(date).format("MM-DD-YYYY");
   const url = `https://foreupsoftware.com/index.php/api/booking/times?time=all&date=${formattedClosestDay}&holes=all&booking_class=${bookingClass}&schedule_id=${scheduleId}&api_key=no_limits`;
 
-  const headers = {
-    "X-Authorization": `Bearer ${process.env.FOREUP_BEARER}`,
+  let config = {
+    headers: {}
   };
 
+  if (bookingClass === 888 || bookingClass === 1135) {
+    config.headers["X-Authorization"] = `Bearer ${process.env.FOREUP_BEARER}`;
+  }
+
   try {
-    const response = await axios.get(url, { headers });
+    const response = await axios.get(url, config);
     const teeTimes = response.data.map((item) => {
       return {
         time: item.time,

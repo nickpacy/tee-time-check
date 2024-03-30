@@ -9,12 +9,16 @@ async function getTeeTimes(bookingClass, dayOfWeek, numPlayers, scheduleId, pool
   const formattedClosestDay = util.getClosestDayOfWeek(dayOfWeek);
   const url = `https://foreupsoftware.com/index.php/api/booking/times?time=all&date=${formattedClosestDay}&holes=all&players=${numPlayers}&booking_class=${bookingClass}&schedule_id=${scheduleId}&api_key=no_limits`;
   
-  const headers = {
-    'X-Authorization': `Bearer ${process.env.FOREUP_BEARER}`,
+  let config = {
+    headers: {}
   };
 
+  if (bookingClass === 888 || bookingClass === 1135) {
+    config.headers["X-Authorization"] = `Bearer ${process.env.FOREUP_BEARER}`;
+  }
+
   try {
-    const response = await axios.get(url, { headers });
+    const response = await axios.get(url, config);
     const teeTimes = response.data.map(item => {
       return {
         time: item.time,
