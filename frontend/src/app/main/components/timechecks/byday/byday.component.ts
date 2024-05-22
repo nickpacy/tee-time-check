@@ -6,6 +6,7 @@ import { Course } from '../../../models/course.model';
 import { UtilityService } from '../../../service/utility.service';
 import { LayoutService } from 'src/app/layout/service/app.layout.service';
 import { firstValueFrom } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: "app-byday",
@@ -23,6 +24,7 @@ export class BydayComponent implements OnInit {
     { id: 6, name: "Saturday", shortName: "Sat", shorterName: "Sa" },
   ];
   dayOfWeek: number = 0;
+  logoUrl: string = environment.logoUrl;
   timechecks: any[] = [];
   activeDayTimechecks: any[];
   courses: Course[]; // Add your course names here
@@ -57,6 +59,7 @@ export class BydayComponent implements OnInit {
       this.timecheckService.getTimechecksByDay()
     );
     this.timechecks = data;
+    console.log(this.timechecks);
   }
 
   async getAllCourses() {

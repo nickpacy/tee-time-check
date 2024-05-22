@@ -10,6 +10,7 @@ import { UtilityService } from '../../service/utility.service';
 import { AuthService } from '../auth/auth.service';
 import { LayoutService } from 'src/app/layout/service/app.layout.service';
 import { firstValueFrom } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Injectable()
 @Component({
@@ -21,6 +22,7 @@ export class TimechecksComponent implements OnInit {
   loading: boolean = true;
   USERID: number = 0;
   isAdmin!: boolean;
+  logoUrl: string = environment.logoUrl;
   timechecks: FullTimeCheck[] = [];
   emailDialog: boolean = false;
   userEmail: string = "";

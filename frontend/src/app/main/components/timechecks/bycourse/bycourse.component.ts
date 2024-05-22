@@ -10,6 +10,7 @@ import { UtilityService } from '../../../service/utility.service';
 import { AuthService } from '../../auth/auth.service';
 import { LayoutService } from 'src/app/layout/service/app.layout.service';
 import { firstValueFrom } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: "app-bycourse",
@@ -19,6 +20,7 @@ import { firstValueFrom } from 'rxjs';
 export class BycourseComponent {
   loading: boolean = true;
   USERID: number = 0;
+  logoUrl: string = environment.logoUrl;
   timechecks: FullTimeCheck[] = [];
   emailDialog: boolean = false;
   userEmail: string = "";

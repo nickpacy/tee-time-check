@@ -28,7 +28,7 @@ async function navigateToBookingPage(driver) {
     await driver.wait(until.elementLocated(By.id('date-field')), 10000);
 
     const delay = getMillisecondsUntil7PM();
-    await new Promise(resolve => setTimeout(resolve, delay));
+    // await new Promise(resolve => setTimeout(resolve, delay));
 
     // await driver.findElement(By.xpath("(//td[contains(@class, 'day') and not(contains(@class, 'disabled'))])[last()-1]")).click();
 

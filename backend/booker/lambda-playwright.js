@@ -1,7 +1,5 @@
-// const puppeteer = require('puppeteer');
-// const { executablePath } = require('chrome-aws-lambda');
-const puppeteer = require('puppeteer-core');
-const chrome = require('chrome-aws-lambda');
+const { chromium } = require('playwright-core');
+const playwrightAWS = require('playwright-aws-lambda');
 const mysql = require("mysql2/promise");
 const dotenv = require("dotenv");
 const util = require('./utility');
@@ -10,32 +8,18 @@ const util = require('./utility');
 // Load environment variables from .env file
 dotenv.config();
 
-// async function initializeBrowser() {
-//     // const browser = await puppeteer.launch({
-//     //     args: ['--headless', '--disable-gpu', '--window-size=1280x1024', '--no-sandbox'],
-//     //     headless: true,
-//     // });
-//     // return browser;
-//     const browser = await puppeteer.launch({
-//         args: chrome.args,
-//         executablePath: await chrome.executablePath,
-//         headless: chrome.headless,
-//     });
-//     return browser;
-// }
+
 
 async function initializeBrowser() {
     try {
-    const browser = await puppeteer.launch({
+        const browser = await chromium.launch({
             args: [
                 '--no-sandbox',
                 '--disable-gpu',
-                '--single-process',
-                '--headless',
-                '--disable-dev-shm-usage'
+                '--disable-dev-shm-usage',
+                '--disable-setuid-sandbox'
             ],
-            executablePath: await chrome.executablePath,
-            headless: chrome.headless,
+            headless: false // this can be controlled based on your environment
         });
         return browser;
     } catch (error) {
@@ -84,38 +68,68 @@ async function getUserLogin(userId) {
 }
 
 async function loginUser(page, email, password, link) {
-    await Promise.all([
-        page.waitForNavigation({ waitUntil: 'networkidle0' }), // wait until network is idle
-        page.goto(link)
-     ]);
+    // Navigate to the page and wait until network is idle
+    await page.goto(link, { waitUntil: 'networkidle' });
+
+    // Wait for the email input field to be available
     await page.waitForSelector('#login_email', { timeout: 1000 });
     await page.type('#login_email', email);
+
+    // Type the password
     await page.type('#login_password', password);
+
+    // Press Enter to submit the form
     await page.keyboard.press('Enter');
+
+    // Wait for the reservations tab to be available
     await page.waitForSelector('#reservations-tab', { timeout: 10000 });
 }
 
+
 async function navigateToBookingPage(page, link, date) {
-    await Promise.all([
-        page.waitForNavigation({ waitUntil: 'networkidle0' }), // wait until network is idle
-        page.goto(link)
-     ]);
-    // await page.click("//button[contains(text(), 'Resident (0 - 7 Days)')]");
-    const [button] = await page.$x("//button[contains(text(), 'Resident (0 - 7 Days)')]");
-    if (button) await button.click();
+    // Navigate to the page and wait until network is idle
+    await page.goto(link, { waitUntil: 'networkidle' });
+
+    // Playwright uses a unified selector engine for both CSS and XPath
+    const button = await page.$('xpath=//button[contains(text(), "Resident (0 - 7 Days)")]');
+    if (button) {
+        await button.click();
+    }
+
+    // Wait for the date field to be available
     await page.waitForSelector('#date-field', { timeout: 10000 });
+
+    // Call a function to set the date for the tee time
     await setDateForTeeTime(page, date);
 }
 
+
+
 async function setDateForTeeTime(page, date) {
+    // Ensure the date is a valid string
+    if (typeof date !== 'string') {
+        console.error('Invalid date: expected a string, but got:', date);
+        throw new TypeError('setDateForTeeTime expects date to be a string');
+    }
+    
+    // Click the date input field to focus on it
     await page.click('#date-field');
-    await page.keyboard.down('End');
+
+    // Press 'End' to move the cursor to the end of the input field
+    await page.keyboard.press('End');
+
+    // Clear the input by pressing 'Backspace' 10 times
     for (let i = 0; i < 10; i++) {
         await page.keyboard.press('Backspace');
     }
+
+    // Type the new date into the input field
     await page.type('#date-field', date);
+
+    // Press 'Enter' to possibly submit the date or close the date picker
     await page.keyboard.press('Enter');
 }
+
 
 
 async function clickHighestButtonValue(page) {
@@ -144,8 +158,13 @@ async function clickHighestButtonValue(page) {
     buttonValues.sort((a, b) => b.value - a.value);
 
     // Click the button with the highest value
-    await buttonValues[0].element.click();
+    if (buttonValues.length > 0) {
+        await buttonValues[0].element.click();
+    } else {
+        console.error('No buttons found to click.');
+    }
 }
+
 
 
 async function selectTimeSlot(page, startTimeVariable) {
@@ -157,7 +176,7 @@ async function selectTimeSlot(page, startTimeVariable) {
 
     while (!foundTime && attempts < maxAttempts) {
         try {
-            await page.waitForSelector('.booking-start-time-label', { timeout: 5000 }); // waits up to 5 seconds
+            await page.waitForSelector('.booking-start-time-label', { timeout: 3000 }); // waits up to 3 seconds
             const times = await page.$$('.booking-start-time-label');
             let anyTimeAfterStartTime = false;
 
@@ -168,6 +187,7 @@ async function selectTimeSlot(page, startTimeVariable) {
                 if (displayedTimeInMinutes === await timeToMinutes(startTimeVariable)) {
                     await timeElement.click();
                     foundTime = true;
+                    break; // Once the correct time is found and clicked, break out of the loop
                 }
         
                 if (displayedTimeInMinutes >= await timeToMinutes(startTimeVariable)) {
@@ -183,10 +203,11 @@ async function selectTimeSlot(page, startTimeVariable) {
                 let bookTimeButton = await page.$('button.btn.btn-success.js-book-button.pull-left');
                 if (bookTimeButton) {
                     console.log("SIMULATE BOOKING");
+                    // Uncomment the next line in production to perform the click
                     // await bookTimeButton.click();
                 }
 
-                // Check if the recaptcha-token appears
+                // Optionally check for recaptcha or other forms of CAPTCHA
                 // await checkRecaptcha(page);
                 return;
             }
@@ -196,56 +217,27 @@ async function selectTimeSlot(page, startTimeVariable) {
                 return;
             }
 
+            // Check if the times are empty and if so, break the loop
             const isTimesEmptyPresent = !!(await page.$('#times-empty'));
             if (isTimesEmptyPresent) break;
 
         } catch (error) {
             if (error.message.includes('Node is either not visible or not an HTMLElement')) {
-                attempts++;
                 console.log('Stale element detected. Retrying...');
             } else {
+                // Propagate other types of errors
                 throw error;
             }
         }
+        attempts++;
     }
+
+    if (!foundTime) {
+        console.log("Failed to find a time slot after " + maxAttempts + " attempts.");
+    }
+
 }
 
-
-// async function checkRecaptcha(page) {
-//     try {
-//         // Wait for the iframe whose title contains the word "recaptcha challenge expires"
-//         await page.waitForSelector('iframe[title*="recaptcha challenge expires"]', { timeout: 10000 });
-        
-//         // Get all iframes with that title
-//         const iframesWithRecaptchaTitle = await page.$$('iframe[title*="recaptcha challenge expires"]');
-
-//         if (iframesWithRecaptchaTitle.length === 0) {
-//             console.log("No iframe with recaptcha title detected. Tee Time should be booked");
-//             return;
-//         } else {
-//             // Switch to the first iframe with a title containing "recaptcha"
-//             const frameElement = iframesWithRecaptchaTitle[0];
-//             const frame = await frameElement.contentFrame();
-
-//             // Now check for the recaptcha-token inside the iframe
-//             let isRecaptchaPresent = false;
-//             try {
-//                 await frame.waitForSelector('#recaptcha-token', { timeout: 5000 });
-//                 isRecaptchaPresent = true;
-//             } catch (error) {
-//                 console.log("Recaptcha token not found.");
-//             }
-
-//             if (isRecaptchaPresent) {
-//                 console.log("Recaptcha token detected. Exiting. Should notify user to go book manually");
-//                 return;
-//             }
-//         }
-//     } catch (error) {
-//         console.log("Waiting for iframe timed out. No iframe with recaptcha title detected.");
-//         return;
-//     }
-// }
 
 
 function timeToMinutes(time) {
@@ -268,27 +260,32 @@ const loginToBooker = async (teeTimeData) => {
         process.exit(0);
     }
 
-    let browser = await initializeBrowser();
+    // let browser = await initializeBrowser();
+    let browser = null;
+    browser = await playwrightAWS.launchChromium();
+    const context = await browser.newContext();
     let page = await browser.newPage();
-    await page.setViewport({width: 1440,height: 1024});
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537');
-
+    // await page.setViewportSize({width: 1440,height: 1024});
 
     try {
+        console.log("Attempting to login...");
         await loginUser(page, email, password, teeTimeData.bookingLink);
+        console.log("Attempting to navigate...");
         await navigateToBookingPage(page, teeTimeData.bookingLink, teeTimeData.date);
+        console.log("Attempting to select time...");
         await selectTimeSlot(page, teeTimeData.time);
+        console.log("Everything has completed");
     } catch (error) {
         console.error("An error occurred:", error);
     } finally {
         console.log("Function Completed");
-        // setTimeout(() =>  {
-        //     browser.close().then(() => {
-        //         process.exit(0);
-        //     });
-        // }, 300000);
-        await browser.close();
-        process.exit(0);
+        setTimeout(() =>  {
+            browser.close().then(() => {
+                process.exit(0);
+            });
+        }, 5000);
+        // await browser.close();
+        // process.exit(0);
     }
 };
 
