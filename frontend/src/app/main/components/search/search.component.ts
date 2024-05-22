@@ -6,6 +6,7 @@ import { Course } from '../../models/course.model';
 import { DatePipe } from '@angular/common';
 import { LayoutService } from 'src/app/layout/service/app.layout.service';
 import { firstValueFrom } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 
 @Component({
@@ -14,6 +15,7 @@ import { firstValueFrom } from 'rxjs';
   styleUrls: ["./search.component.scss"],
 })
 export class SearchComponent implements OnInit {
+  logoUrl: string = environment.logoUrl;
   searchDate: Date = new Date();
   searchTimeInterval: number[] = this.utilityService.getSunTimes();
   maxDate: Date = new Date(new Date().setDate(new Date().getDate() + 15));
