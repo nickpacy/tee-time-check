@@ -1,5 +1,13 @@
 const pool = require("../database");
+const dotenv = require("dotenv");
+const twilio = require('twilio');
 const { NotFoundError, InternalError } = require("../middlewares/errorTypes");
+
+dotenv.config();
+const smsClient = new twilio(
+    process.env.TWILIO_SID,
+    process.env.TWILIO_AUTH_TOKEN
+);
 
 const getNotificationsByCourse = async (req, res, next) => {
   const userId = req.user.userId;
@@ -53,7 +61,67 @@ const removeNotification = async (req, res, next) => {
   }
 };
 
+
+const updateTwilioMessages = async (req, res, next) => {
+  const lastUpdate = await getLastUpdateTimestamp(); // Ensure this function is correctly defined and handled
+
+  try {
+      const messages = await smsClient.messages.list({
+          dateSentAfter: lastUpdate.toISOString()
+      });
+
+      let updatesCount = 0; // Counter for successfully updated/inserted messages
+
+      for (const message of messages) {
+          const { sid, dateSent, from, to, body, price } = message;
+          const sql = `INSERT INTO twilio_messages (sid, dateSent, fromPhone, toPhone, body, price)
+                       VALUES (?, ?, ?, ?, ?, ?)
+                       ON DUPLICATE KEY UPDATE
+                       dateSent = VALUES(dateSent), fromPhone = VALUES(fromPhone), toPhone = VALUES(toPhone),
+                       body = VALUES(body), price = VALUES(price)`;
+
+          const result = await pool.query(sql, [sid, new Date(dateSent), from, to, body, parseFloat(price)]);
+          if (result.affectedRows > 0) {
+              updatesCount++;
+              // console.log(`Message with SID: ${sid} updated or inserted successfully.`);
+          }
+      }
+
+      // Sending a success response with details about the operation
+      res.json({
+          success: true,
+          message: `${updatesCount} messages updated or inserted successfully.`,
+          updatedRecords: updatesCount
+      });
+  } catch (error) {
+      console.error('Error updating Twilio messages:', error);
+      next(new InternalError("Error updating Twilio messages", error));
+  }
+};
+
+
+const getLastUpdateTimestamp = async (req, res, next) => {
+  try {
+      const sql = `SELECT MAX(dateSent) as lastUpdate FROM twilio_messages`;
+      const results = await pool.query(sql);
+
+      if (results.length > 0 && results[0].lastUpdate) {
+          return new Date(results[0].lastUpdate);
+      }
+      return new Date('2023-07-01T00:00:00Z'); // Default if no records or unable to find a last update
+  } catch (error) {
+      console.error('Error retrieving last update timestamp:', error);
+      next(new InternalError("Failed to retrieve last update timestamp", error));
+  }
+};
+
+
+
+
+
 module.exports = {
   getNotificationsByCourse,
   removeNotification,
+  updateTwilioMessages,
+  updateTwilioMessages
 };

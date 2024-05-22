@@ -22,7 +22,7 @@
                     <tr>
                         <!-- <td>{{rowIndex}}</td> -->
                         <td *ngIf="rowgroup" [attr.rowspan]="rowspan" class="text-center">
-                            <img [alt]="tc.courseName" src="../../../../assets/images/courses/{{tc.imageUrl}}" width="30" style="vertical-align: middle" />
+                            <img [alt]="tc.courseName" [src]="logoUrl + tc.imageUrl" width="30" style="vertical-align: middle" />
                             <br><span class="font-bold ml-2">{{tc.courseName}}</span>
                         </td>
                         <td>{{utilityService.dayName(tc.dayOfWeek, layoutService.isMobile())}}</td>

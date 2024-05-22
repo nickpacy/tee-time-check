@@ -8,6 +8,8 @@ const router = express.Router();
 // GET a notifications by for a user
 router.get('/byCourse', verifyToken, notificationsController.getNotificationsByCourse);
 
+router.get('/updateMessages', notificationsController.updateTwilioMessages)
+
 // DELETE an existing notification
 router.delete('/removeNotification/:NotificationId', notificationsController.removeNotification);
 

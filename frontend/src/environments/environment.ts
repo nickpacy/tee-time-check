@@ -4,7 +4,8 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5050'
+  apiUrl: 'http://localhost:5050',
+  logoUrl: 'https://d6l5cjqqn6ggt.cloudfront.net/logos/'
 };
 
 /*

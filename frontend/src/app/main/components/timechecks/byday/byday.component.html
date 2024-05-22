@@ -56,7 +56,7 @@
                             [listStyle]="{ 'max-height': '300px' }" styleClass="w-full mb-5" [multiple]="true" (onChange)="updateCourseActive($event)">
                         <ng-template let-course pTemplate="item">
                             <div class="flex align-items-center gap-2">
-                                <img [src]="'../../../../../assets/images/courses/' + course.ImageUrl" style="width: 18px"/>
+                                <img [src]="logoUrl + course.ImageUrl" style="width: 18px"/>
                                 <div>{{ course.CourseName }}</div>
                             </div>
                         </ng-template>
