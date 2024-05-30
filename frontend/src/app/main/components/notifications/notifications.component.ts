@@ -4,6 +4,8 @@ import { AuthService } from '../auth/auth.service';
 import { UtilityService } from '../../service/utility.service';
 import { DatePipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { MetricService } from '../../service/metric.service';
 
 @Component({
   selector: "app-notifications",
@@ -13,10 +15,13 @@ import { firstValueFrom } from 'rxjs';
 export class NotificationsComponent implements OnInit {
   USERID!: number;
   notifications: any[] = [];
+  monthlyCharges: any[] = [];
+  logoUrl: string = environment.logoUrl;
 
   constructor(
     private notificationService: NotificationsService,
     private authService: AuthService,
+    private metricService: MetricService,
     private datePipe: DatePipe,
     private utilService: UtilityService
   ) {}
@@ -24,6 +29,18 @@ export class NotificationsComponent implements OnInit {
   ngOnInit(): void {
     this.USERID = this.authService.getUserId();
     this.getNotifications();
+    this.getMonthlyCharges();
+  }
+
+  async getMonthlyCharges() {
+    this.monthlyCharges = await firstValueFrom(this.metricService.getMonthlyCharges());
+  }
+  getTotalMessages() {
+    return this.monthlyCharges.reduce((sum, charge) => sum + charge.totalMessages, 0);
+  }
+
+  getTotalCharges() {
+    return this.monthlyCharges.reduce((sum, charge) => sum + parseFloat(charge.totalCharges), 0).toFixed(5);
   }
 
   async getNotifications() {

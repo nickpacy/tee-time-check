@@ -26,6 +26,11 @@ export class MetricService {
     return this.http.get<any>(url, { params });
   }
 
+  getMonthlyCharges(): Observable<any> {
+    const url = `${this.apiUrl}/monthlyCharges`;
+    return this.http.get<any>(url);
+  }
+
   private formatDate(date: Date): string {
     return date.toISOString().split("T")[0];
   }

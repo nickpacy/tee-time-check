@@ -1,0 +1,62 @@
+<h2>
+    <span class="fa fa-map-location-dot" style="float: right;font-size: 2rem;margin-right: .5em;margin-left: 20px;"></span>
+    <p-button [routerLink]="['/courses']" icon="fa fa-arrow-left" label="Courses" styleClass="p-button-sm" [style]="{'float': 'right', 'margin-left': '20px'}"></p-button>
+    Add/Edit Course
+</h2>
+<hr>
+<div class="p-fluid" *ngIf="course">
+    <div class="p-field">
+        <label for="Method">Method</label>
+        <p-dropdown [options]="methods" optionValue="value" optionLabel="label" [(ngModel)]="course.Method" (onChange)="onMethodChange($event)"></p-dropdown>
+    </div>
+    <div class="p-field">
+      <label for="CourseName">Course Name</label>
+      <input id="CourseName" type="text" pInputText [(ngModel)]="course.CourseName">
+    </div>
+    <div class="p-field">
+        <label for="CourseAbbr">Course Abbreviation</label>
+        <input id="CourseAbbr" type="text" pInputText [(ngModel)]="course.CourseAbbr" [maxlength]="4" oninput="this.value = this.value.toUpperCase()">
+      </div>
+    <div class="p-field">
+      <label for="BookingClass">Booking Class</label>
+      <input id="BookingClass" type="number" pInputText [(ngModel)]="course.BookingClass">
+    </div>
+    <div class="p-field" *ngIf="showScheduleId">
+      <label for="ScheduleId">Schedule ID</label>
+      <input id="ScheduleId" type="number" pInputText [(ngModel)]="course.ScheduleId">
+    </div>
+    <div class="p-field" *ngIf="showBookingPrefix">
+      <label for="BookingPrefix">Booking Prefix</label>
+      <input id="BookingPrefix" type="text" pInputText [(ngModel)]="course.BookingPrefix">
+    </div>
+    <div class="p-field" *ngIf="showWebsiteId">
+      <label for="WebsiteId">WebsiteId</label>
+      <input id="WebsiteId" type="text" pInputText [(ngModel)]="course.WebsiteId">
+    </div>
+    <div class="p-field">
+      <label for="ImageUrl">Image URL</label>
+      <input id="ImageUrl" type="text" pInputText [(ngModel)]="course.ImageUrl">
+    </div>
+    <div class="p-field">
+        <label for="BookingUrl">Booking URL</label>
+        <input id="BookingUrl" type="text" pInputText [(ngModel)]="course.BookingUrl">
+      </div>
+
+    <div class="p-field">
+        <label for="CourseImage">Course Image</label>
+        <input id="CourseImage" type="text" pInputText [(ngModel)]="course.CourseImage">
+      </div>
+    <div class="p-field">
+      <label for="Latitude">Latitude</label>
+      <input id="Latitude" type="number" pInputText [(ngModel)]="course.Latitude" [step]=".000001">
+    </div>
+    <div class="p-field">
+      <label for="Longitude">Longitude</label>
+      <input id="Longitude" type="number" pInputText [(ngModel)]="course.Longitude" [step]=".000001">
+    </div>
+    <div class="p-field">
+        <label for="TimeZone">TimeZone</label>
+        <p-dropdown [options]="timezones" [(ngModel)]="course.TimeZone"></p-dropdown>
+      </div>
+    <button type="button" style="margin-top: 20px;" pButton icon="pi pi-check" label="Save" [disabled]="!isFormValid()" (click)="onSave()"></button>
+  </div>

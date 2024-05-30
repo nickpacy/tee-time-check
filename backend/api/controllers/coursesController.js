@@ -93,39 +93,97 @@ const getCourseById = async (req, res, next) => {
 
 // Create new course
 const createCourse = async (req, res, next) => {
-  const { CourseName, BookingClass, ScheduleId } = req.body;
+  const {
+    CourseName,
+    CourseAbbr,
+    BookingClass,
+    BookingPrefix,
+    ScheduleId,
+    Method,
+    CourseImage,
+    ImageUrl,
+    WebsiteId,
+    BookingUrl,
+    Latitude,
+    Longitude,
+    TimeZone
+  } = req.body;
   try {
     const result = await pool.query(
-      "INSERT INTO Courses (CourseName, BookingClass, ScheduleId) VALUES (?, ?, ?)",
-      [CourseName, BookingClass, ScheduleId]
+      "INSERT INTO Courses (CourseName, CourseAbbr, BookingClass, BookingPrefix, ScheduleId, Method, CourseImage, ImageUrl, WebsiteId, BookingUrl, Latitude, Longitude, TimeZone, Active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
+      [CourseName, CourseAbbr, BookingClass, BookingPrefix, ScheduleId, Method, CourseImage, ImageUrl, WebsiteId, BookingUrl, Latitude, Longitude, TimeZone]
     );
     const newCourseId = result.insertId;
-    res
-      .status(201)
-      .json({ CourseId: newCourseId, CourseName, BookingClass, ScheduleId });
+    res.status(201).json({
+      CourseId: newCourseId,
+      CourseName,
+      CourseAbbr,
+      BookingClass,
+      BookingPrefix,
+      ScheduleId,
+      Method,
+      CourseImage,
+      ImageUrl,
+      WebsiteId,
+      BookingUrl,
+      Latitude,
+      Longitude,
+      TimeZone
+    });
   } catch (error) {
     next(new DatabaseError("Error creating course", error));
   }
 };
 
+
 // Update existing course
 const updateCourse = async (req, res, next) => {
   const courseId = req.params.courseId;
-  const { CourseName, BookingClass, ScheduleId } = req.body;
+  const {
+    CourseName,
+    CourseAbbr,
+    BookingClass,
+    BookingPrefix,
+    ScheduleId,
+    Method,
+    CourseImage,
+    ImageUrl,
+    WebsiteId,
+    BookingUrl,
+    Latitude,
+    Longitude,
+    TimeZone
+  } = req.body;
   try {
     const result = await pool.query(
-      "UPDATE Courses SET CourseName = ?, BookingClass = ?, ScheduleId = ? WHERE CourseId = ?",
-      [CourseName, BookingClass, ScheduleId, courseId]
+      "UPDATE Courses SET CourseName = ?, CourseAbbr = ?, BookingClass = ?, BookingPrefix = ?, ScheduleId = ?, Method = ?, CourseImage = ?, ImageUrl = ?, WebsiteId = ?, BookingUrl = ?, Latitude = ?, Longitude = ?, TimeZone = ? WHERE CourseId = ?",
+      [CourseName, CourseAbbr, BookingClass, BookingPrefix, ScheduleId, Method, CourseImage, ImageUrl, WebsiteId, BookingUrl, Latitude, Longitude, TimeZone, courseId]
     );
     if (result.affectedRows === 0) {
       throw new NotFoundError("Course not found");
     } else {
-      res.json({ CourseId: courseId, CourseName, BookingClass, ScheduleId });
+      res.json({
+        CourseId: courseId,
+        CourseName,
+        CourseAbbr,
+        BookingClass,
+        BookingPrefix,
+        ScheduleId,
+        Method,
+        CourseImage,
+        ImageUrl,
+        WebsiteId,
+        BookingUrl,
+        Latitude,
+        Longitude,
+        TimeZone
+      });
     }
   } catch (error) {
     next(error);
   }
 };
+
 
 // Delete existing course
 const deleteCourse = async (req, res, next) => {

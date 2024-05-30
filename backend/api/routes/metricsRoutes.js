@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.get('/notificationsByCourse', verifyToken, metricsController.getNotificationsByCourse);
 router.get('/notificationsByCourseAndUser', metricsController.getTotalTeeTimesByCourseAndUser);
+router.get('/monthlyCharges', verifyToken, metricsController.getMonthlyCharges);
 
 
 module.exports = router;

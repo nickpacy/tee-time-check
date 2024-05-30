@@ -34,6 +34,7 @@ import { TeesheetComponent } from './main/components/teesheet/teesheet.component
 import { TeeTimeDetailComponent } from './main/components/teesheet/tee-time-detail/tee-time-detail.component';
 import { AddUserCoursesComponent } from './main/components/courses/add-user-courses/add-user-courses.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { AddCourseComponent } from './main/components/courses/add-course/add-course.component';
 
 
 @NgModule({
@@ -54,7 +55,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
         FriendsComponent,
         TeesheetComponent,
         TeeTimeDetailComponent,
-        AddUserCoursesComponent
+        AddUserCoursesComponent,
+        AddCourseComponent
     ],
     imports: [
         AppRoutingModule,

@@ -2,7 +2,8 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { Course, UserCourse } from '../../models/course.model';
 import { CourseService } from '../../service/course.service';
 import { LayoutService } from 'src/app/layout/service/app.layout.service';
-import { firstValueFrom } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, firstValueFrom } from 'rxjs';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: "app-courses",
@@ -12,12 +13,14 @@ import { firstValueFrom } from 'rxjs';
 export class CoursesComponent implements OnInit {
   @Output() refreshModal = new EventEmitter<void>();
 
+  isAdmin: boolean = false;
   courses: UserCourse[] = [];
   addCourseDialog: boolean = false;
 
   constructor(
     private courseService: CourseService,
-    public layoutService: LayoutService
+    public layoutService: LayoutService,
+    private authService: AuthService
   ) {}
 
   async ngOnInit() {
@@ -25,6 +28,10 @@ export class CoursesComponent implements OnInit {
     if (this.courses.length == 0) {
       this.addCourseDialog = true;
     }
+
+    this.authService.getUser().pipe(filter(user => user !== null), distinctUntilChanged(), debounceTime(100)).subscribe(loggedInUser => {
+      this.isAdmin = Boolean(loggedInUser.Admin);
+    });
   }
 
   async getUserCourses() {

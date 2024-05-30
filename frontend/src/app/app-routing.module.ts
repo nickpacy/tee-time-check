@@ -16,6 +16,7 @@ import { BydayComponent } from './main/components/timechecks/byday/byday.compone
 import { MetricsComponent } from './main/components/metrics/metrics.component';
 import { FriendsComponent } from './main/components/friends/friends.component';
 import { TeesheetComponent } from './main/components/teesheet/teesheet.component';
+import { AddCourseComponent } from './main/components/courses/add-course/add-course.component';
 
 @NgModule({
     imports: [
@@ -28,6 +29,7 @@ import { TeesheetComponent } from './main/components/teesheet/teesheet.component
                     { path: 'profile/:userId', component: ProfileComponent, canActivate: [AuthGuard] },
                     { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
                     { path: 'courses', component: CoursesComponent, canActivate: [AuthGuard] },
+                    { path: 'courses/:id', component: AddCourseComponent, canActivate: [AuthGuard] },
                     { path: 'calendar', component: CalendarComponent, canActivate: [AuthGuard] },
                     { path: 'notifications', component: NotificationsComponent, canActivate: [AuthGuard] },
                     { path: 'timechecks', component: TimechecksComponent, canActivate: [AuthGuard] },

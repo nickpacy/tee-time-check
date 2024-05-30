@@ -1,10 +1,10 @@
 <h2>
     <span class="fa fa-map-location-dot" style="float: right;font-size: 2rem;margin-right: .5em;margin-left: 20px;"></span>
-    <p-button (onClick)="addCourseDialog = true" icon="fa fa-plus" label="Add Courses" styleClass="p-button-sm" [style]="{'float': 'right'}"></p-button>
+    <p-button (onClick)="addCourseDialog = true" icon="fa fa-plus" label="Add Courses" styleClass="p-button-sm" [style]="{'float': 'right', 'margin-left': '20px'}"></p-button>
+    <p-button *ngIf="isAdmin" [routerLink]="['/courses', 0]" icon="fa fa-plus" label="Add New Course" styleClass="p-button-sm" [style]="{'float': 'right', 'margin-left': '20px'}"></p-button>
     Courses
 </h2>
 <hr>
-
 <p-table [value]="courses" styleClass="p-datatable-small" [rows]="20" responsiveLayout="scroll" [reorderableColumns]="true" (onRowReorder)="updateCourseOrder()">
     <ng-template pTemplate="header">
         <tr>
@@ -26,7 +26,8 @@
             <td *ngIf="!layoutService.isMobile()">
                 <span class="pi pi-bars" pReorderableRowHandle></span>
             </td>
-            <td>{{course.CourseName}}</td>
+            <td *ngIf="!isAdmin">{{course.CourseName}}</td>
+            <td *ngIf="isAdmin"><a [routerLink]="['/courses', course.CourseId]">{{course.CourseName}}</a></td>
             <td>{{course.CourseAbbr}}</td>
             <td><p-checkbox styleClass="p-checkbox-sm p-0" [(ngModel)]="course.Active" [binary]="true" (onChange)="updateCourseOrder()"></p-checkbox></td>
             <td><i class="fa fa-trash fa-cursor" style="color: red;" (click)="deleteUserCourse(course.CourseId)"></i></td>
