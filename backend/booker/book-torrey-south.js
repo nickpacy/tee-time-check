@@ -1,22 +1,29 @@
 const { Builder, By, Key, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const SunCalc = require('suncalc');
+const util = require('./utility');
 
 
 async function initializeDriver() {
+    // let chromeOptions = new chrome.Options();
+    // chromeOptions.addArguments('--window-size=1440x506', '--no-sandbox');
+    // chromeOptions.addArguments('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+    // let driver = await new Builder().forBrowser('chrome').setChromeOptions(chromeOptions).build();
+
     let driver = await new Builder().forBrowser('chrome').build();
     return driver;
 }
 
 async function loginUser(driver, email, password) {
-    await driver.get('https://foreupsoftware.com/index.php/booking/19347/1468#/login');
+    await driver.get('https://foreupsoftware.com/index.php/booking/19347/1467#/login');
     await driver.findElement(By.id('login_email')).sendKeys(email);
     await driver.findElement(By.id('login_password')).sendKeys(password, Key.RETURN);
     await driver.wait(until.elementLocated(By.id('reservations-tab')), 10000);
 }
 
 async function navigateToBookingPage(driver) {
-    await driver.get('https://foreupsoftware.com/index.php/booking/19347/1468#/teetimes');
+    await driver.get('https://foreupsoftware.com/index.php/booking/19347/1467#/teetimes');
     await driver.findElement(By.xpath("//button[contains(text(), 'Resident (0 - 7 Days)')]")).click();
     await driver.wait(until.elementLocated(By.id('date-field')), 10000);
 
@@ -180,18 +187,19 @@ function getMillisecondsUntil7PM() {
     const targetTime = new Date(now);
 
     // Set to 3am UTC which is 7pm PST
-    targetTime.setUTCHours(3, 0, 0, 0); 
+    targetTime.setUTCHours(2, 0, 0, 0); 
     
     // If it's already past 3am UTC (i.e., past 7pm PST), target the next day's 3am UTC.
     if (now > targetTime) {
         targetTime.setUTCDate(targetTime.getUTCDate() + 1);
     }
 
-    console.log(now);
-    console.log(targetTime);
-
     const delay = targetTime - now;
-    console.log(`Waiting until 7 PM. The delay is ${delay} milliseconds.`);
+    const delayInMinutes = Math.floor(delay / 60000); // Convert milliseconds to minutes
+    const remainingSeconds = Math.floor((delay % 60000) / 1000); // Get the remaining seconds after extracting minutes
+
+    console.log(`Waiting until 7 PM. The delay is ${delayInMinutes} minutes and ${remainingSeconds} seconds.`);
+
     // If the delay is more than 3 minutes (180,000 milliseconds), return 0
     // if (delay > 180000) {
     //     return 0;
@@ -213,7 +221,7 @@ function getMillisecondsUntil7PM() {
         console.log(sunsetTimeLocal);
 
         const lastTimeInMinutes = timeToMinutes(sunsetTimeLocal.getHours() + ':' + sunsetTimeLocal.getMinutes()) + 250;
-        let defaultStartTime = "5:00am";
+        let defaultStartTime = "3:00pm";
         let startTimeVariable = defaultStartTime;
 
         await selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes);
@@ -224,6 +232,3 @@ function getMillisecondsUntil7PM() {
         setTimeout(() => driver.quit(), 600000); //Quit after 5 minutes
     }
 })();
-
-
-// id="recaptcha-token"

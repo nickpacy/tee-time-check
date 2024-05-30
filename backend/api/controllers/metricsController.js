@@ -167,7 +167,43 @@ const getTotalTeeTimesByCourseAndUser = async (req, res, next) => {
   }
 };
 
+const getMonthlyCharges = async (req, res, next) => {
+  const userId = req.user.userId;
+
+  try {
+    // Use the TTC database and fetch monthly charges
+    let query = `
+      SELECT 
+          DATE_FORMAT(tm.dateSent, '%Y-%m') AS month,
+          COUNT(DISTINCT tm.sid) AS totalMessages,
+          SUM(tm.price) * -1 AS totalCharges
+      FROM twilio_messages tm
+      JOIN users u ON tm.toPhone = CONCAT('+1', u.Phone)
+      WHERE u.UserId = ?
+      GROUP BY month
+      ORDER BY month;
+    `;
+
+    // Execute the query
+    const results = await pool.query(query, [userId]);
+
+    // If no results, return an empty array
+    if (results.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    // Return the results as JSON
+    res.json(results);
+  } catch (error) {
+    // Handle any errors
+    next(new InternalError("Error getting monthly charges", error));
+  }
+};
+
+
 module.exports = {
   getNotificationsByCourse,
   getTotalTeeTimesByCourseAndUser,
+  getMonthlyCharges
 };

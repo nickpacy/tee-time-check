@@ -101,6 +101,7 @@ export class ProfileComponent implements OnInit {
 
     if (user.Latitude && user.Latitude) {
       const locData = await firstValueFrom(this.geolocationService.getReverseGeocodingData(user.Latitude, user.Longitude));
+      console.log(locData);
       user.Zip = locData.address.postcode;
     } else {
       const locData: any = await this.getLocation();
