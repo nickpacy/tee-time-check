@@ -45,13 +45,13 @@ export class UserByWeekComponent implements OnInit {
       series: data.series.map((seriesItem: any) => {
         return {
           data: seriesItem.data,
-          type: "area",
+          type: 'area',
           name: seriesItem.name,
         };
       }),
       plotOptions: {
         area: {
-          stacking: "normal",
+          stacking: 'normal',
         },
       },
       xAxis: {
@@ -59,19 +59,19 @@ export class UserByWeekComponent implements OnInit {
         labels: {
           formatter: function () {
             const date = new Date(this.value);
-            const month = ("0" + (date.getUTCMonth() + 1)).slice(-2);
-            const day = ("0" + date.getUTCDate()).slice(-2);
+            const month = ('0' + (date.getUTCMonth() + 1)).slice(-2);
+            const day = ('0' + date.getUTCDate()).slice(-2);
             return `${month}-${day}`;
           },
         },
       },
       yAxis: {
         title: {
-          text: this.layoutService.isMobile() ? "" : "Tee Time Count",
+          text: this.layoutService.isMobile() ? '' : 'Tee Time Count',
         },
       },
       title: {
-        text: "Tee Times Found By Course",
+        text: 'Tee Times Found By Course',
       },
     };
 
@@ -79,17 +79,5 @@ export class UserByWeekComponent implements OnInit {
     if (this.Highcharts.charts[0]) {
       this.Highcharts.charts[0].update(this.chartOptions, true, true);
     }
-  }
-
-  generateAllWeeksBetweenDates(startDate: Date, endDate: Date): string[] {
-    const weekDates: string[] = [];
-
-    while (startDate <= endDate) {
-      weekDates.push(startDate.toISOString());
-      // Increment by 7 days
-      startDate = new Date(startDate.setDate(startDate.getDate() + 7));
-    }
-
-    return weekDates;
   }
 }
