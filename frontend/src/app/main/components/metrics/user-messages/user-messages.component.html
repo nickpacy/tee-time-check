@@ -1,0 +1,36 @@
+<div class="card">
+    <h3>Total Twilio Charges By User</h3>
+    <p-table [value]="monthlyCharges">
+        <ng-template pTemplate="header">
+          <tr>
+            <th *ngFor="let col of cols">
+              {{ col.header }}
+            </th>
+            <th>Total</th> <!-- Total Column Header -->
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-rowData>
+          <tr>
+            <td *ngFor="let col of cols">
+                <ng-container *ngIf="col.field !== 'month'; else notCurrency">
+                    {{ rowData[col.field] | currency }}
+                  </ng-container>
+                  <ng-template #notCurrency>
+                    {{ rowData[col.field] }}
+                  </ng-template>
+            </td>
+            <td>{{ rowData.total | currency }}</td> <!-- Total Column Cell -->
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="footer">
+          <tr>
+            <td *ngFor="let col of cols">
+              {{ totalRow[col.field] | currency }}
+            </td>
+            <td>{{ totalRow.total | currency }}</td> <!-- Total of Totals -->
+          </tr>
+        </ng-template>
+      </p-table>
+      
+      
+</div>

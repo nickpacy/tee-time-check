@@ -1,155 +1,131 @@
 const pool = require("../database");
 const { InternalError } = require("../middlewares/errorTypes");
+
+
 const getNotificationsByCourse = async (req, res, next) => {
   const userId = req.user.userId;
-  const {weekLookback} = req.query || 12;
-  try {
-    // First, get the list of weeks
-    const weeksResults = await pool.query(
-      `
-            WITH RECURSIVE date_series AS (
-                SELECT MIN(DATE(STR_TO_DATE(CONCAT(YEAR(NotifiedDate), WEEK(NotifiedDate, 1), ' Sunday'), '%X%V %W'))) as date 
-                FROM notifications
-                WHERE UserId = ?
-                UNION ALL
-                SELECT DATE_ADD(date, INTERVAL 7 DAY) 
-                FROM date_series 
-                WHERE DATE_ADD(date, INTERVAL 7 DAY) <= (SELECT MAX(DATE(STR_TO_DATE(CONCAT(YEAR(NotifiedDate), WEEK(NotifiedDate, 1), ' Sunday'), '%X%V %W'))) FROM notifications WHERE UserId = ?)
-            )
-            SELECT date AS WeekStartDate 
-            FROM date_series
-            WHERE date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK);
-        `,
-      [userId, userId, weekLookback]
-    );
+  const weekLookback = req.query.weekLookback || 12;
 
-    // Then, get the notification counts by course and week
+  try {
+    // Get the notification counts by course and week
     const countsResults = await pool.query(
       `
-            SELECT 
-                CourseName,
-                DATE_FORMAT(STR_TO_DATE(CONCAT(YEAR(NotifiedDate), WEEK(NotifiedDate, 1), ' Sunday'), '%X%V %W'), '%Y-%m-%d') AS WeekStartDate,
-                COUNT(DISTINCT NotificationId) AS WeeklyNotificationCount
-            FROM notifications n
-            JOIN courses c ON n.CourseId = c.CourseId
-            WHERE UserId = ? AND NotifiedDate >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
-            GROUP BY CourseName, WeekStartDate
-            ORDER BY WeekStartDate, CourseName;
-        `,
+        SELECT 
+          c.CourseName,
+          DATE_FORMAT(STR_TO_DATE(CONCAT(YEAR(n.NotifiedDate), WEEK(n.NotifiedDate, 1), ' Sunday'), '%X%V %W'), '%Y-%m-%d') AS WeekStartDate,
+          COUNT(DISTINCT n.NotificationId) AS WeeklyNotificationCount
+        FROM 
+          notifications n
+        JOIN 
+          courses c ON n.CourseId = c.CourseId
+        WHERE 
+          n.UserId = ? AND n.NotifiedDate >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
+        GROUP BY 
+          c.CourseName, WeekStartDate
+        ORDER BY 
+          WeekStartDate, c.CourseName;
+      `,
       [userId, weekLookback]
     );
-    const weekList = weeksResults.map(
-      (week) => week.WeekStartDate.toISOString().split("T")[0]
-    );
 
-    // Process the results to format them for Highcharts
+    // Process the results to extract the week list and organize data for Highcharts
     let seriesData = {};
+    let weekSet = new Set();
+
     countsResults.forEach((record) => {
       if (!seriesData[record.CourseName]) {
-        seriesData[record.CourseName] = new Array(weekList.length).fill(0);
+        seriesData[record.CourseName] = {};
       }
-      const weekIndex = weekList.indexOf(record.WeekStartDate);
-      seriesData[record.CourseName][weekIndex] = record.WeeklyNotificationCount;
+
+      seriesData[record.CourseName][record.weekStartDate] = record.WeeklyNotificationCount;
+      weekSet.add(record.weekStartDate);
     });
 
-    // Convert the processed series data into the required format
+    // Convert the set of weeks to a sorted array
+    let weekList = Array.from(weekSet).sort();
+
+    // Format series data according to the sorted week list
     let finalSeries = [];
     for (let course in seriesData) {
+      let courseData = weekList.map((week) => seriesData[course][week] || 0);
       finalSeries.push({
         name: course,
-        data: seriesData[course],
+        data: courseData,
       });
     }
 
-    // Final dataset for Highcharts
     const data = {
       categories: weekList,
       series: finalSeries,
     };
+
     res.json(data);
   } catch (err) {
-    next(new InternalError("Error getting metrics", error));
+    next(new InternalError("Error getting metrics", err));
   }
 };
 
+
 const getTotalTeeTimesByCourseAndUser = async (req, res, next) => {
-    let { startDate, endDate } = req.query; // Extract dates from query parameters
+  let { startDate, endDate } = req.query; // Extract dates from query parameters
 
-    // Default to the past 30 days if dates are not provided
-    if (!startDate || !endDate) {
-        endDate = new Date(); // Current date
-        startDate = new Date();
-        startDate.setDate(startDate.getDate() - 30); // Set to 30 days ago
-        // Format dates to match the format expected by your database
-        startDate = startDate.toISOString().split('T')[0];
-        endDate = endDate.toISOString().split('T')[0];
-    }
+  // Default to the past 30 days if dates are not provided
+  if (!startDate || !endDate) {
+    endDate = new Date(); // Current date
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30); // Set to 30 days ago
 
+    // Format dates to match the format expected by your database
+    startDate = startDate.toISOString().split('T')[0];
+    endDate = endDate.toISOString().split('T')[0];
+  }
 
   try {
     const results = await pool.query(`
-            SELECT 
-                c.CourseName,
-                n.UserId,
-                u.Name,
-                COUNT(n.TeeTime) AS TotalTeeTimes
-            FROM 
-                notifications n
-            JOIN 
-                courses c ON n.CourseId = c.CourseId
-            JOIN 
-                users u ON n.UserId = u.UserId
-            WHERE 
-                n.NotifiedDate BETWEEN ? AND ?
-            GROUP BY 
-                c.CourseName, n.UserId, u.Name
-            ORDER BY 
-                TotalTeeTimes DESC, 
-                c.CourseName, 
-                n.UserId;
-        `, [startDate, endDate]);
-
-    // WHERE n.TeeTime >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+      SELECT 
+        c.CourseName,
+        n.UserId,
+        u.Name,
+        COUNT(n.TeeTime) AS TotalTeeTimes
+      FROM 
+        notifications n
+      JOIN 
+        courses c ON n.CourseId = c.CourseId
+      JOIN 
+        users u ON n.UserId = u.UserId
+      WHERE 
+        n.NotifiedDate BETWEEN ? AND ?
+      GROUP BY 
+        c.CourseName, n.UserId, u.Name
+      ORDER BY 
+        c.CourseName, 
+        u.Name;
+    `, [startDate, endDate]);
 
     // Process the results for the stacked bar chart
     let seriesData = {};
-    let courseTotals = {};
-    let courseNames = [];
-    let userNames = {}; // New object to map userId to userName
+    let courseNames = new Set();
+    let userNames = {};
 
     results.forEach((record) => {
-      courseTotals[record.CourseName] =
-        (courseTotals[record.CourseName] || 0) + record.TotalTeeTimes;
+      courseNames.add(record.CourseName);
 
       if (!seriesData[record.UserId]) {
-        seriesData[record.UserId] = [];
-        userNames[record.UserId] = record.Name; // Map userId to userName
+        seriesData[record.UserId] = {};
+        userNames[record.UserId] = record.Name;
       }
 
-      seriesData[record.UserId].push({
-        name: record.CourseName,
-        y: record.TotalTeeTimes,
-      });
+      seriesData[record.UserId][record.CourseName] = record.TotalTeeTimes;
     });
 
-    // Sort courses by total tee times
-    courseNames = Object.keys(courseTotals).sort(
-      (a, b) => courseTotals[b] - courseTotals[a]
-    );
+    courseNames = Array.from(courseNames).sort();
 
-    // Format series data according to sorted course names
-    let finalSeries = [];
-    for (let userId in seriesData) {
-      finalSeries.push({
-        name: userNames[userId], // Use userName instead of userId
-        data: courseNames.map((courseName) => {
-          const courseData = seriesData[userId].find(
-            (data) => data.name === courseName
-          );
-          return courseData ? courseData.y : 0;
-        }),
-      });
-    }
+    let finalSeries = Object.keys(seriesData).map(userId => {
+      return {
+        name: userNames[userId],
+        data: courseNames.map(courseName => seriesData[userId][courseName] || 0)
+      };
+    });
 
     const data = {
       categories: courseNames,
@@ -158,12 +134,7 @@ const getTotalTeeTimesByCourseAndUser = async (req, res, next) => {
 
     res.json(data);
   } catch (error) {
-    next(
-      new InternalError(
-        "Error getting total tee times by course and user",
-        error
-      )
-    );
+    next(new InternalError("Error getting total tee times by course and user", error));
   }
 };
 
@@ -201,9 +172,61 @@ const getMonthlyCharges = async (req, res, next) => {
   }
 };
 
+const getAllUsersMonthlyCharges = async (req, res, next) => {
+  try {
+    // Fetch distinct users who have messages
+    const usersQuery = `
+      SELECT DISTINCT u.UserId, u.Name
+      FROM users u
+      JOIN twilio_messages tm ON tm.toPhone = CONCAT('+1', u.Phone)
+    `;
+    const usersResults = await pool.query(usersQuery);
+
+    if (usersResults.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    // Create CASE statements for each user
+    const caseStatements = usersResults.map(user => {
+      return `SUM(CASE WHEN u.UserId = ${user.UserId} THEN tm.price * -1 ELSE 0 END) AS '${user.Name}'`;
+    }).join(', ');
+
+    // Construct the dynamic SQL query
+    const query = `
+      SELECT 
+          DATE_FORMAT(tm.dateSent, '%Y-%m') AS month,
+          ${caseStatements}
+      FROM twilio_messages tm
+      JOIN users u ON tm.toPhone = CONCAT('+1', u.Phone)
+      GROUP BY month
+      ORDER BY month;
+    `;
+
+    // Execute the query
+    const results = await pool.query(query);
+
+    // If no results, return an empty array
+    if (results.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    // Return the results as JSON
+    res.json(results);
+
+    console.log(results);
+  } catch (error) {
+    // Handle any errors
+    next(new InternalError("Error getting monthly charges", error));
+  }
+};
+
+
 
 module.exports = {
   getNotificationsByCourse,
   getTotalTeeTimesByCourseAndUser,
-  getMonthlyCharges
+  getMonthlyCharges,
+  getAllUsersMonthlyCharges
 };
