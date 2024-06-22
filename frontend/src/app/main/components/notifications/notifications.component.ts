@@ -101,6 +101,7 @@ export class NotificationsComponent implements OnInit {
       dateEntry.teeTimes.push({
         time: notification.TeeTime,
         notificationId: notification.NotificationId,
+        bookingUrl: notification.BookingUrl,
       });
     });
 

@@ -110,7 +110,7 @@ const createCourse = async (req, res, next) => {
   } = req.body;
   try {
     const result = await pool.query(
-      "INSERT INTO Courses (CourseName, CourseAbbr, BookingClass, BookingPrefix, ScheduleId, Method, CourseImage, ImageUrl, WebsiteId, BookingUrl, Latitude, Longitude, TimeZone, Active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
+      "INSERT INTO courses (CourseName, CourseAbbr, BookingClass, BookingPrefix, ScheduleId, Method, CourseImage, ImageUrl, WebsiteId, BookingUrl, Latitude, Longitude, TimeZone, Active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
       [CourseName, CourseAbbr, BookingClass, BookingPrefix, ScheduleId, Method, CourseImage, ImageUrl, WebsiteId, BookingUrl, Latitude, Longitude, TimeZone]
     );
     const newCourseId = result.insertId;
@@ -156,7 +156,7 @@ const updateCourse = async (req, res, next) => {
   } = req.body;
   try {
     const result = await pool.query(
-      "UPDATE Courses SET CourseName = ?, CourseAbbr = ?, BookingClass = ?, BookingPrefix = ?, ScheduleId = ?, Method = ?, CourseImage = ?, ImageUrl = ?, WebsiteId = ?, BookingUrl = ?, Latitude = ?, Longitude = ?, TimeZone = ? WHERE CourseId = ?",
+      "UPDATE courses SET CourseName = ?, CourseAbbr = ?, BookingClass = ?, BookingPrefix = ?, ScheduleId = ?, Method = ?, CourseImage = ?, ImageUrl = ?, WebsiteId = ?, BookingUrl = ?, Latitude = ?, Longitude = ?, TimeZone = ? WHERE CourseId = ?",
       [CourseName, CourseAbbr, BookingClass, BookingPrefix, ScheduleId, Method, CourseImage, ImageUrl, WebsiteId, BookingUrl, Latitude, Longitude, TimeZone, courseId]
     );
     if (result.affectedRows === 0) {

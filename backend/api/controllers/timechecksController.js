@@ -152,6 +152,7 @@ const getAllUsersActiveTimechecks = async (req, res, next) => {
       }
       usersMap[row.UserId].timechecks.push({
         timecheckId: row.Id,
+        userId: row.UserId,
         courseId: row.CourseId,
         courseName: row.CourseName,
         imageUrl: row.ImageUrl,
@@ -159,9 +160,11 @@ const getAllUsersActiveTimechecks = async (req, res, next) => {
         dayOfWeek: row.DayOfWeek,
         startTime: row.StartTime,
         endTime: row.EndTime,
-        numPlayers: row.NumPlayers
+        numPlayers: row.NumPlayers,
+        active: row.Active
       });    
     });
+
 
     // Converting the usersMap object into an array
     const usersArray = Object.values(usersMap);

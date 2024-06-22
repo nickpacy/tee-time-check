@@ -33,7 +33,7 @@
           <p-tag *ngFor="let tt of dates.teeTimes" severity="info" [rounded]="true" styleClass="m-1">
               <div class="flex align-items-center justify-content-between">
                 <!-- <i class="fa fa-clock px-2"></i> -->
-                <span style="width: 70px;" class="text-base pl-2">{{ tt.time | date: 'hh:mm a'}}</span>
+                <a [href]="tt.bookingUrl" target="_blank" style="width: 70px;text-decoration: none;color: black;" class="text-base pl-2">{{ tt.time | date: 'hh:mm a'}}</a>
                 <i class="fa fa-times-circle p-1" style="cursor: pointer;" (click)="removeNotification(course.courseId, dates.date, tt.notificationId)"></i>
               </div>
             </p-tag>

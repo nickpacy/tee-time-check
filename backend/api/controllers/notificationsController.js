@@ -14,21 +14,40 @@ const getNotificationsByCourse = async (req, res, next) => {
 
   try {
     // Fetch distinct courses and tee times for which user received notifications in the past 24 hours
-    let query = `
+     let query = `
           SELECT 
-              n.UserId, 
-              n.CourseId, 
-              c.CourseName, 
-              c.ImageUrl,
-              n.NotificationId,
-              n.TeeTime
+          n.UserId, 
+          n.CourseId, 
+          c.CourseName, 
+          c.ImageUrl,
+          n.NotificationId,
+          n.TeeTime,
+          n.NotifiedDate,
+          CASE 
+            WHEN c.Method = 'navy' THEN 
+              CONCAT(
+                'https://myffr.navyaims.com/navywest/wbwsc/navywest.wsc/search.html',
+                ':Action=Start&secondarycode=',
+                c.BookingClass,
+                '&numberofplayers=1&begindate=',
+                DATE_FORMAT(n.TeeTime, '%m/%d/%Y'),
+                '&begintime=05:00AM&numberofholes=18&reservee=&display=Listing&sort=Time&search=yes&page=1&module=GR&multiselectlist_value=&grwebsearch_buttonsearch=yes'
+              )
+            ELSE c.BookingUrl 
+          END AS BookingUrl
           FROM notifications n
           JOIN courses c ON n.CourseId = c.CourseId 
-          WHERE n.UserId = ?
-          AND n.NotifiedDate BETWEEN NOW() - INTERVAL 24 HOUR AND NOW()
-      `;
-
+          WHERE n.UserId = ? AND n.NotifiedDate BETWEEN NOW() - INTERVAL 24 HOUR AND NOW()
+          ORDER BY NotifiedDate DESC, CourseId ASC, TeeTime ASC;
+            `;
+            
     const results = await pool.query(query, [userId]);
+
+    results.forEach(result => {
+      if (result.BookingUrl && result.BookingUrl.includes(':Action')) {
+        result.BookingUrl = result.BookingUrl.replace(':Action', '?Action');
+      }
+    });
 
     if (results.length === 0) {
       res.json([]);
