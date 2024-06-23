@@ -216,7 +216,7 @@ function getMillisecondsUntil7PM() {
         console.log(sunsetTimeLocal);
 
         const lastTimeInMinutes = timeToMinutes(sunsetTimeLocal.getHours() + ':' + sunsetTimeLocal.getMinutes()) + 250;
-        let defaultStartTime = "2:00pm";
+        let defaultStartTime = "3:05pm";
         let startTimeVariable = defaultStartTime;
 
         await selectTimeSlot(driver, startTimeVariable, lastTimeInMinutes);

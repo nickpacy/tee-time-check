@@ -330,6 +330,68 @@ const setTimecheckInactive = async (req, res, next) => {
   }
 };
 
+const getTimecheckSummary = async (req, res, next) => {
+  try {
+    // Define the days of the week
+    const daysOfWeek = [
+      { id: 1, name: 'Monday', shortName: 'Mon' },
+      { id: 2, name: 'Tuesday', shortName: 'Tue' },
+      { id: 3, name: 'Wednesday', shortName: 'Wed' },
+      { id: 4, name: 'Thursday', shortName: 'Thu' },
+      { id: 5, name: 'Friday', shortName: 'Fri' },
+      { id: 6, name: 'Saturday', shortName: 'Sat' },
+      { id: 0, name: 'Sunday', shortName: 'Sun' },
+    ];
+
+    // Query to get the summary of timechecks
+    const query = `
+      SELECT 
+        t.CourseId,
+        c.CourseName,
+        COUNT(CASE WHEN t.DayOfWeek = 0 THEN 1 END) AS Sunday,
+        COUNT(CASE WHEN t.DayOfWeek = 1 THEN 1 END) AS Monday,
+        COUNT(CASE WHEN t.DayOfWeek = 2 THEN 1 END) AS Tuesday,
+        COUNT(CASE WHEN t.DayOfWeek = 3 THEN 1 END) AS Wednesday,
+        COUNT(CASE WHEN t.DayOfWeek = 4 THEN 1 END) AS Thursday,
+        COUNT(CASE WHEN t.DayOfWeek = 5 THEN 1 END) AS Friday,
+        COUNT(CASE WHEN t.DayOfWeek = 6 THEN 1 END) AS Saturday,
+        COUNT(*) AS Total
+      FROM 
+        timechecks t
+      JOIN
+        courses c ON t.CourseId = c.CourseId
+      WHERE 
+        t.Active = 1
+      GROUP BY 
+        t.CourseId, c.CourseName
+      ORDER BY 
+        Total DESC, c.CourseName;
+    `;
+
+    // Execute the query
+    const results = await pool.query(query);
+
+    // Format the result to match the expected structure
+    const formattedResults = results.map(row => ({
+      courseId: row.CourseId,
+      courseName: row.CourseName,
+      monday: row.Monday,
+      tuesday: row.Tuesday,
+      wednesday: row.Wednesday,
+      thursday: row.Thursday,
+      friday: row.Friday,
+      saturday: row.Saturday,
+      sunday: row.Sunday,
+      total: row.Total,
+    }));
+
+    // Send the result back to the client
+    res.json(formattedResults);
+  } catch (error) {
+    next(new InternalError("Error getting timecheck summary.", error));
+  }
+};
+
 module.exports = {
     getTimechecks,
     getTimecheckById,
@@ -344,5 +406,6 @@ module.exports = {
     getTimechecksByCourse,
     getTimechecksByDayofWeek,
     resetTimechecks,
-    setTimecheckInactive
+    setTimecheckInactive,
+    getTimecheckSummary
   };

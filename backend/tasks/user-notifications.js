@@ -169,7 +169,8 @@ const sendPushNotitification = async (teeTimesByUser) => {
 
             let note = new apn.Notification();
             if (teeTimes.length == 1) {
-                note.alert = `${formatDate(teeTimes[0].teeTime)} @ ${teeTimes[0].courseName} for ${teeTimes[0].available_spots} `;
+                note.alert = `${moment(teeTimes[0].teeTime).format("ddd M/D h:mm A")} @ ${teeTimes[0].courseName} for ${teeTimes[0].available_spots} `;
+                // note.alert = `${formatDate(teeTimes[0].teeTime)} @ ${teeTimes[0].courseName} for ${teeTimes[0].available_spots} `;
                 note.payload = {'targetURL': teeTimes[0].bookingLink};
             } else {
                 note.alert = `${teeTimes.length} Tee Times Found. Click to View`;
@@ -203,25 +204,25 @@ const sendPushNotitification = async (teeTimesByUser) => {
     
 }
 
-const formatDate = (teeTime) => {
-    // Format the tee time in the user's local time zone
-    const options = {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        timeZone: "America/Los_Angeles", // Specify the desired time zone
-    };
-    const teeTimeDate = moment
-        .tz(teeTime, "America/Los_Angeles")
-        .toDate();
-    const localTime = teeTimeDate.toLocaleString("en-US", options);
+// const formatDate = (teeTime) => {
+//     // Format the tee time in the user's local time zone
+//     const options = {
+//         weekday: "short",
+//         year: "numeric",
+//         month: "short",
+//         day: "numeric",
+//         hour: "numeric",
+//         minute: "numeric",
+//         hour12: true,
+//         timeZone: "America/Los_Angeles", // Specify the desired time zone
+//     };
+//     const teeTimeDate = moment
+//         .tz(teeTime, "America/Los_Angeles")
+//         .toDate();
+//     const localTime = teeTimeDate.toLocaleString("en-US", options);
 
-    return localTime;
-}
+//     return localTime;
+// }
 
 
 

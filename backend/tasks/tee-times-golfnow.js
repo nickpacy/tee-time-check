@@ -48,8 +48,8 @@ async function getTeeTimes(bookingClass, dayOfWeek, numPlayers) {
         }
       });
 
-      const filteredTimes = formattedData.filter(({ available_spots }) => available_spots >= numPlayers);
-      return filteredTimes;
+      // const filteredTimes = formattedData.filter(({ available_spots }) => available_spots >= numPlayers);
+      return formattedData;
     } else {
         console.error(`Error retrieving tee times. Status code: ${response}`);
         return []; // Return an empty array in case of an error
