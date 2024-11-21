@@ -132,3 +132,4 @@ dist
 
 # Ignore lambda files
 *lambda*.zip
+backend/manual-tasks/AuthKey_NPDRS4SRCS.p8

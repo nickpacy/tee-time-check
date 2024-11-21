@@ -1,32 +1,67 @@
-const { chromium } = require('playwright-core');
 const playwrightAWS = require('playwright-aws-lambda');
 const mysql = require("mysql2/promise");
 const dotenv = require("dotenv");
 const util = require('./utility');
 
-
 // Load environment variables from .env file
 dotenv.config();
 
-
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function initializeBrowser() {
+    const headlessMode = process.env.HEADLESS_MODE === 'true';
     try {
-        const browser = await chromium.launch({
+        console.log('Launching browser with headless mode:', headlessMode);
+        const browser = await playwrightAWS.launchChromium({
             args: [
-                '--no-sandbox',
-                '--disable-gpu',
-                '--disable-dev-shm-usage',
-                '--disable-setuid-sandbox'
+                 "--autoplay-policy=user-gesture-required",
+                  "--disable-background-networking",
+                  "--disable-background-timer-throttling",
+                  "--disable-backgrounding-occluded-windows",
+                  "--disable-breakpad",
+                  "--disable-client-side-phishing-detection",
+                  "--disable-component-update",
+                  "--disable-default-apps",
+                  "--disable-dev-shm-usage",
+                  "--disable-domain-reliability",
+                  "--disable-extensions",
+                  "--disable-features=AudioServiceOutOfProcess",
+                  "--disable-hang-monitor",
+                  "--disable-ipc-flooding-protection",
+                  "--disable-notifications",
+                  "--disable-offer-store-unmasked-wallet-cards",
+                  "--disable-popup-blocking",
+                  "--disable-print-preview",
+                  "--disable-prompt-on-repost",
+                  "--disable-renderer-backgrounding",
+                  "--disable-setuid-sandbox",
+                  "--disable-speech-api",
+                  "--disable-sync",
+                  "--disk-cache-size=33554432",
+                  "--hide-scrollbars",
+                  "--ignore-gpu-blacklist",
+                  "--metrics-recording-only",
+                  "--mute-audio",
+                  "--no-default-browser-check",
+                  "--no-first-run",
+                  "--no-pings",
+                  "--no-sandbox",
+                  "--no-zygote",
+                  "--password-store=basic",
+                  "--use-gl=swiftshader",
+                  "--use-mock-keychain",
+                  "--single-process",
             ],
-            headless: false // this can be controlled based on your environment
+            headless: headlessMode
         });
+        console.log('Browser launched successfully');
         return browser;
     } catch (error) {
-        console.error('Puppeteer error:', error);
-        process.exit(0);
+        console.error('Playwright error:', error);
+        throw error;
     }
-    
 }
 
 async function initializeDatabase() {
@@ -50,7 +85,7 @@ async function getUserLogin(userId) {
     let password = "";
 
     try {
-        query = "SELECT SettingKey, SettingValue FROM user_settings WHERE UserId = ? AND SettingKey LIKE '%TorreyPinesLogin%';";
+        const query = "SELECT SettingKey, SettingValue FROM user_settings WHERE UserId = ? AND SettingKey LIKE '%TorreyPinesLogin%';";
         const [results] = await connection.execute(query, [userId]);
         for (const entry of results) {
             if (entry.SettingKey === 'TorreyPinesLoginEmail') {
@@ -68,8 +103,14 @@ async function getUserLogin(userId) {
 }
 
 async function loginUser(page, email, password, link) {
+    
     // Navigate to the page and wait until network is idle
-    await page.goto(link, { waitUntil: 'networkidle' });
+    try {
+        await page.goto(link, { waitUntil: 'networkidle', timeout: 120000 });
+    } catch (navigationError) {
+        console.error('Navigation error:', navigationError);
+        throw navigationError;
+    }
 
     // Wait for the email input field to be available
     await page.waitForSelector('#login_email', { timeout: 1000 });
@@ -126,7 +167,7 @@ async function setDateForTeeTime(page, date) {
     // Type the new date into the input field
     await page.type('#date-field', date);
 
-    // Press 'Enter' to possibly submit the date or close the date picker
+    // Press 'Enter' to submit the date
     await page.keyboard.press('Enter');
 }
 
@@ -179,9 +220,10 @@ async function selectTimeSlot(page, startTimeVariable) {
             await page.waitForSelector('.booking-start-time-label', { timeout: 3000 }); // waits up to 3 seconds
             const times = await page.$$('.booking-start-time-label');
             let anyTimeAfterStartTime = false;
+            var displayedTime
 
             for (let timeElement of times) {
-                let displayedTime = await page.evaluate(el => el.innerText, timeElement);
+                displayedTime = await page.evaluate(el => el.innerText, timeElement);
                 let displayedTimeInMinutes = await timeToMinutes(displayedTime);
                 
                 if (displayedTimeInMinutes === await timeToMinutes(startTimeVariable)) {
@@ -202,7 +244,9 @@ async function selectTimeSlot(page, startTimeVariable) {
                 // Try to click the book time button
                 let bookTimeButton = await page.$('button.btn.btn-success.js-book-button.pull-left');
                 if (bookTimeButton) {
-                    console.log("SIMULATE BOOKING");
+
+                    await delay(5000);
+                    console.log("SIMULATE BOOKING", displayedTime);
                     // Uncomment the next line in production to perform the click
                     // await bookTimeButton.click();
                 }
@@ -238,8 +282,6 @@ async function selectTimeSlot(page, startTimeVariable) {
 
 }
 
-
-
 function timeToMinutes(time) {
     let [hours, minutes] = time.split(':');
     let period = time.includes('pm') && hours !== '12' ? 'pm' : 'am';
@@ -261,14 +303,18 @@ const loginToBooker = async (teeTimeData) => {
     }
 
     // let browser = await initializeBrowser();
-    let browser = null;
-    browser = await playwrightAWS.launchChromium();
+    const browser = await initializeBrowser();
+    console.log('Creating new browser context');
     const context = await browser.newContext();
-    let page = await browser.newPage();
-    // await page.setViewportSize({width: 1440,height: 1024});
+    console.log('Creating new page');
+    await delay(5000);
+    const page = await context.newPage();
+    console.log('New page created successfully');
+    //await page.setViewportSize({width: 1156,height: 861});
 
     try {
         console.log("Attempting to login...");
+        await delay(5000);
         await loginUser(page, email, password, teeTimeData.bookingLink);
         console.log("Attempting to navigate...");
         await navigateToBookingPage(page, teeTimeData.bookingLink, teeTimeData.date);
@@ -277,15 +323,15 @@ const loginToBooker = async (teeTimeData) => {
         console.log("Everything has completed");
     } catch (error) {
         console.error("An error occurred:", error);
+        if (browser) {
+            await browser.close();
+        }
+        throw error;
     } finally {
-        console.log("Function Completed");
-        setTimeout(() =>  {
-            browser.close().then(() => {
-                process.exit(0);
-            });
-        }, 5000);
-        // await browser.close();
-        // process.exit(0);
+        console.log("Cleaning up resources...");
+        if (browser) {
+            await browser.close();
+        }
     }
 };
 
