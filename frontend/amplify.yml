@@ -6,7 +6,15 @@ frontend:
         - npm ci
     build:
       commands:
-        - if [ "$AWS_BRANCH" = "main" ]; then npm run build -- --configuration=production; else npm run build -- --configuration=dev; fi
+        - echo "Building branch: $AWS_BRANCH"
+        - |
+          if [[ "$AWS_BRANCH" == "main" ]]; then
+            echo "Running production build"
+            npm run build -- --configuration=production
+          else
+            echo "Running dev build"
+            npm run build -- --configuration=dev
+          fi
   artifacts:
     baseDirectory: dist/algotee
     files:
