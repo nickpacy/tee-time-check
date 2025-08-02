@@ -1,10 +1,10 @@
 const pool = require("../database");
 const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
-const sgMail = require("@sendgrid/mail");
 const fs = require("fs").promises;
 const crypto = require("crypto");
 const escapeHtml = require("escape-html");
+const { Resend } = require('resend');
 const { InternalError, ConflictError } = require("../middlewares/errorTypes"); // Import the custom error classes
 
 dotenv.config();
@@ -57,7 +57,7 @@ const setAndSendPassword = async (user, mailOptions, next) => {
 
     // Send the Email
     const info = await sendMail(mailer);
-    console.log(`Email sent to ${mailer.to}`);
+    // console.log(`Email sent to ${mailer.to}`);
   } catch (error) {
     if (error.code && error.code === "ER_DUP_ENTRY") {
       next(new ConflictError("Duplicate entry found in database", error));
@@ -74,13 +74,13 @@ const setAndSendPassword = async (user, mailOptions, next) => {
 
 const sendMail = async (mail, next) => {
   try {
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    const resend = new Resend(process.env.RESEND_API_KEY)
 
-    const result = await sgMail.send({
+    const result = await resend.emails.send({
       from: mail.from,
       to: mail.to,
       subject: mail.subject,
-      html: mail.html,
+      html: mail.html
     });
 
     return result; // Return the result object on successful email send
@@ -89,6 +89,28 @@ const sendMail = async (mail, next) => {
   }
 };
 
+const sendTestEmail = async (req, res, next) => {
+  try {
+    const testMail = {
+      from: 'YourApp <nick@algotee.com>', // replace with verified domain when live
+      to: 'nickpacy@gmail.com', // put your test recipient email here
+      subject: 'Test Email from Resend Integration',
+      html: '<p>This is a <strong>test email</strong> sent using Resend.</p>'
+    };
+
+    const result = await sendMail(testMail, next);
+
+    if (result?.error) {
+      return res.status(500).json({ error: result.error });
+    }
+
+    return res.status(200).json({ message: 'Test email sent successfully!', data: result.data });
+  } catch (error) {
+    next(new InternalError("Error sending test email", error));
+  }
+};
+
 module.exports = {
   setAndSendPassword,
+  sendTestEmail
 };

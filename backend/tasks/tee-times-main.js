@@ -222,7 +222,7 @@ const sendNotifications = async (teeTimesByUser) => {
   if (Object.keys(teeTimesByUser).length > 0) {
     try {
       await Promise.all([
-        notificationsFunction.sendPushNotitification(teeTimesByUser),
+        notificationsFunction.sendPushNotification(teeTimesByUser),
         notificationsFunction.sendSMS(teeTimesByUser),
         notificationsFunction.sendEmails(teeTimesByUser)
       ]);

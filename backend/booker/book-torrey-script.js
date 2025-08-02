@@ -40,7 +40,7 @@ async function inputOneWeekFromNowInPDT(driver) {
     const [month, day, year] = dateInPDT.split('/');
 
     const formattedDate = `${month.padStart(2, '0')}-${day.padStart(2, '0')}-${year}`;
-    // console.log("formatted date", formattedDate);
+    console.log("Looking for Tee Times for: ", formattedDate);
 
     // Find the input element and input the formatted date
     let dateField = await driver.findElement(By.xpath("//input[@id='date-field']"));

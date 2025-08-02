@@ -1,7 +1,7 @@
 const axios = require('axios');
 const dotenv = require("dotenv"); 
 const util = require('./utility');
-const sgMail = require("@sendgrid/mail");
+const { Resend } = require('resend');
 
 dotenv.config();
 
@@ -38,7 +38,7 @@ async function getTeeTimes(bookingClass, dayOfWeek, numPlayers, scheduleId, pool
       if (await shouldSendEmail(pool)) {
         try {
           const mailOptions = {
-            from: "Reset Bearer <info@teetimecheck.com>", // Sender's email address
+            from: "Reset Bearer <info@algotee.com>", // Sender's email address
             to: "nickpacy@gmail.com",
             subject: "Reset Bearer Token",
             html: "<p>You need to reset the ForeUp token for Algoteé</p>"
@@ -60,13 +60,13 @@ async function getTeeTimes(bookingClass, dayOfWeek, numPlayers, scheduleId, pool
 
 const sendMail = async (mail) => {
   try {
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    const resend = new Resend(process.env.RESEND_API_KEY)
 
-    const result = await sgMail.send({
+    const result = await resend.emails.send({
       from: mail.from,
       to: mail.to,
       subject: mail.subject,
-      html: mail.html,
+      html: mail.html
     });
 
     return result; // Return the result object on successful email send
@@ -75,6 +75,8 @@ const sendMail = async (mail) => {
     throw err; // Rethrow the error to be caught by the caller or handle it accordingly
   }
 };
+
+
 
 async function shouldSendEmail(pool) {
   const today = new Date().toISOString().split('T')[0]; // Format today's date as YYYY-MM-DD

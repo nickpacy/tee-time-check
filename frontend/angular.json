@@ -134,7 +134,6 @@
       }
     }
   },
-  "defaultProject": "algotee",
   "cli": {
     "analytics": false,
     "schematicCollections": [

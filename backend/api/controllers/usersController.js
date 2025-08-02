@@ -111,14 +111,14 @@ const createUser = async (req, res, next) => {
     const rows = await pool.query("SELECT * FROM users WHERE UserId = ?", [
       newUserId,
     ]);
-    console.log(rows);
+    // console.log(rows);
     const user = rows[0];
-    console.log(user);
+    // console.log(user);
 
     const mailOptions = {
-      from: '"Welcome" <donotreply@teetimecheck.com>',
+      from: '"Welcome" <donotreply@algotee.com>',
       to: user.Email,
-      subject: "Welcome - Tee Time Check",
+      subject: "Welcome - Algoteé",
       template: "welcome.html",
     };
     await email.setAndSendPassword(user, mailOptions);

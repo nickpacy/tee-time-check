@@ -1,5 +1,6 @@
 const express = require('express');
 const notificationsController = require('../controllers/notificationsController');
+const emailController = require('../controllers/emailController');
 const verifyToken = require('../middlewares/authMiddleware');
 
 const router = express.Router();
@@ -9,6 +10,8 @@ const router = express.Router();
 router.get('/byCourse', verifyToken, notificationsController.getNotificationsByCourse);
 
 router.get('/updateMessages', notificationsController.updateTwilioMessages)
+
+router.get('/testemail', emailController.sendTestEmail);
 
 // DELETE an existing notification
 router.delete('/removeNotification/:NotificationId', notificationsController.removeNotification);
