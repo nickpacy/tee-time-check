@@ -5,13 +5,15 @@ applications:
       phases:
         preBuild:
           commands:
+            - node --version
+            - npm --version
             - npm ci
         build:
           commands:
             - echo "Building branch: $AWS_BRANCH"
-            - bash -c "if [ \"$AWS_BRANCH\" = \"main\" ]; then npm run build -- --configuration=production; else npm run build -- --configuration=dev; fi"
+            - if [ "$AWS_BRANCH" = "main" ]; then npm run build -- --configuration=production; else npm run build -- --configuration=dev; fi
       artifacts:
-        baseDirectory: dist/algotee
+        baseDirectory: dist
         files:
           - '**/*'
       cache:
