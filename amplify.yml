@@ -11,7 +11,7 @@ applications:
         build:
           commands:
             - echo "Building branch: $AWS_BRANCH"
-            - if [ "$AWS_BRANCH" = "main" ]; then npm run build -- --configuration=production; else npm run build -- --configuration=dev; fi
+            - 'if [ "$AWS_BRANCH" = "main" ]; then npm run build -- --configuration=production; else npm run build -- --configuration=dev; fi'
       artifacts:
         baseDirectory: dist
         files:
