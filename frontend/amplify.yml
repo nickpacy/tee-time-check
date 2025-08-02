@@ -1,25 +1,22 @@
 version: 1
-applications:
-  - appRoot: frontend
-    app:
-      frontend:
-        phases:
-          preBuild:
-            commands:
-              - npm ci
-          build:
-            commands:
-              - echo "Building branch: $AWS_BRANCH"
-              - |
-                if [[ "$AWS_BRANCH" == "main" ]]; then
-                  npm run build -- --configuration=production
-                else
-                  npm run build -- --configuration=dev
-                fi
-        artifacts:
-          baseDirectory: dist/algotee
-          files:
-            - '**/*'
-        cache:
-          paths:
-            - node_modules/**/*
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - echo "Building branch: $AWS_BRANCH"
+        - |
+          if [[ "$AWS_BRANCH" == "main" ]]; then
+            npm run build -- --configuration=production
+          else
+            npm run build -- --configuration=dev
+          fi
+  artifacts:
+    baseDirectory: dist/algotee
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
