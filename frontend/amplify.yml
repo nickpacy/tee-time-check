@@ -9,12 +9,7 @@ applications:
         build:
           commands:
             - echo "Building branch: $AWS_BRANCH"
-            - >
-              bash -c "if [[ \"$AWS_BRANCH\" == \"main\" ]]; then
-                npm run build -- --configuration=production;
-              else
-                npm run build -- --configuration=dev;
-              fi"
+            - bash -c "if [[ \"$AWS_BRANCH\" == \"main\" ]]; then npm run build -- --configuration=production; else npm run build -- --configuration=dev; fi"
       artifacts:
         baseDirectory: dist/algotee
         files:
