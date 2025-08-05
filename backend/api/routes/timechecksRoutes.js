@@ -10,6 +10,7 @@ router.get('/allUsersActiveTimechecks', timechecksController.getAllUsersActiveTi
 router.post('/', timechecksController.createTimecheck);
 router.post('/bulk-update', timechecksController.updateBulkTimechecks);
 router.put('/inactive', timechecksController.setTimecheckInactive);
+router.get('/timecheckSummary', timechecksController.getTimecheckSummary);
 
 // Middleware-protected routes
 router.get('/timechecksByUserId', verifyToken, timechecksController.getTimechecksByUserId);

@@ -157,7 +157,7 @@ const forgotPassword = async (req, res, next) => {
 
     const user = results[0];
     const mailOptions = {
-      from: '"Password Reset" <donotreply@teetimecheck.com>',
+      from: '"Password Reset" <donotreply@algotee.com>',
       to: Email,
       subject: "Forgot Password - Tee Time Check",
       template: "forgotPassword.html",

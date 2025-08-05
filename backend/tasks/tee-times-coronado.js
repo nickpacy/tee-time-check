@@ -24,9 +24,9 @@ async function getTeeTimes(bookingClass, dayOfWeek, numPlayers) {
       };
     });
 
-    const filteredTimes = teeTimes.filter(({ available_spots }) => available_spots >= numPlayers);
+    // const filteredTimes = teeTimes.filter(({ available_spots }) => available_spots >= numPlayers);
     
-    return filteredTimes;
+    return teeTimes;
   } catch (error) {
     console.error(error);
     return []; // Return an empty array in case of an error

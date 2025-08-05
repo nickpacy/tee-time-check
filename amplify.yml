@@ -1,0 +1,18 @@
+version: 1
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+        build:
+          commands:
+            - 'if [ "$AWS_BRANCH" = "main" ]; then npm run build -- --configuration=production; else npm run build -- --configuration=dev; fi'
+      artifacts:
+        baseDirectory: dist/algotee
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+    appRoot: frontend

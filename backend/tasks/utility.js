@@ -4,8 +4,8 @@ const crypto = require("crypto");
 const ENCRYPTION_KEY = crypto.scryptSync('AlgoteeEncyrpt', 'andthesaltis', 32); // change 'Your Super Secret Passphrase' and 'salt'
 const IV_LENGTH = 16; // For AES, this is always 16
 
-const getClosestDayOfWeek = (dayOfWeek, dateFormat = 'MM-DD-YYYY') => {
-  const currentDate = moment().tz('America/Los_Angeles');
+const getClosestDayOfWeek = (dayOfWeek, dateFormat = 'MM-DD-YYYY', timeZone = 'America/Los_Angeles') => {
+  const currentDate = moment().tz(timeZone);
 
   let closestDayOfWeek = currentDate.clone().isoWeekday(dayOfWeek);
 
@@ -19,6 +19,23 @@ const getClosestDayOfWeek = (dayOfWeek, dateFormat = 'MM-DD-YYYY') => {
   }
 
   return closestDayOfWeek.format(dateFormat);
+};
+
+// Format start and end times based on timezone
+const formatTimesForTimezone = (startTime, endTime, timeZone) => {
+  const formattedStartTime = moment.utc(startTime, "HH:mm:ss").clone().tz(timeZone).format("HH:mm:ss");
+  const formattedEndTime = moment.utc(endTime, "HH:mm:ss").clone().tz(timeZone).format("HH:mm:ss");
+  return [formattedStartTime, formattedEndTime];
+};
+
+// Format tee time dates
+const getTeeTimeDateRange = (closestDate, formattedStartTime, formattedEndTime) => {
+  const teeTimeStartDate = moment(`${closestDate} ${formattedStartTime}`, "MM-DD-YYYY HH:mm:ss").format("YYYY-MM-DD HH:mm");
+  let teeTimeEndDate = moment(`${closestDate} ${formattedEndTime}`, "MM-DD-YYYY HH:mm:ss").format("YYYY-MM-DD HH:mm");
+  if (moment(teeTimeEndDate).isBefore(teeTimeStartDate)) {
+    teeTimeEndDate = moment(teeTimeEndDate).add(1, "day").format("YYYY-MM-DD HH:mm");
+  }
+  return [teeTimeStartDate, teeTimeEndDate];
 };
 
 function encrypt(text) {
@@ -44,6 +61,8 @@ function decrypt(text) {
 
 module.exports = {
     getClosestDayOfWeek,
+    formatTimesForTimezone,
+    getTeeTimeDateRange,
     encrypt,
     decrypt
 };

@@ -1,9 +1,11 @@
 const dotenv = require("dotenv"); // Environment variable management library
 const moment = require("moment-timezone"); // Date and time manipulation library
+const f = require("fs");
 const fs = require('fs').promises; // Import the fs module
 const twilio = require("twilio");
-const sgMail = require("@sendgrid/mail");
-const apn = require('apn');
+const { ApnsClient, Notification } = require('apns2');
+const { Resend } = require('resend');
+const { convert } = require("html-to-text");
 
 
 
@@ -15,17 +17,6 @@ const smsClient = new twilio(
   process.env.TWILIO_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
-
-// Setup auth key for iOS Push notifications
-let options = {
-    token: {
-        key: "AuthKey_NPDRS4SRCS.p8",
-        keyId: "NPDRS4SRCS",
-        teamId: "RFHPD79HMY"
-    },
-    production: true
-};
-let apnProvider = new apn.Provider(options);
 
 // Send emails with tee time notifications
 const sendEmails = async (teeTimesByUser) => {
@@ -74,6 +65,7 @@ const sendEmails = async (teeTimesByUser) => {
         to: email, // Recipient's email address
         subject: "Tee Time Alert",
         html: htmlBody,
+        text: convert(htmlBody)
       };
 
       try {
@@ -92,13 +84,13 @@ const sendEmails = async (teeTimesByUser) => {
 // Actually send the email
 const sendMail = async (mail) => {
   try {
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-    const result = await sgMail.send({
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    
+    const result = await resend.emails.send({
       from: mail.from,
       to: mail.to,
       subject: mail.subject,
-      html: mail.html,
+      html: mail.html
     });
 
     return result; // Return the result object on successful email send
@@ -159,75 +151,90 @@ const sendSMS = async (teeTimesByUser) => {
 };
 
 
-const sendPushNotitification = async (teeTimesByUser) => {
-    if (Object.keys(teeTimesByUser).length > 0) {
-        // Send an email to each user with their list of tee times
-        for (const [userId, teeTimes] of Object.entries(teeTimesByUser)) {
-          const deviceToken = teeTimes[0].deviceToken;
-          if (!deviceToken) break;
-    
+const sendPushNotification = async (teeTimesByUser) => {
+  if (Object.keys(teeTimesByUser).length === 0) {
+    console.log("No New Tee Times as of " + new Date());
+    return;
+  }
 
-            let note = new apn.Notification();
-            if (teeTimes.length == 1) {
-                note.alert = `${formatDate(teeTimes[0].teeTime)} @ ${teeTimes[0].courseName} for ${teeTimes[0].available_spots} `;
-                note.payload = {'targetURL': teeTimes[0].bookingLink};
-            } else {
-                note.alert = `${teeTimes.length} Tee Times Found. Click to View`;
-                note.payload = {'action': 'open_notifications_view'};
-            }
-            note.expiry = Math.floor(Date.now() / 1000) + 1800; // Expires 30 minutes.
-            note.badge = 0;
-            note.sound = "default";
-            note.topic = "com.nickpacy.tee-time-check-ios";
-    
-          try {
-            apnProvider.send(note, deviceToken).then( result => {
-                // see documentation for an explanation of result
-                // console.log(result);
-                if (result.failed.length > 0) {
-                    console.log(result.failed[0].response);
-                } else {
-                    console.log(`Tee Time Found! Push sent to ${deviceToken}`);
-                }
-                }).finally(() => {
-                    apnProvider.shutdown();
-                });
-          } catch (error) {
-            console.log(`Error sending email to ${email}:`, error);
-          }
-        }
+  signingKey = f.readFileSync('AuthKey_NPDRS4SRCS.p8', 'utf8');
+
+  // Initialize APNs client
+  const apnClient = new ApnsClient({
+    team: 'RFHPD79HMY',
+    keyId: 'NPDRS4SRCS',
+    signingKey: signingKey,
+    defaultTopic: 'com.nickpacy.tee-time-check-ios',
+    production: true,
+  });
+
+  // Loop through users and send push notifications
+  for (const [userId, teeTimes] of Object.entries(teeTimesByUser)) {
+    const deviceToken = teeTimes[0]?.deviceToken;
+    if (!deviceToken) continue;
+
+    // Prepare alert and payload
+    let alert;
+    let payload;
+
+    if (teeTimes.length === 1) {
+      const teeTime = moment(teeTimes[0].teeTime).format("ddd M/D h:mm A");
+      alert = `${teeTime} @ ${teeTimes[0].courseName} for ${teeTimes[0].available_spots}`;
+      payload = { targetURL: teeTimes[0].bookingLink };
+    } else {
+      alert = `${teeTimes.length} Tee Times Found. Click to View`;
+      payload = { action: 'open_notifications_view' };
+    }
+
+    // Create notification
+    const note = new Notification(deviceToken, {
+      alert,
+      sound: 'default',
+      badge: 0,
+      payload,
+      expiry: Math.floor(Date.now() / 1000) + 1800,
+    });
+
+    // Send and handle response
+    try {
+      const result = await apnClient.send(note);
+
+      if (result instanceof Notification) {
+        console.log(`Tee Time Found! Push sent to ${deviceToken}`);
       } else {
-        // No new tee times
-        console.log("No New Tee Times as of " + new Date());
+        console.error(`Failed to send push to ${deviceToken}:`, result);
       }
-    
-}
+    } catch (error) {
+      console.error(`Error sending push to ${deviceToken}:`, error);
+    }
+  }
+};
 
-const formatDate = (teeTime) => {
-    // Format the tee time in the user's local time zone
-    const options = {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        timeZone: "America/Los_Angeles", // Specify the desired time zone
-    };
-    const teeTimeDate = moment
-        .tz(teeTime, "America/Los_Angeles")
-        .toDate();
-    const localTime = teeTimeDate.toLocaleString("en-US", options);
+// const formatDate = (teeTime) => {
+//     // Format the tee time in the user's local time zone
+//     const options = {
+//         weekday: "short",
+//         year: "numeric",
+//         month: "short",
+//         day: "numeric",
+//         hour: "numeric",
+//         minute: "numeric",
+//         hour12: true,
+//         timeZone: "America/Los_Angeles", // Specify the desired time zone
+//     };
+//     const teeTimeDate = moment
+//         .tz(teeTime, "America/Los_Angeles")
+//         .toDate();
+//     const localTime = teeTimeDate.toLocaleString("en-US", options);
 
-    return localTime;
-}
+//     return localTime;
+// }
 
 
 
 module.exports = {
     sendEmails,
     sendSMS,
-    sendPushNotitification
+    sendPushNotification
   };
   

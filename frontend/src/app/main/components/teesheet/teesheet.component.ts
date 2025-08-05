@@ -10,8 +10,8 @@ import { firstValueFrom } from 'rxjs';
 export class TeesheetComponent implements OnInit {
 
   teeSheet = [];
-  teeTimeDialog: boolean = true;
-  selectedTeeSheetId: number = 26;
+  teeTimeDialog: boolean = false;
+  selectedTeeSheetId: number;
 
   constructor(private teesheetService: TeeSheetService) {}
 
