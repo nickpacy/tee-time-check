@@ -5,6 +5,7 @@ const fs = require("fs").promises;
 const crypto = require("crypto");
 const escapeHtml = require("escape-html");
 const { Resend } = require('resend');
+const { convert } = require("html-to-text");
 const { InternalError, ConflictError } = require("../middlewares/errorTypes"); // Import the custom error classes
 
 dotenv.config();
@@ -80,7 +81,8 @@ const sendMail = async (mail, next) => {
       from: mail.from,
       to: mail.to,
       subject: mail.subject,
-      html: mail.html
+      html: mail.html,
+      text: convert(mail.html)
     });
 
     return result; // Return the result object on successful email send
@@ -95,7 +97,8 @@ const sendTestEmail = async (req, res, next) => {
       from: 'YourApp <nick@algotee.com>', // replace with verified domain when live
       to: 'nickpacy@gmail.com', // put your test recipient email here
       subject: 'Test Email from Resend Integration',
-      html: '<p>This is a <strong>test email</strong> sent using Resend.</p>'
+      html: '<p>This is a <strong>test email</strong> sent using Resend.</p>',
+      text: 'This is a test email sent using Resend.'
     };
 
     const result = await sendMail(testMail, next);

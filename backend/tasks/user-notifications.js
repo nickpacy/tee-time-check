@@ -3,9 +3,9 @@ const moment = require("moment-timezone"); // Date and time manipulation library
 const f = require("fs");
 const fs = require('fs').promises; // Import the fs module
 const twilio = require("twilio");
-// const apn = require('apn');
 const { ApnsClient, Notification } = require('apns2');
 const { Resend } = require('resend');
+const { convert } = require("html-to-text");
 
 
 
@@ -65,6 +65,7 @@ const sendEmails = async (teeTimesByUser) => {
         to: email, // Recipient's email address
         subject: "Tee Time Alert",
         html: htmlBody,
+        text: convert(htmlBody)
       };
 
       try {
@@ -164,7 +165,7 @@ const sendPushNotification = async (teeTimesByUser) => {
     keyId: 'NPDRS4SRCS',
     signingKey: signingKey,
     defaultTopic: 'com.nickpacy.tee-time-check-ios',
-    production: false,
+    production: true,
   });
 
   // Loop through users and send push notifications
@@ -198,10 +199,10 @@ const sendPushNotification = async (teeTimesByUser) => {
     try {
       const result = await apnClient.send(note);
 
-      if (result.sent.length > 0) {
+      if (result instanceof Notification) {
         console.log(`Tee Time Found! Push sent to ${deviceToken}`);
-      } else if (result.failed.length > 0) {
-        console.error(`Failed to send push to ${deviceToken}:`, result.failed[0]);
+      } else {
+        console.error(`Failed to send push to ${deviceToken}:`, result);
       }
     } catch (error) {
       console.error(`Error sending push to ${deviceToken}:`, error);

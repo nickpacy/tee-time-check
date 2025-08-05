@@ -37,18 +37,18 @@ const pool = mysql.createPool({
 });
 
 // Retrieve relevant courses with time checks
-const getRelevantCourses = async (connection, isJCGolf) => {
-  const methodCondition = isJCGolf ? "= 'jcgolf'" : "<> 'jcgolf'";
+const getRelevantCourses = async (connection, config) => {
   const query = `
     SELECT DISTINCT t.dayOfWeek, t.courseId, 1 AS numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, c.courseName,c.method, c.bookingUrl, c.timeZone, '12:00:00' AS navy5amStartTime
     FROM timechecks t
     JOIN users u ON u.userid = t.userId
     JOIN courses c ON c.courseid = t.courseId
     WHERE u.active = 1 AND t.active = 1 AND c.active = 1
-      AND c.method ${methodCondition}
-      AND ((u.email IS NOT NULL AND u.emailNotification = 1) 
-        OR (u.phone IS NOT NULL AND u.phoneNotification = 1) 
-        OR u.deviceToken IS NOT NULL);
+      ${config.IS_JCGOLF ? ` AND c.method = 'jcgolf'` : ` AND c.method <> 'jcgolf'`}
+      ${config.COURSE_FILTER ? ` AND c.courseId IN (${config.COURSE_FILTER})` : ''}
+      AND ((u.email is not null AND u.emailNotification = 1 )
+        OR (u.phone is not null AND u.phoneNotification = 1)
+        OR u.deviceToken is not null)
   `;
   const [courseResults] = await connection.execute(query);
   return courseResults;
@@ -70,11 +70,11 @@ const getAllTeeTimes = async (courseResults) => {
       timeZone,
       navy5amStartTime,
       courseId,
-      courseName
+      courseName,
+      bookingUrl
     } = course;
     let teeTimes = [];
-    let bookingLink = course.bookingUrl;
-
+    let bookingLink = bookingUrl;
     try {
       let courseTeeTimes = [];
 
@@ -108,8 +108,9 @@ const getAllTeeTimes = async (courseResults) => {
 
       if (allTeeTimes[courseId]) {
         allTeeTimes[courseId].teeTimes = allTeeTimes[courseId].teeTimes.concat(courseTeeTimes);
+        allTeeTimes[courseId].bookingLink = bookingLink;
       } else {
-        allTeeTimes[courseId] = {courseName, teeTimes: courseTeeTimes};
+        allTeeTimes[courseId] = {courseName, teeTimes: courseTeeTimes, bookingLink};
       }
 
     } catch (error) {
@@ -121,8 +122,7 @@ const getAllTeeTimes = async (courseResults) => {
 };
 
 // Process tee times for users based on their preferences
-const processTeeTimesForUsers = async (connection, allTeeTimes, isJCGolf) => {
-  const methodCondition = isJCGolf ? "= 'jcgolf'" : "<> 'jcgolf'";
+const processTeeTimesForUsers = async (connection, allTeeTimes, config) => {
   const query = `
     SELECT DISTINCT t.id, u.userId, u.email, u.phone, u.emailNotification, u.phoneNotification, u.deviceToken, t.dayOfWeek, 
                           t.startTime, t.endTime, t.courseId, t.numPlayers, c.bookingClass, c.scheduleId, c.bookingPrefix, c.websiteId, 
@@ -134,7 +134,8 @@ const processTeeTimesForUsers = async (connection, allTeeTimes, isJCGolf) => {
     WHERE u.active = 1
         AND t.active = 1
         AND c.active = 1
-        AND c.method ${methodCondition}
+        ${config.IS_JCGOLF ? ` AND c.method = 'jcgolf'` : ` AND c.method <> 'jcgolf'`}
+        ${config.COURSE_FILTER ? ` AND c.courseId IN (${config.COURSE_FILTER})` : ''}
         AND ((u.email is not null AND u.emailNotification = 1 )
           OR (u.phone is not null AND u.phoneNotification = 1)
           OR u.deviceToken is not null)
@@ -257,15 +258,14 @@ const saveNotifiedTeeTimes = async (connection, teeTimesByUser) => {
 };
 
 // Check tee times and notify users
-const checkTeeTimes = async () => {
-  const isJCGolf = process.env.IS_JCGOLF === 'true';
+const checkTeeTimes = async (config) => {
 
   try {
     const connection = await pool.getConnection();
     try {
-      const relevantCoursesWithTimechecks = await getRelevantCourses(connection, isJCGolf);
+      const relevantCoursesWithTimechecks = await getRelevantCourses(connection, config);
       const allTeeTimes = await getAllTeeTimes(relevantCoursesWithTimechecks);
-      const teeTimesByUser = await processTeeTimesForUsers(connection, allTeeTimes, isJCGolf);
+      const teeTimesByUser = await processTeeTimesForUsers(connection, allTeeTimes, config);
       await sendNotifications(teeTimesByUser);
       await saveNotifiedTeeTimes(connection, teeTimesByUser);
     } catch (err) {
