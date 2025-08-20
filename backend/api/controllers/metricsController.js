@@ -214,8 +214,6 @@ const getAllUsersMonthlyCharges = async (req, res, next) => {
 
     // Return the results as JSON
     res.json(results);
-
-    console.log(results);
   } catch (error) {
     // Handle any errors
     next(new InternalError("Error getting monthly charges", error));

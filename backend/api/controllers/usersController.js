@@ -332,6 +332,22 @@ const getUserSettings = async (req, res, next) => {
   }
 };
 
+const getMe = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const rows = await pool.query("SELECT * FROM users WHERE UserId = ?", [
+      userId,
+    ]);
+    if (rows.length === 0) {
+      next(new NotFoundError("User not found"));
+    } else {
+      res.json(rows[0]);
+    }
+  } catch (error) {
+    next(new InternalError("Error getting user", error));
+  }
+}
+
 module.exports = {
   getUsers,
   getUserById,
@@ -342,5 +358,6 @@ module.exports = {
   updateUserDeviceToken,
   insertOrUpdateUserSetting,
   getUserSettings,
-  searchUsers
+  searchUsers,
+  getMe
 };

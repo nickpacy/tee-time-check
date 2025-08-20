@@ -14,6 +14,8 @@ const notificationsRoutes = require('./routes/notificationsRoutes');
 const teeTimeRoutes = require('./routes/teeTimeRoutes');
 const appSettingsRoutes = require('./routes/appSettingsRoutes');
 const teeSheetRoutes = require('./routes/teeSheetRoutes');
+const awsRoutes = require('./routes/awsRoutes');
+const communicationsRoutes = require('./routes/communicationsRoutes');
 
 const app = express();
 app.use(express.json());
@@ -33,6 +35,8 @@ app.use(`${stage}/notifications`, notificationsRoutes);
 app.use(`${stage}/teetimes`, teeTimeRoutes);
 app.use(`${stage}/appsettings`, appSettingsRoutes);
 app.use(`${stage}/teesheet`, teeSheetRoutes);
+// app.use(`${stage}/aws`, awsRoutes);
+app.use(`${stage}/communications`, communicationsRoutes);
 app.use(errorHandler);
 
 if (process.env.STATIC == 'true') {

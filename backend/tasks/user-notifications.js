@@ -12,6 +12,12 @@ const { convert } = require("html-to-text");
 // Load environment variables from .env file
 dotenv.config();
 
+let dbPool; // set by init()
+
+function init(pool) {
+  dbPool = pool;
+}
+
 // Create a Twilio client
 const smsClient = new twilio(
   process.env.TWILIO_SID,
@@ -24,7 +30,7 @@ const sendEmails = async (teeTimesByUser) => {
     // Send an email to each user with their list of tee times
     for (const [userId, teeTimes] of Object.entries(teeTimesByUser)) {
       const emailNotification = teeTimes[0].emailNotification;
-      if (!emailNotification) break;
+      if (!emailNotification) continue;
 
       const email = teeTimes[0].email;
 
@@ -71,6 +77,19 @@ const sendEmails = async (teeTimesByUser) => {
       try {
         const info = await sendMail(mailOptions);
         console.log(`Tee Time Found! Email sent to ${email}`);
+
+        const commId = await logCommunication({
+          userId,
+          type: 'email',
+          sentTo: email,
+          body: htmlBody,
+          status: 'sent',
+          sentTime: new Date()
+        });
+
+        const notificationIds = teeTimes.map(t => t.notificationId).filter(Boolean);
+        await linkCommunicationToNotifications(commId, notificationIds);
+
       } catch (error) {
         console.log(`Error sending email to ${email}:`, error);
       }
@@ -106,7 +125,7 @@ const sendSMS = async (teeTimesByUser) => {
     // Send an SMS to each user with their list of tee times
     for (const [userId, teeTimes] of Object.entries(teeTimesByUser)) {
       const phoneNotification = teeTimes[0].phoneNotification;
-      if (!phoneNotification) break;
+      if (!phoneNotification) continue;
 
       let phoneNumber = teeTimes[0].phone;
       if (!phoneNumber.startsWith("+1")) {
@@ -132,6 +151,23 @@ const sendSMS = async (teeTimesByUser) => {
         message += newMessage;
       }
 
+      // Check if the SMS limit has been reached
+      const sentToday = await countTodaysSms(userId);
+      if (sentToday >= 5) {
+        console.log(`SMS limit reached for user ${userId}`);
+        const commId = await logCommunication({
+          userId,
+          type: 'sms',
+          sentTo: phoneNumber,
+          body: message,
+          status: 'skipped',
+          sentTime: new Date()
+        });
+        const notificationIds = teeTimes.map(t => t.notificationId).filter(Boolean);
+        await linkCommunicationToNotifications(commId, notificationIds);
+        continue;
+      }
+
       try {
         // Send the SMS
         await smsClient.messages.create({
@@ -140,6 +176,18 @@ const sendSMS = async (teeTimesByUser) => {
           from: process.env.TWILIO_FROM, // Your Twilio number
         });
         console.log(`Tee Time Found! SMS sent to ${phoneNumber}`);
+
+        const commId = await logCommunication({
+          userId,
+          type: 'sms',
+          sentTo: phoneNumber,
+          body: message,
+          status: 'sent',
+          sentTime: new Date()
+        });
+        const notificationIds = teeTimes.map(t => t.notificationId).filter(Boolean);
+        await linkCommunicationToNotifications(commId, notificationIds);
+
       } catch (error) {
         console.log(`Error sending SMS to ${phoneNumber}:`, error);
       }
@@ -180,7 +228,10 @@ const sendPushNotification = async (teeTimesByUser) => {
     if (teeTimes.length === 1) {
       const teeTime = moment(teeTimes[0].teeTime).format("ddd M/D h:mm A");
       alert = `${teeTime} @ ${teeTimes[0].courseName} for ${teeTimes[0].available_spots}`;
-      payload = { targetURL: teeTimes[0].bookingLink };
+      payload = {
+        action: "open_booking",
+        targetURL: teeTimes[0].bookingLink,
+      };
     } else {
       alert = `${teeTimes.length} Tee Times Found. Click to View`;
       payload = { action: 'open_notifications_view' };
@@ -201,38 +252,74 @@ const sendPushNotification = async (teeTimesByUser) => {
 
       if (result instanceof Notification) {
         console.log(`Tee Time Found! Push sent to ${deviceToken}`);
+
+        const commId = await logCommunication({
+          userId,
+          type: 'push',
+          sentTo: deviceToken,
+          body: alert,
+          status: 'sent',
+          sentTime: new Date()
+        });
+        const notificationIds = teeTimes.map(t => t.notificationId).filter(Boolean);
+        await linkCommunicationToNotifications(commId, notificationIds);
+
       } else {
-        console.error(`Failed to send push to ${deviceToken}:`, result);
+
+        const commId = await logCommunication({
+          userId,
+          type: 'push',
+          sentTo: deviceToken,
+          body: alert,
+          status: 'failed',
+          sentTime: new Date()
+        });
+        const notificationIds = teeTimes.map(t => t.notificationId).filter(Boolean);
+        await linkCommunicationToNotifications(commId, notificationIds);
+
       }
     } catch (error) {
-      console.error(`Error sending push to ${deviceToken}:`, error);
+      console.error(`Error sending push to ${deviceToken}`);
     }
   }
 };
 
-// const formatDate = (teeTime) => {
-//     // Format the tee time in the user's local time zone
-//     const options = {
-//         weekday: "short",
-//         year: "numeric",
-//         month: "short",
-//         day: "numeric",
-//         hour: "numeric",
-//         minute: "numeric",
-//         hour12: true,
-//         timeZone: "America/Los_Angeles", // Specify the desired time zone
-//     };
-//     const teeTimeDate = moment
-//         .tz(teeTime, "America/Los_Angeles")
-//         .toDate();
-//     const localTime = teeTimeDate.toLocaleString("en-US", options);
+async function logCommunication({ userId, type, sentTo, body, status='sent', sentTime=new Date() }) {
+  const [res] = await dbPool.execute(
+    `INSERT INTO communications (UserId, MessageType, SentTo, MessageBody, SentTime, Status)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [userId, type, sentTo, body ?? null, sentTime, status]
+  );
+  return res.insertId;
+}
 
-//     return localTime;
-// }
+async function linkCommunicationToNotifications(communicationId, notificationIds) {
+  if (!notificationIds?.length) return;
+  const values = notificationIds.map(nid => [nid, communicationId]);
+  await dbPool.query(
+    `INSERT INTO notification_communications (NotificationId, CommunicationId) VALUES ?`,
+    [values]
+  );
+}
+
+async function countTodaysSms(userId) {
+  const [rows] = await dbPool.execute(
+    `SELECT COUNT(*) AS cnt
+       FROM communications
+      WHERE UserId = ?
+        AND MessageType = 'sms'
+        AND Status = 'sent'
+        AND SentTime >= UTC_DATE()
+        AND SentTime < UTC_DATE() + INTERVAL 1 DAY`,
+    [userId]
+  );
+  return rows[0].cnt || 0;
+}
 
 
 
 module.exports = {
+    init,
     sendEmails,
     sendSMS,
     sendPushNotification

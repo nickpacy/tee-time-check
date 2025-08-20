@@ -1,7 +1,7 @@
 const express = require('express');
 const notificationsController = require('../controllers/notificationsController');
 const emailController = require('../controllers/emailController');
-const verifyToken = require('../middlewares/authMiddleware');
+const { verifyToken } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 

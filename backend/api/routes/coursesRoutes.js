@@ -1,6 +1,6 @@
 const express = require('express');
 const coursesController = require('../controllers/coursesController');
-const verifyToken = require('../middlewares/authMiddleware');
+const { verifyToken } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 

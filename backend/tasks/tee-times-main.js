@@ -35,6 +35,7 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD, // MySQL database password
   database: process.env.DB_NAME, // MySQL database name
 });
+notificationsFunction.init(pool);
 
 // Retrieve relevant courses with time checks
 const getRelevantCourses = async (connection, config) => {
@@ -130,7 +131,7 @@ const processTeeTimesForUsers = async (connection, allTeeTimes, config) => {
     FROM timechecks t
     JOIN users u ON u.userid = t.userId
     JOIN courses c ON c.courseid = t.courseId
-    LEFT JOIN notifications n ON n.userId = t.userId AND c.courseid = n.courseid AND n.NotifiedDate BETWEEN NOW() - INTERVAL 24 HOUR AND NOW()
+    LEFT JOIN notifications n ON n.Active = 1 AND n.userId = t.userId AND c.courseid = n.courseid AND n.NotifiedDate BETWEEN NOW() - INTERVAL 24 HOUR AND NOW()
     WHERE u.active = 1
         AND t.active = 1
         AND c.active = 1
@@ -238,24 +239,37 @@ const sendNotifications = async (teeTimesByUser) => {
 
 // Save notified tee times to the database
 const saveNotifiedTeeTimes = async (connection, teeTimesByUser) => {
-  try {
-    const promises = [];
-    for (const userId in teeTimesByUser) {
-      const notifiedTeeTimes = teeTimesByUser[userId];
-      for (const { teeTime, courseId, timeZone } of notifiedTeeTimes) {
-        const insertNotificationQuery = `
-          INSERT INTO notifications (UserId, CourseId, TeeTime)
-          VALUES (?, ?, ?);
-        `;
-        const utcTeeTime = moment.tz(teeTime, timeZone).utc().format('YYYY-MM-DD HH:mm:ss');
-        promises.push(connection.execute(insertNotificationQuery, [userId, courseId, utcTeeTime]));
-      }
+  const newTeeTimesByUser = {};
+  for (const userId in teeTimesByUser) {
+    const notifiedTeeTimes = teeTimesByUser[userId];
+    newTeeTimesByUser[userId] = [];
+    for (const { teeTime, courseId, timeZone, available_spots, bookingLink, courseName, courseAbbr, phone, deviceToken, email, phoneNotification, emailNotification } of notifiedTeeTimes) {
+      const utcTeeTime = moment.tz(teeTime, timeZone).utc().format('YYYY-MM-DD HH:mm:ss');
+      const [result] = await connection.execute(
+        `INSERT INTO notifications (UserId, CourseId, TeeTime, AvailableSpots)
+         VALUES (?, ?, ?, ?)`,
+        [userId, courseId, utcTeeTime, available_spots]
+      );
+      newTeeTimesByUser[userId].push({
+        teeTime,
+        courseId,
+        courseName,
+        courseAbbr,
+        timeZone,
+        available_spots,
+        bookingLink,
+        phone, 
+        deviceToken, 
+        email, 
+        phoneNotification, 
+        emailNotification,
+        notificationId: result.insertId // 🔹 Keep NotificationId
+      });
     }
-    await Promise.all(promises);
-  } catch (err) {
-    logger.error("Error saving notified tee times:", err);
   }
+  return newTeeTimesByUser;
 };
+
 
 // Check tee times and notify users
 const checkTeeTimes = async (config) => {
@@ -266,8 +280,9 @@ const checkTeeTimes = async (config) => {
       const relevantCoursesWithTimechecks = await getRelevantCourses(connection, config);
       const allTeeTimes = await getAllTeeTimes(relevantCoursesWithTimechecks);
       const teeTimesByUser = await processTeeTimesForUsers(connection, allTeeTimes, config);
-      await sendNotifications(teeTimesByUser);
-      await saveNotifiedTeeTimes(connection, teeTimesByUser);
+      const teeTimesWithIds = await saveNotifiedTeeTimes(connection, teeTimesByUser);
+      await sendNotifications(teeTimesWithIds);
+
     } catch (err) {
       logger.error("Error processing tee times:", err);
     } finally {

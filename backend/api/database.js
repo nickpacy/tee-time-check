@@ -23,6 +23,9 @@ const pool = mysql.createPool({
 
 
 const database = {
+  pool, // ✅ export the pool for modules that need it
+
+  // lightweight helpers kept for existing code:
   query: async (sql, params) => {
     let connection;
     try {
@@ -32,11 +35,24 @@ const database = {
     } catch (error) {
       throw new DatabaseError("Error executing query", error);
     } finally {
-      if (connection) {
-        connection.release();
-      }
+      if (connection) connection.release();
     }
   },
+
+  // optional: execute returns [rows, fields] semantics if you need it
+  execute: async (sql, params) => {
+    let connection;
+    try {
+      connection = await pool.getConnection();
+      const [rows, fields] = await connection.execute(sql, params);
+      return [rows, fields];
+    } catch (error) {
+      throw new DatabaseError("Error executing statement", error);
+    } finally {
+      if (connection) connection.release();
+    }
+  },
+
   close: async () => {
     await pool.end();
   }

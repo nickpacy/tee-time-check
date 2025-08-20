@@ -1,0 +1,12 @@
+ROUTE_IDS=$(aws apigatewayv2 get-routes \
+  --api-id apiId \
+  --query 'Items[*].RouteId' \
+  --output text)
+
+for id in $ROUTE_IDS; do
+  echo "Attaching integration to route: $id"
+  aws apigatewayv2 update-route \
+    --api-id apiId \
+    --route-id "$id" \
+    --target integrations/{target}
+done
