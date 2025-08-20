@@ -23,6 +23,7 @@ const getNotificationsByCourse = async (req, res, next) => {
           n.NotificationId,
           n.TeeTime,
           n.NotifiedDate,
+          n.AvailableSpots,
           CASE 
             WHEN c.Method = 'navy' THEN 
               CONCAT(
@@ -37,7 +38,7 @@ const getNotificationsByCourse = async (req, res, next) => {
           END AS BookingUrl
           FROM notifications n
           JOIN courses c ON n.CourseId = c.CourseId 
-          WHERE n.UserId = ? AND n.NotifiedDate BETWEEN NOW() - INTERVAL 24 HOUR AND NOW()
+          WHERE n.UserId = ? AND n.Active = 1 AND n.NotifiedDate BETWEEN NOW() - INTERVAL 24 HOUR AND NOW()
           ORDER BY NotifiedDate DESC, CourseId ASC, TeeTime ASC;
             `;
             
@@ -66,7 +67,7 @@ const removeNotification = async (req, res, next) => {
   try {
     // Delete the specified tee time from the notified_tee_times table
     const result = await pool.query(
-      "DELETE FROM notifications WHERE NotificationId = ?",
+      "UPDATE notifications SET Active = 0 WHERE NotificationId = ?",
       [NotificationId]
     );
 

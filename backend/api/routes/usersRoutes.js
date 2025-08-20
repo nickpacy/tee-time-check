@@ -1,6 +1,6 @@
 const express = require('express');
 const usersController = require('../controllers/usersController');
-const verifyToken = require('../middlewares/authMiddleware');
+const { verifyToken } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
@@ -8,6 +8,7 @@ router.put('/updateDeviceToken', verifyToken, usersController.updateUserDeviceTo
 router.post('/userSetting', verifyToken, usersController.insertOrUpdateUserSetting);
 router.get('/userSetting', verifyToken, usersController.getUserSettings);
 
+router.get('/me', verifyToken, usersController.getMe);
 router.get('/', usersController.getUsers);
 router.get('/search', usersController.searchUsers);
 router.get('/:userId', usersController.getUserById);

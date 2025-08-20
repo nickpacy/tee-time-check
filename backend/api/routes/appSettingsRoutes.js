@@ -1,6 +1,6 @@
 const express = require('express');
 const appSettingsController = require('../controllers/appSettingsController');
-const verifyToken = require('../middlewares/authMiddleware'); // Assuming you want these routes protected
+const { verifyToken } = require('../middlewares/authMiddleware'); // Assuming you want these routes protected
 
 const router = express.Router();
 

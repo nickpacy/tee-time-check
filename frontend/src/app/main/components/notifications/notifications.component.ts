@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { NotificationsService } from '../../service/notification.service';
 import { AuthService } from '../auth/auth.service';
 import { UtilityService } from '../../service/utility.service';
@@ -6,6 +6,8 @@ import { DatePipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MetricService } from '../../service/metric.service';
+import { CommunicationsService } from '../../service/communications.service';
+import { CommsSummary, Communication, ListParams } from '../../models/communication.model';
 
 @Component({
   selector: "app-notifications",
@@ -18,18 +20,91 @@ export class NotificationsComponent implements OnInit {
   monthlyCharges: any[] = [];
   logoUrl: string = environment.logoUrl;
 
+  metrics: CommsSummary | null = null;
+  smsRemaining = 5;
+
   constructor(
     private notificationService: NotificationsService,
     private authService: AuthService,
     private metricService: MetricService,
+    private cdr: ChangeDetectorRef,
     private datePipe: DatePipe,
-    private utilService: UtilityService
+    private utilService: UtilityService,
+    private comms: CommunicationsService
   ) {}
 
   ngOnInit(): void {
     this.USERID = this.authService.getUserId();
     this.getNotifications();
     this.getMonthlyCharges();
+    this.loadMetrics(); // totals per channel/status in last 24h
+    this.computeSmsRemaining(); // from API, per user
+  }
+
+    // ---------- metrics ----------
+  private loadMetrics(): void {
+    this.comms.summaryMe(48).subscribe({
+      next: (res) => (this.metrics = res),
+      error: () => (this.metrics = null),
+    });
+  }
+
+  private computeSmsRemaining(): void {
+    this.comms.smsCountTodayMe().subscribe({
+      next: (r) => (this.smsRemaining = Math.max(0, 5 - (r?.count ?? 0))),
+      error: () => (this.smsRemaining = 5),
+    });
+  }
+
+  // ---------- optional per-card comms log ----------
+  onToggleLog(course: any, checked: boolean) {
+    course.showLog = checked;
+    if (checked && !course.comms) {
+      this.loadRecentCommsForUser(course);
+    }
+  }
+
+  private loadRecentCommsForUser(course: any): void {
+    const from = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    this.comms.listMe({ from, limit: 200 }).subscribe({
+      next: (rows) => {
+        course.comms = rows;
+        this.cdr.markForCheck(); // <-- force view update under OnPush
+      },
+      error: () => {
+        course.comms = [];
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  totalAlerts(course: any): string {
+    return (course?.dates ?? []).reduce((sum: number, d: any) => {
+      return sum + ((d?.teeTimes ?? []).length);
+    }, 0);
+  }
+
+  // ---------- helpers used in template ----------
+  trackCourse = (_: number, c: any) => c?.courseId;
+  trackTeeTime = (_: number, t: any) => t?.notificationId || t?.time;
+
+  typeSeverity(type: string) {
+    switch (type) {
+      case 'email': return 'success';
+      case 'sms': return 'info';
+      case 'push': return 'warning';
+      default: return 'secondary';
+    }
+  }
+
+  statusSeverity(status: string) {
+    switch (status) {
+      case 'sent': return 'success';
+      case 'queued': return 'info';
+      case 'skipped': return 'warning';
+      case 'failed': return 'danger';
+      default: return 'secondary';
+    }
   }
 
   async getMonthlyCharges() {
@@ -102,6 +177,7 @@ export class NotificationsComponent implements OnInit {
         time: notification.TeeTime,
         notificationId: notification.NotificationId,
         bookingUrl: notification.BookingUrl,
+        availableSpots: notification.AvailableSpots,
       });
     });
 

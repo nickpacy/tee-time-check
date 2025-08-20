@@ -1,51 +1,167 @@
+<!-- ===== Metrics Header (24h) ===== -->
+<div class="grid" *ngIf="metrics">
+  <div class="col-12">
+    <div class="card">
+      <div class="flex flex-wrap gap-3 align-items-center justify-content-between">
+        <div class="flex align-items-center gap-3">
+          <h4 class="m-0">Last 24 Hours</h4>
+          <p-tag severity="info" [rounded]="true">{{ metrics.windowStart | date:'short' }} — {{ metrics.windowEnd | date:'short' }}</p-tag>
+        </div>
+
+        <div class="flex gap-3 flex-wrap">
+          <p-chip label="Total" icon="pi pi-bell" styleClass="p-2"
+                  pBadge [value]="metrics.total?.toString()" severity="info"></p-chip>
+
+          <p-chip label="Email" icon="pi pi-envelope" styleClass="p-2"
+                  pBadge [value]="metrics.email.sent?.toString()" severity="success"></p-chip>
+          <p-chip *ngIf="metrics.email.skipped" label="Skipped" icon="fa fa-ban" styleClass="p-2"
+                  pBadge [value]="metrics.email.skipped?.toString()" severity="warning"></p-chip>
+          <p-chip *ngIf="metrics.email.failed" label="Failed" icon="pi pi-times" styleClass="p-2"
+                  pBadge [value]="metrics.email.failed?.toString()" severity="danger"></p-chip>
+
+          <p-chip label="SMS" icon="pi pi-comment" styleClass="p-2"
+                  pBadge [value]="metrics.sms.sent?.toString()" severity="success"></p-chip>
+          <p-chip *ngIf="metrics.sms.skipped" label="Skipped" icon="fa fa-ban" styleClass="p-2"
+                  pBadge [value]="metrics.sms.skipped?.toString()" severity="warning"></p-chip>
+          <p-chip *ngIf="metrics.sms.failed" label="Failed" icon="pi pi-times" styleClass="p-2"
+                  pBadge [value]="metrics.sms.failed?.toString()" severity="danger"></p-chip>
+
+          <p-chip label="Push" icon="pi pi-bolt" styleClass="p-2"
+                  pBadge [value]="metrics.push.sent?.toString()" severity="success"></p-chip>
+          <p-chip *ngIf="metrics.push.failed" label="Failed" icon="pi pi-times" styleClass="p-2"
+                  pBadge [value]="metrics.push.failed?.toString()" severity="danger"></p-chip>
+        </div>
+
+
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-info-circle"></i>
+          <span>SMS remaining today:</span>
+          <p-tag [severity]="smsRemaining > 0 ? 'success' : 'danger'" [rounded]="true">{{ smsRemaining }}/5</p-tag>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Help Card ===== -->
 <div class="grid">
   <div class="col-12">
     <div class="card">
       <h4>Welcome to Your Course Alerts Dashboard!</h4>
-      <p>Here's what you can do on this page:</p>
-      <p><strong>Review Today's Alerts:</strong> This page displays alerts you've received in the past 24 hours for specific tee times across different courses. Alerts reset every 24 hours.</p>
-      <p><strong>Missed Out on a Tee Time?:</strong> See the 'X' icon next to each tee time? Clicking on it allows you to express interest in a tee time you may have missed earlier. If that time becomes available again, we'll notify you right away!</p>
-      <p *ngIf="notifications?.length < 1"><strong>No Notifications Today?:</strong> If you don't see any alerts, it means you have not received any notifications today. But don't worry! You can easily configure your tee times by clicking on the "Setup Now" button.</p>
+      <ul class="m-0 pl-3">
+        <li><strong>Review Today’s Alerts:</strong> Tee times from the past 24 hours.</li>
+        <li><strong>Missed one?</strong> Click the <i class="pi pi-times-circle"></i> next to a time to re-add the alert.</li>
+        <li><strong>Comms log:</strong> Use the “Show Log” toggle on any card to see recent sends.</li>
+      </ul>
+      <p *ngIf="!notifications?.length" class="mt-2">
+        <strong>No Notifications Today?</strong> Click “Setup Now” to configure tee time alerts.
+      </p>
     </div>
   </div>
 </div>
 
-
-
+<!-- ===== Notifications Grid ===== -->
 <div class="grid" *ngIf="notifications?.length > 0; else noNotifications">
-  <div class="col-12 md:col-6 lg:col-6 xl:col-4" *ngFor="let course of notifications;">
+  <div class="col-12 md:col-6 lg:col-6 xl:col-4" *ngFor="let course of notifications; trackBy: trackCourse">
     <div class="card mb-0">
-      <div class="flex justify-content-between mb-3">
-        <div class="flex" [ngStyle]="{width: '4rem', height: '4rem'}">
-          <img [src]="logoUrl + course.imageUrl" [alt]="course.courseName" style="height: 50px;">
+      <!-- Header -->
+      <div class="flex justify-content-between align-items-center mb-3">
+        <div class="flex align-items-center gap-2">
+          <img [src]="logoUrl + course.imageUrl" [alt]="course.courseName" style="height: 40px; width:auto; object-fit:contain;">
+          <div class="flex flex-column">
+            <span class="text-lg font-medium">{{ course.courseName }}</span>
+            <!-- <small class="text-500">{{ course.courseId }}</small> -->
+          </div>
         </div>
-        <div>
-          <span class="block text-xl font-medium" style="text-align: right;">{{course.courseName}} Alerts</span>
-          <span>Click the x to re-add alert</span>
+        <div class="flex align-items-center gap-2">
+          <p-badge [value]="totalAlerts(course)" severity="info"></p-badge>
+          <p-toggleButton
+            [onLabel]="'Show Log'"
+            [offLabel]="'Show Log'"
+            [ngModel]="!!course.showLog"
+            (ngModelChange)="onToggleLog(course, $event)">
+          </p-toggleButton>
         </div>
       </div>
-      <div *ngFor="let dates of course.dates; let isLast = last">
-        <p-tag severity="warning" styleClass="text-xl p-2" [rounded]="true" styleClass="w-full mb-2">
-          <span style="font-size: large;">{{ dates.date | date: 'fullDate'}}</span>
-        </p-tag>
-        
-        <div class="p-d-flex p-flex-column mb-3">
-          <p-tag *ngFor="let tt of dates.teeTimes" severity="info" [rounded]="true" styleClass="m-1">
-              <div class="flex align-items-center justify-content-between">
-                <!-- <i class="fa fa-clock px-2"></i> -->
-                <a [href]="tt.bookingUrl" target="_blank" style="width: 70px;text-decoration: none;color: black;" class="text-base pl-2">{{ tt.time | date: 'hh:mm a'}}</a>
-                <i class="fa fa-times-circle p-1" style="cursor: pointer;" (click)="removeNotification(course.courseId, dates.date, tt.notificationId)"></i>
-              </div>
-            </p-tag>
-            <hr *ngIf="!isLast">
+
+      <!-- Per-Date Sections -->
+      <div *ngFor="let dates of course.dates; let last = last">
+        <p-divider align="left">
+          <!-- <p-tag severity="warning" styleClass="text-xl p-2" [rounded]="true"> -->
+            <span style="font-size: large;">{{ dates.date | date:'fullDate' }}</span>
+          <!-- </p-tag> -->
+        </p-divider>
+
+        <div class="flex flex-wrap">
+          <p-chip *ngFor="let tt of dates.teeTimes; trackBy: trackTeeTime"
+                  [removable]="false"
+                  styleClass="m-1 p-1">
+            <div class="flex align-items-center gap-2">
+              <a [href]="tt.bookingUrl" target="_blank" class="no-underline text-900" style="width:72px; text-align:center;">
+                {{ tt.time | date:'hh:mm a' }}
+              </a>
+              <p-tag severity="info" [rounded]="true">{{ tt.availableSpots }} spots</p-tag>
+              <button pButton type="button" class="p-button-text p-button-rounded p-1"
+                      pTooltip="Re-add alert" tooltipPosition="top"
+                      (click)="removeNotification(course.courseId, dates.date, tt.notificationId)">
+                <i class="pi pi-times-circle"></i>
+              </button>
+            </div>
+          </p-chip>
         </div>
+
+        <p-divider *ngIf="!last"></p-divider>
+      </div>
+
+      <!-- Communications Log (collapsible) -->
+      <div *ngIf="course.showLog" class="mt-3">
+        <p-table [value]="course.comms" [paginator]="false" [rows]="5" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Time</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>To</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-c>
+            <tr>
+              <td>{{ c.SentTime | date:'short' }}</td>
+              <td><p-tag [severity]="typeSeverity(c.MessageType)" [rounded]="true">{{ c.MessageType }}</p-tag></td>
+              <td><p-tag [severity]="statusSeverity(c.Status)" [rounded]="true">{{ c.Status }}</p-tag></td>
+              <td class="truncate">{{ c.SentTo }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="4">No recent communications.</td></tr>
+          </ng-template>
+        </p-table>
       </div>
     </div>
   </div>
 </div>
 
-<!-- <app-user-by-week></app-user-by-week> -->
+<!-- ===== Empty State ===== -->
+<ng-template #noNotifications>
+  <div class="grid">
+    <div class="col-12 md:col-6 lg:col-6 xl:col-4">
+      <div class="px-4 py-5 shadow-2 flex flex-column md:flex-row md:align-items-center justify-content-between mb-3"
+           [ngStyle]="{borderRadius:'1rem', background:'linear-gradient(0deg, rgba(0, 123, 255, 0.5), rgba(0, 123, 255, 0.5)), linear-gradient(92.54deg, #1C80CF 47.88%, #FFFFFF 100.01%)'}">
+        <div>
+          <div class="text-blue-100 font-medium text-xl mt-2 mb-3">NO NOTIFICATIONS TODAY</div>
+          <div class="text-white font-medium text-2xl">Configure Tee Times</div>
+        </div>
+        <div class="mt-4 mr-auto md:mt-0 md:mr-0">
+          <a [routerLink]="['/setup']" class="p-button font-bold px-3 py-3 p-button-success p-button-rounded p-button-raised">
+            Setup Now
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
 
+<!-- ===== Monthly Charges (unchanged) ===== -->
 <div class="grid" *ngIf="monthlyCharges?.length > 0">
   <div class="col-12">
     <div class="card">
@@ -73,24 +189,6 @@
           </tr>
         </ng-template>
       </p-table>
-      
     </div>
   </div>
 </div>
-
-  <ng-template #noNotifications>
-    
-    <div class="col-12 md:col-6 lg:col-6 xl:col-4">
-        <div class="px-4 py-5 shadow-2 flex flex-column md:flex-row md:align-items-center justify-content-between mb-3" [ngStyle]="{borderRadius: '1rem', background: 'linear-gradient(0deg, rgba(0, 123, 255, 0.5), rgba(0, 123, 255, 0.5)), linear-gradient(92.54deg, #1C80CF 47.88%, #FFFFFF 100.01%)'}">
-            <div>
-                <div class="text-blue-100 font-medium text-xl mt-2 mb-3">NO NOTIFICATIONS TODAY</div>
-                <div class="text-white font-medium text-2xl">Configure Tee Times</div>
-            </div>
-            <div class="mt-4 mr-auto md:mt-0 md:mr-0">
-                <a [routerLink]="['/setup']" class="p-button font-bold px-3 py-3 p-button-success p-button-rounded p-button-raised">
-                    Setup Now
-                </a>
-            </div>
-          </div>    
-    </div>
-  </ng-template>

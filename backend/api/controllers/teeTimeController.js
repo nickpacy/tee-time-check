@@ -66,10 +66,10 @@ const searchTeeTimes = async (req, res, next) => {
           );
           break;
           case "teeitup":
-            promises.push(getTeeTimes_teeitup(date, course.BookingPrefix));
+            promises.push(getTeeTimes_teeitup(date, course.BookingPrefix, course.TimeZone));
             break;
           case "chrono":
-            promises.push(getTeeTimes_chrono(date, course.WebsiteId, course.BookingClass, course.ScheduleId, numPlayers, course.TimeZone));
+            promises.push(getTeeTimes_chrono(date, course.WebsiteId, course.BookingClass, course.ScheduleId, numPlayers, course.BookingPrefix));
             break;
           case "golfnow":
             promises.push(getTeeTimes_golfnow(date, course.BookingClass, numPlayers));
@@ -273,13 +273,13 @@ async function getTeeTimes_navy(date, bookingClass, numPlayers, startTime) {
   }
 }
 
-async function getTeeTimes_teeitup(date, bookingPrefix) {
+async function getTeeTimes_teeitup(date, bookingPrefix, timezone) {
   const formattedClosestDay = moment(date).format("YYYY-MM-DD");
   const url = `https://phx-api-be-east-1b.kenna.io/v2/tee-times?date=${formattedClosestDay}`;
 
-  const currentDate = moment().tz("America/Los_Angeles").startOf("day");
+  const currentDate = moment().tz(timezone).startOf("day");
   const twoDaysOut = moment()
-    .tz("America/Los_Angeles")
+    .tz(timezone)
     .add(3, "days")
     .startOf("day");
 
@@ -314,7 +314,7 @@ async function getTeeTimes_teeitup(date, bookingPrefix) {
 
         return {
           time: moment(teetime.teetime)
-            .tz("America/Los_Angeles")
+            .tz(timezone)
             .format("YYYY-MM-DD HH:mm"),
           available_spots: teetime.maxPlayers,
           green_fee: greenFee,
@@ -364,9 +364,9 @@ async function getTeeTimes_coronado(date, bookingClass) {
   }
 }
 
-async function getTeeTimes_chrono(date, websiteId, bookingClass, courseId, numPlayers, timezone) {
+async function getTeeTimes_chrono(date, websiteId, bookingClass, courseId, numPlayers, holes) {
   const formattedClosestDay = moment(date).format("YYYY-MM-DD");
-  var url = `https://www.chronogolf.com/marketplace/clubs/${websiteId}/teetimes?date=${formattedClosestDay}&course_id=${courseId}&nb_holes=18`;
+  var url = `https://www.chronogolf.com/marketplace/clubs/${websiteId}/teetimes?date=${formattedClosestDay}&course_id=${courseId}&nb_holes=${holes}`;
   for (let index = 0; index < numPlayers; index++) {
     url += `&affiliation_type_ids%5B%5D=${bookingClass}`;
   }
