@@ -153,7 +153,8 @@ async function getTeeTimes_foreup(date, bookingClass, scheduleId) {
   };
 
   if (bookingClass === 888 || bookingClass === 1135) {
-    config.headers["X-Authorization"] = `Bearer ${process.env.FOREUP_BEARER}`;
+    let bearer = await getTorreyPinesBearerToken();
+    config.headers["X-Authorization"] = `Bearer ${bearer}`;
   }
 
   try {
@@ -168,7 +169,7 @@ async function getTeeTimes_foreup(date, bookingClass, scheduleId) {
 
     return teeTimes;
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     return []; // Return an empty array in case of an error
   }
 }
@@ -459,6 +460,18 @@ async function getTeeTimes_golfnow(date, bookingClass, numPlayers) {
   } catch (error) {
     console.error(error);
     return []; // Return an empty array in case of an error
+  }
+}
+
+async function getTorreyPinesBearerToken() {
+  try {
+    const rows = await pool.query(
+      "SELECT SettingValue FROM app_settings WHERE SettingKey = 'TorreyPinesToken'"
+    );
+    return rows.length ? rows[0].SettingValue : null;
+  } catch (error) {
+    console.error("getTorreyPinesBearerToken error:", error);
+    return null;
   }
 }
 
