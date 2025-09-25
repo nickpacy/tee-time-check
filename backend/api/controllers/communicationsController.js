@@ -191,6 +191,111 @@ const summaryAll = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+const listUserSummaries = async (req, res, next) => {
+  try {
+    const { from, to } = req.query;
+    const clauses = [];
+    const params = [];
+
+    if (from) { clauses.push('c.SentTime >= ?'); params.push(from); }
+    if (to)   { clauses.push('c.SentTime < ?');  params.push(to); }
+
+    const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+
+    const [rows] = await pool.execute(
+      `
+      SELECT u.UserId   AS userId,
+            u.Name     AS name,
+            COUNT(DISTINCT n.NotificationId) AS notifications,
+            CAST(IFNULL(COUNT(DISTINCT CASE WHEN c.MessageType = 'email' THEN c.CommunicationId END), 0) AS UNSIGNED) AS emailCount,
+            CAST(IFNULL(COUNT(DISTINCT CASE WHEN c.MessageType = 'sms'   THEN c.CommunicationId END), 0) AS UNSIGNED) AS smsCount,
+            CAST(IFNULL(COUNT(DISTINCT CASE WHEN c.MessageType = 'push'  THEN c.CommunicationId END), 0) AS UNSIGNED) AS pushCount
+
+        FROM communications c
+    LEFT JOIN notification_communications nc ON nc.CommunicationId = c.CommunicationId
+    LEFT JOIN notifications n ON n.NotificationId = nc.NotificationId
+    LEFT JOIN users u ON u.UserId = c.UserId
+        ${where}
+    GROUP BY u.UserId, u.Name
+    ORDER BY notifications DESC
+      `,
+      params
+    );
+
+    res.json(rows);
+  } catch (e) { next(e); }
+};
+
+const listUserNotifications = async (req, res, next) => {
+  try {
+    const userId = Number(req.params.userId);
+    if (!Number.isFinite(userId)) return res.status(400).json({ error: 'Invalid userId' });
+
+    const { from, to } = req.query;
+    const clauses = ['n.UserId = ?'];
+    const params = [userId];
+
+    if (from) { clauses.push('c.SentTime >= ?'); params.push(from); }
+    if (to)   { clauses.push('c.SentTime < ?');  params.push(to);   }
+
+    const where = `WHERE ${clauses.join(' AND ')}`;
+
+    const [rows] = await pool.execute(
+        `
+        SELECT n.NotificationId AS notificationId,
+              n.CourseId       AS courseId,
+              crs.CourseName         AS courseName,
+              n.TeeTime        AS teeTime,
+              n.NotifiedDate    AS notifiedDate,
+              n.AvailableSpots AS availableSpots,
+              c.CommunicationId AS communicationId,
+              c.MessageType     AS messageType,
+              c.Status          AS status,
+              c.SentTime        AS sentTime,
+              c.SentTo          AS sentTo
+          FROM notifications n
+      LEFT JOIN notification_communications nc ON nc.NotificationId = n.NotificationId
+      LEFT JOIN communications c ON c.CommunicationId = nc.CommunicationId
+      LEFT JOIN courses crs ON crs.CourseId = n.CourseId
+          ${where}
+      ORDER BY n.notifiedDate DESC, n.teeTime ASC
+        `,
+        params
+      );
+
+    // Group into { notification, communications: [] }
+    const map = new Map();
+    for (const r of rows) {
+      if (!r.notificationId) continue; // skip empties
+      
+      if (!map.has(r.notificationId)) {
+        map.set(r.notificationId, {
+          notificationId: r.notificationId,
+          courseId: r.courseId,
+          courseName: r.courseName,
+          teeTime: r.teeTime,
+          notifiedDate: r.notifiedDate,
+          availableSpots: r.availableSpots,
+          communications: [],
+        });
+      }
+
+      if (r.communicationId) {
+        map.get(r.notificationId).communications.push({
+          id: r.communicationId,
+          type: r.messageType,
+          status: r.status,
+          sentTime: r.sentTime,
+          sentTo: r.sentTo,
+        });
+      }
+    }
+
+    res.json([...map.values()]);
+  } catch (e) { next(e); }
+};
+
+
 module.exports = {
   listSelf,
   summarySelf,
@@ -200,4 +305,6 @@ module.exports = {
   smsCountTodayUser,
   listAll,
   summaryAll,
+  listUserSummaries,
+  listUserNotifications,
 };

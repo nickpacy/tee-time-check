@@ -36,4 +36,13 @@ router.get('/users/:userId/sms-count-today', requireSelfOrAdmin('userId'), commu
 router.get('/all', requireAdmin, communicationsController.listAll);
 router.get('/all/summary', requireAdmin, communicationsController.summaryAll);
 
+/**
+ * Admin summaries
+ * GET /communications/admin/users?from=&to=
+ * GET /communications/admin/users/:userId?from=&to=
+ */
+router.get('/admin/users', requireAdmin, communicationsController.listUserSummaries);
+router.get('/admin/users/:userId', requireAdmin, communicationsController.listUserNotifications);
+
+
 module.exports = router;

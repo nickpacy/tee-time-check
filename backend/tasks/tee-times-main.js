@@ -36,6 +36,7 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME, // MySQL database name
 });
 notificationsFunction.init(pool);
+foreupFunction.init(pool);
 
 // Retrieve relevant courses with time checks
 const getRelevantCourses = async (connection, config) => {
@@ -92,7 +93,7 @@ const getAllTeeTimes = async (courseResults) => {
           courseTeeTimes = await teeitupFunction.getTeeTimes(bookingPrefix, dayOfWeek, numPlayers, timeZone);
           break;
         case "chrono":
-          courseTeeTimes = await chronoFunction.getTeeTimes(websiteId, bookingClass, scheduleId, dayOfWeek, numPlayers);
+          courseTeeTimes = await chronoFunction.getTeeTimes(websiteId, bookingClass, scheduleId, dayOfWeek, numPlayers, bookingPrefix);
           break;
         case "golfnow":
           courseTeeTimes = await golfnowFunction.getTeeTimes(bookingClass, dayOfWeek, numPlayers);

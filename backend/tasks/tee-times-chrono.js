@@ -3,15 +3,21 @@ const moment = require("moment");
 const util = require('./utility');
 require('moment-timezone');
 
-async function getTeeTimes(websiteId, bookingClass, scheduleId, dayOfWeek, numPlayers) {
+async function getTeeTimes(websiteId, bookingClass, scheduleId, dayOfWeek, numPlayers, holes) {
   const formattedClosestDay = util.getClosestDayOfWeek(dayOfWeek, 'YYYY-MM-DD');
-  var url = `https://www.chronogolf.com/marketplace/clubs/${websiteId}/teetimes?date=${formattedClosestDay}&course_id=${scheduleId}&nb_holes=18`;
+  var url = `https://www.chronogolf.com/marketplace/clubs/${websiteId}/teetimes?date=${formattedClosestDay}&course_id=${scheduleId}&nb_holes=${holes}`;
   for (let index = 0; index < numPlayers; index++) {
     url += `&affiliation_type_ids%5B%5D=${bookingClass}`;
   }
 
 
-  const headers = {};
+  const headers = {
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'User-Agent': 'TeeTimeCheck/1.0 (+https://teetimecheck.com/)',
+    'Referer': 'https://www.chronogolf.com/',
+    'Connection': 'keep-alive',
+  };
 
   try {
     const response = await axios.get(url, { headers });

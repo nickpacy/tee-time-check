@@ -14,7 +14,7 @@ const notificationsRoutes = require('./routes/notificationsRoutes');
 const teeTimeRoutes = require('./routes/teeTimeRoutes');
 const appSettingsRoutes = require('./routes/appSettingsRoutes');
 const teeSheetRoutes = require('./routes/teeSheetRoutes');
-const awsRoutes = require('./routes/awsRoutes');
+// const awsRoutes = require('./routes/awsRoutes');
 const communicationsRoutes = require('./routes/communicationsRoutes');
 
 const app = express();
