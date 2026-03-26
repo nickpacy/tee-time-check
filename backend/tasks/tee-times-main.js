@@ -57,9 +57,23 @@ const getRelevantCourses = async (connection, config) => {
 };
 
 // Fetch all tee times for given courses
-const getAllTeeTimes = async (courseResults) => {
+const getAllTeeTimes = async (courseResults, config) => {
   const allTeeTimes = {};
   let isFirstJCGolf = true;
+  let jcGolfAuth = null;
+
+  // JC Golf requires a token/transaction setup step before fetching tee times
+  if (config?.IS_JCGOLF) {
+    const firstJcCourse = courseResults.find((course) => course.method === "jcgolf");
+    if (firstJcCourse) {
+      try {
+        jcGolfAuth = await jcgolfFunction.getJCToken(firstJcCourse.websiteId, firstJcCourse.bookingPrefix);
+      } catch (error) {
+        logger.error("Error retrieving JC Golf token/transactionId:", error);
+      }
+    }
+  }
+
   for (const course of courseResults) {
     const { 
       bookingClass, 
@@ -99,7 +113,7 @@ const getAllTeeTimes = async (courseResults) => {
           courseTeeTimes = await golfnowFunction.getTeeTimes(bookingClass, dayOfWeek, numPlayers);
           break;
         case "jcgolf":
-          courseTeeTimes = await jcgolfFunction.getTeeTimes(bookingClass, dayOfWeek, numPlayers, bookingPrefix, websiteId, isFirstJCGolf);
+          courseTeeTimes = await jcgolfFunction.getTeeTimes(bookingClass, dayOfWeek, numPlayers, bookingPrefix, websiteId, isFirstJCGolf, jcGolfAuth);
           if (isFirstJCGolf) {
             isFirstJCGolf = false;  // Set the flag to false after the first call
           }
@@ -273,13 +287,13 @@ const saveNotifiedTeeTimes = async (connection, teeTimesByUser) => {
 
 
 // Check tee times and notify users
-const checkTeeTimes = async (config) => {
+const checkTeeTimes = async (config = { IS_JCGOLF: false, COURSE_FILTER: null }) => {
 
   try {
     const connection = await pool.getConnection();
     try {
       const relevantCoursesWithTimechecks = await getRelevantCourses(connection, config);
-      const allTeeTimes = await getAllTeeTimes(relevantCoursesWithTimechecks);
+      const allTeeTimes = await getAllTeeTimes(relevantCoursesWithTimechecks, config);
       const teeTimesByUser = await processTeeTimesForUsers(connection, allTeeTimes, config);
       const teeTimesWithIds = await saveNotifiedTeeTimes(connection, teeTimesByUser);
       await sendNotifications(teeTimesWithIds);
